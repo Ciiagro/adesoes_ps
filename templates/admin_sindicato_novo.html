@@ -1,0 +1,96 @@
+{% extends 'admin_base.html' %}
+{% block title %}Novo sindicato{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
+<div class="page-head">
+  <h1>Cadastrar novo sindicato</h1>
+  <p class="sub">
+    Preencha o nome, os contatos e escolha quais municípios passam a ser dele —
+    tudo de uma vez. Os municípios escolhidos deixam de pertencer ao sindicato
+    anterior (a mudança fica registrada no histórico de cada um).
+  </p>
+</div>
+
+<form method="post" class="secao-card">
+  <h2>Dados do sindicato</h2>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Nome do sindicato *</span>
+      <input type="text" name="nome" required autofocus placeholder="Ex.: Sindicato Rural de..." style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Presidente do Sindicato</span>
+      <input type="text" name="presidente_nome" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Secretário(a) do Sindicato</span>
+      <input type="text" name="secretario_nome" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Contato do Sindicato</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone 1</span>
+      <input type="text" name="telefone1" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone 2</span>
+      <input type="text" name="telefone2" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 1</span>
+      <input type="email" name="email1" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 2</span>
+      <input type="email" name="email2" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 3</span>
+      <input type="email" name="email3" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 4</span>
+      <input type="email" name="email4" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Contato do Vice-Presidente Regional</h2>
+  <p class="sub" style="margin-top:-8px;">
+    Pessoa responsável pela região (às vezes é também presidente de algum
+    sindicato específico) — o contato abaixo é dela(e) no papel de
+    vice-presidente/diretor(a) regional, separado do contato do sindicato acima.
+  </p>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Vice-Presidente Regional</span>
+      <input type="text" name="vice_presidente_texto" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone</span>
+      <input type="text" name="telefone_vice_presidente" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail</span>
+      <input type="email" name="email_vice_presidente" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Municípios deste sindicato</h2>
+  <p class="sub" style="margin-top:-8px;">
+    Segure Ctrl (ou Cmd no Mac) pra escolher mais de um. Entre parênteses está o
+    sindicato responsável atual de cada município — se ele já tiver um, vai ser
+    substituído por este que você está cadastrando.
+  </p>
+  <select name="municipios" multiple size="14" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;font-family:inherit;">
+    {% for m in municipios %}
+    <option value="{{ m.cod_ibge }}">{{ m.nome }}{% if m.sindicato %} (atualmente: {{ m.sindicato.nome }}){% endif %}</option>
+    {% endfor %}
+  </select>
+
+  <div style="margin-top:22px;">
+    <button type="submit">💾 Cadastrar sindicato</button>
+  </div>
+</form>
+{% endblock %}

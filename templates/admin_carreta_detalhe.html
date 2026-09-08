@@ -1,0 +1,238 @@
+{% extends 'admin_base.html' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  #mapa-impacto { height: 460px; border-radius: var(--radius); border: 1px solid var(--line); }
+  .pin-carreta { background: transparent !important; border: none !important; }
+  .legenda-mapa-carreta {
+    background: rgba(255,255,255,.95); padding: 9px 12px; border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: .78rem; color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .legenda-mapa-carreta .item { display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .legenda-mapa-carreta .bolinha {
+    width:11px; height:11px; border-radius:50%; flex-shrink:0; border:2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+  }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
+<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+  <div>
+    <h1>{{ solicitacao.evento }}</h1>
+    <p class="sub">{{ solicitacao.municipio_nome }} — {{ solicitacao.data_inicio.strftime('%d/%m/%Y') }} a {{ solicitacao.data_fim.strftime('%d/%m/%Y') }}</p>
+  </div>
+  <a class="btn secundario" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">✏️ Editar</a>
+</div>
+
+{% if solicitacao.status == 'pendente' %}
+<div class="secao-card" style="margin-bottom:16px;background:#FBF7EC;border-color:#EEDCB4;">
+  <h2>📍 Impacto se essa solicitação for aprovada</h2>
+  <p style="margin-top:4px;">
+    A carreta ficaria em <b>{{ solicitacao.municipio_nome }}</b> de {{ solicitacao.data_inicio.strftime('%d/%m') }} a {{ solicitacao.data_fim.strftime('%d/%m') }}.
+    {% if ponto_ultima_localizacao %}
+      Comparando com {{ 'onde ela está agora' if ultima_localizacao_eh_atual else 'a última localização conhecida dela' }}
+      (<b>{{ ponto_ultima_localizacao.municipio_nome }}</b>){% if distancia_ultima_localizacao_km %}, são cerca de <b>{{ distancia_ultima_localizacao_km }} km</b> em linha reta até {{ solicitacao.municipio_nome }}{% endif %}.
+    {% endif %}
+    {% if ponto_anterior %}Antes disso, o compromisso mais próximo já confirmado é
+      <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=ponto_anterior.id) }}">{{ ponto_anterior.municipio_nome }} ({{ ponto_anterior.data_fim }})</a>{% if distancia_antes_km %} — cerca de {{ distancia_antes_km }} km em linha reta{% endif %}.
+    {% else %}Não tem nenhum compromisso confirmado antes dessa data.{% endif %}
+    {% if ponto_proximo %}Depois, o próximo já confirmado é
+      <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=ponto_proximo.id) }}">{{ ponto_proximo.municipio_nome }} ({{ ponto_proximo.data_inicio }})</a>{% if distancia_depois_km %} — cerca de {{ distancia_depois_km }} km em linha reta{% endif %}.
+    {% else %}Não tem nenhum compromisso confirmado depois dessa data (por enquanto).{% endif %}
+  </p>
+  <div id="mapa-impacto" style="margin-top:12px;"></div>
+  <p style="font-size:.78rem;color:var(--ink-soft);margin-top:8px;">
+    Os números no mapa mostram a ordem cronológica real (1º, 2º, 3º...) — não a ordem em que os
+    pontos aparecem no texto acima.
+  </p>
+</div>
+{% endif %}
+
+<div class="secao-card" style="margin-bottom:16px;">
+  <h2>Situação atual:
+    <span class="badge {% if solicitacao.status == 'aprovada' %}concluida{% elif solicitacao.status == 'realizada' %}realizada{% elif solicitacao.status == 'recusada' %}rascunho{% else %}aguardando{% endif %}">
+      {{ status_label.get(solicitacao.status, solicitacao.status) }}
+    </span>
+  </h2>
+
+  {% if solicitacao.status == 'recusada' and solicitacao.motivo_recusa %}
+  <p style="color:var(--danger);">Motivo: {{ solicitacao.motivo_recusa }}</p>
+  {% endif %}
+
+  {% if conflitos %}
+  <fieldset style="border-color:#EEDCB4;background:#FBEED6;margin-top:14px;">
+    <legend>⚠️ Conflito de datas</legend>
+    <p>Outra(s) solicitação(ões) ocupam dias dentro desse período (o mesmo motorista/veículo atende os dois programas):</p>
+    <ul>
+      {% for c in conflitos %}
+      <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=c.id) }}">{{ c.evento }} — {{ c.municipio_nome }} ({{ tipos_recurso.get(c.tipo_recurso, c.tipo_recurso) }}, {{ c.data_inicio.strftime('%d/%m') }} a {{ c.data_fim.strftime('%d/%m') }}) — {{ status_label.get(c.status, c.status) }}</a></li>
+      {% endfor %}
+    </ul>
+  </fieldset>
+  {% endif %}
+
+  {% if avisos_deslocamento %}
+  <fieldset style="border-color:#EEDCB4;background:#FBEED6;margin-top:14px;">
+    <legend>🚚 Deslocamento apertado</legend>
+    <p>Sem sobreposição de datas, mas o intervalo pode não ser suficiente pro motorista viajar até/de outro compromisso distante:</p>
+    <ul>
+      {% for aviso in avisos_deslocamento %}
+      {% set c = aviso.solicitacao %}
+      <li>
+        <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=c.id) }}">{{ c.evento }} — {{ c.municipio_nome }} ({{ tipos_recurso.get(c.tipo_recurso, c.tipo_recurso) }}, {{ c.data_inicio.strftime('%d/%m') }} a {{ c.data_fim.strftime('%d/%m') }})</a>
+        — cerca de {{ aviso.distancia_km }} km em linha reta,
+        {% if aviso.dias_de_intervalo <= 0 %}sem nenhum dia livre entre os dois{% else %}só {{ aviso.dias_de_intervalo }} dia(s) livre(s) entre os dois{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </fieldset>
+  {% endif %}
+
+  <table style="margin-top:16px;">
+    <tbody>
+      <tr><td style="width:200px;color:var(--ink-faint);">Programa</td><td><span class="badge-programa {{ 'agro' if solicitacao.tipo_recurso == 'carreta_agro' else 'saude' }}">{{ tipos_recurso.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso) }}</span></td></tr>
+      <tr><td style="color:var(--ink-faint);">Sindicato</td><td>{{ solicitacao.sindicato_nome or '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Nº do ofício</td><td>{{ solicitacao.numero_oficio or '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Data do ofício</td><td>{{ solicitacao.data_oficio.strftime('%d/%m/%Y') if solicitacao.data_oficio else '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Responsável</td><td>{{ solicitacao.responsavel_nome or '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Telefone</td><td>{{ solicitacao.responsavel_telefone or '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">E-mail</td><td>{{ solicitacao.responsavel_email or '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Observações</td><td>{{ solicitacao.observacoes or '—' }}</td></tr>
+    </tbody>
+  </table>
+
+  <p style="margin:16px 0 8px;font-weight:600;">Ofícios anexados</p>
+  {% if solicitacao.arquivos %}
+  <ul>
+    {% for arq in solicitacao.arquivos %}
+    <li>
+      {% if arq.storage_path or arq.conteudo %}
+      <a href="{{ url_for('admin_carreta_arquivo', arquivo_id=arq.id) }}" target="_blank">📄 {{ arq.nome_arquivo }}</a>
+      {% elif arq.drive_url %}
+      <a href="{{ arq.drive_url }}" target="_blank">📄 {{ arq.nome_arquivo }} (Google Drive)</a>
+      {% else %}
+      📄 {{ arq.nome_arquivo }}
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="vazio">Nenhum arquivo anexado.</p>
+  {% endif %}
+</div>
+
+<div class="secao-card">
+  <h2>Alterar situação</h2>
+  <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}">
+    <label style="display:block;max-width:340px;margin-bottom:14px;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
+      <input type="text" name="alterado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="display:block;max-width:500px;margin-bottom:14px;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Motivo do cancelamento (só se for cancelar)</span>
+      <input type="text" name="motivo_recusa" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button type="submit" name="status" value="aprovada">✅ Aprovar</button>
+      {% if solicitacao.status in ('aprovada', 'realizada') %}
+      <button type="submit" name="status" value="realizada" class="btn secundario">🏁 Marcar como realizada</button>
+      {% endif %}
+      <button type="submit" name="status" value="recusada" class="btn secundario" style="color:var(--danger);">✖ Cancelar</button>
+      <button type="submit" name="status" value="pendente" class="btn secundario">↩ Voltar pra pendente</button>
+    </div>
+  </form>
+  <p class="hint" style="margin-top:10px;">
+    Solicitações aprovadas viram "Realizada" sozinhas assim que a data final passa — só use o botão
+    acima se precisar marcar como concluída ANTES disso (evento que terminou mais cedo, por exemplo).
+  </p>
+</div>
+
+<form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=solicitacao.id) }}" style="margin-top:16px;" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
+  <button type="submit" class="btn secundario" style="color:var(--danger);">🗑️ Remover esta solicitação</button>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if solicitacao.status == 'pendente' %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const sequenciaImpacto = {{ sequencia_impacto|tojson }};
+
+  const CORES_PAPEL = {
+    atual: '#7A4FB5', ultima_localizacao: '#7A4FB5',
+    antes: '#2E6DA4', solicitacao: '#B5851A', depois: '#A6412B',
+  };
+  const ROTULOS_PAPEL = {
+    atual: 'Está aqui agora', ultima_localizacao: 'Última localização conhecida',
+    antes: 'Compromisso confirmado (antes)', solicitacao: '⚠️ SE APROVADA, fica aqui',
+    depois: 'Compromisso confirmado (depois)',
+  };
+
+  const mapa = L.map('mapa-impacto').setView([-5.2, -39.3], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap',
+    maxZoom: 19
+  }).addTo(mapa);
+
+  const legenda = L.control({ position: 'bottomleft' });
+  legenda.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legenda-mapa-carreta');
+    div.innerHTML = `
+      <div class="item"><span class="bolinha" style="background:#7A4FB5;"></span> Localização atual</div>
+      <div class="item"><span class="bolinha" style="background:#2E6DA4;"></span> Confirmado antes</div>
+      <div class="item"><span class="bolinha" style="background:#B5851A;"></span> Se aprovada</div>
+      <div class="item"><span class="bolinha" style="background:#A6412B;"></span> Confirmado depois</div>
+      <div style="margin-top:4px;font-size:.72rem;opacity:.8;">Números = ordem cronológica</div>
+    `;
+    return div;
+  };
+  legenda.addTo(mapa);
+
+  function iconePin(cor, tamanho, numero, tracejado) {
+    const numeroSvg = numero
+      ? `<circle cx="13" cy="13" r="9" fill="#fff"/>
+         <text x="13" y="17" text-anchor="middle" font-size="12" font-weight="700"
+               font-family="Inter, system-ui, sans-serif" fill="${cor}">${numero}</text>`
+      : '';
+    return L.divIcon({
+      className: 'pin-carreta',
+      html: `<svg width="${tamanho}" height="${tamanho * 1.3}" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg">
+               <path d="M13 0C5.8 0 0 5.8 0 13c0 9.2 13 21 13 21s13-11.8 13-21C26 5.8 20.2 0 13 0z"
+                     fill="${cor}" stroke="#fff" stroke-width="2" ${tracejado ? 'stroke-dasharray="3 2"' : ''}/>
+               ${numeroSvg}
+             </svg>`,
+      iconSize: [tamanho, tamanho * 1.3],
+      iconAnchor: [tamanho / 2, tamanho * 1.3],
+      popupAnchor: [0, -tamanho],
+    });
+  }
+
+  const pontosRota = [];
+  const grupo = L.featureGroup();
+
+  sequenciaImpacto.forEach(p => {
+    const cor = CORES_PAPEL[p.papel] || '#8A8A8A';
+    const ehSolicitacao = p.papel === 'solicitacao';
+    const marcador = L.marker([p.lat, p.lng], { icon: iconePin(cor, ehSolicitacao ? 34 : 26, p.numero, ehSolicitacao) })
+      .bindPopup(`<b>${p.numero}º — ${ROTULOS_PAPEL[p.papel] || p.papel}</b><br>${p.municipio_nome}<br>${p.data_inicio} a ${p.data_fim}`)
+      .addTo(grupo);
+    if (ehSolicitacao) marcador.openPopup();
+    pontosRota.push([p.lat, p.lng]);
+  });
+
+  grupo.addTo(mapa);
+  if (pontosRota.length > 1) {
+    L.polyline(pontosRota, { color: '#8A6D4F', weight: 2, dashArray: '6 6', opacity: 0.6 }).addTo(mapa);
+  }
+  if (pontosRota.length > 0) {
+    mapa.fitBounds(L.featureGroup(grupo.getLayers()).getBounds(), { padding: [30, 30], maxZoom: 10 });
+  }
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm;
+    @bottom-center {
+      content: "Sistema de Adesões · {{ 'Programa Agrinho' if adesao.programa.nome == 'AGRINHO' else 'Projeto Valores' }} " counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #6E6555;
+    }
+  }
+  *{ box-sizing:border-box; }
+  body{
+    font-family: 'DejaVu Sans', Arial, sans-serif;
+    color:#2A2620;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+  .header{
+    border-bottom: 3px solid {{ cor_tema }};
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+  .header .selo{
+    display:inline-block;
+    background:{{ cor_tema }};
+    color:#fff;
+    font-size:8.5pt;
+    font-weight:bold;
+    padding:3px 10px;
+    border-radius:4px;
+    letter-spacing:.03em;
+    margin-bottom:8px;
+  }
+  .header h1{
+    font-size:17pt;
+    margin:0 0 3px;
+    color:{{ cor_tema_escura }};
+  }
+  .header .sub{
+    color:#6E6555;
+    font-size:9pt;
+    margin:0;
+  }
+  h2.secao{
+    font-size:11.5pt;
+    color:{{ cor_tema_escura }};
+    background:#F1EFE3;
+    border-left:4px solid {{ cor_tema }};
+    padding:6px 10px;
+    margin:20px 0 10px;
+    break-after: avoid;
+  }
+  .grid2{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 22px;
+    margin-bottom: 4px;
+  }
+  .campo{ margin: 3px 0; }
+  .campo .rotulo{
+    font-size:8.3pt;
+    color:#6E6555;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    display:block;
+  }
+  .campo .valor{
+    font-size:10.3pt;
+    font-weight:bold;
+  }
+  table.dados{
+    width:100%;
+    border-collapse:collapse;
+    margin: 8px 0 4px;
+    break-inside: avoid;
+  }
+  table.dados th, table.dados td{
+    border:1px solid #D8D0B8;
+    padding:5px 7px;
+    text-align:center;
+    font-size:9.6pt;
+  }
+  table.dados th{
+    background:#F1EFE3;
+    color:{{ cor_tema_escura }};
+  }
+  table.dados td.total{
+    font-weight:bold;
+    background:#FBFAF3;
+  }
+  .escola-bloco{
+    border:1px solid #D8D0B8;
+    border-radius:6px;
+    padding:10px 14px 12px;
+    margin-bottom:12px;
+    break-inside: avoid;
+  }
+  .escola-bloco h3{
+    font-size:10.8pt;
+    margin:0 0 6px;
+    color:{{ cor_tema_escura }};
+  }
+  .escola-meta{
+    font-size:9.3pt;
+    color:#4A453A;
+    margin-bottom:6px;
+  }
+  .escola-meta span{ margin-right:16px; }
+  .termo{
+    background:#FBFAF3;
+    border:1px solid #E1D8C0;
+    border-radius:6px;
+    padding:12px 16px;
+    font-size:9.8pt;
+    margin-bottom:16px;
+  }
+  .assinaturas-municipio{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap: 26px 24px;
+    margin-bottom: 6px;
+  }
+  .assinatura-bloco{
+    break-inside: avoid;
+    padding-top: 30px;
+  }
+  .assinatura-linha{
+    border-top:1px solid #2A2620;
+    padding-top:4px;
+  }
+  .assinatura-nome{
+    font-weight:bold;
+    font-size:9.8pt;
+  }
+  .assinatura-cargo{
+    font-size:8.6pt;
+    color:#6E6555;
+  }
+  .escola-assinaturas{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap: 22px 24px;
+    margin-top: 22px;
+  }
+  .rodape-info{
+    margin-top:26px;
+    font-size:8pt;
+    color:#8A8168;
+    border-top:1px solid #E1D8C0;
+    padding-top:8px;
+  }
+  .assinatura-eletronica{
+    font-size:8.6pt;
+    color:{{ cor_tema_escura }};
+    background:#EFF6F1;
+    border:1px solid {{ cor_tema }};
+    border-radius:5px;
+    padding:5px 8px;
+    margin-top:4px;
+    display:inline-block;
+  }
+  .pagina-nova{ break-before: page; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="selo">{{ 'SENAR CEARÁ' if adesao.programa.nome == 'AGRINHO' else 'SEDUC / PARCEIROS' }}</span>
+  <h1>Ficha de Adesão &middot; {{ 'Programa Agrinho' if adesao.programa.nome == 'AGRINHO' else 'Projeto Valores' }} {{ adesao.ano }}</h1>
+  <p class="sub">Documento gerado pelo Sistema de Adesões &middot; Dados preenchidos eletronicamente pelo município</p>
+</div>
+
+<h2 class="secao">1. Identificação do Município e Executivo</h2>
+<div class="grid2">
+  <div class="campo"><span class="rotulo">Município</span><span class="valor">{{ adesao.municipio.nome }} - {{ adesao.municipio.uf }}</span></div>
+  <div class="campo"><span class="rotulo">Prefeito(a)</span><span class="valor">{{ adesao.municipio.prefeito_nome or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">RG do Prefeito(a)</span><span class="valor">{{ adesao.municipio.prefeito_rg or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">CPF do Prefeito(a)</span><span class="valor">{{ adesao.municipio.prefeito_cpf or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">Endereço da Prefeitura</span><span class="valor">{{ adesao.municipio.prefeitura_endereco or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">CEP</span><span class="valor">{{ adesao.municipio.prefeitura_cep or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">Telefone</span><span class="valor">{{ adesao.municipio.prefeitura_telefone or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">E-mail</span><span class="valor">{{ adesao.municipio.prefeitura_email or '-' }}</span></div>
+</div>
+
+<h2 class="secao">2. Secretaria de Educação</h2>
+<div class="grid2">
+  <div class="campo"><span class="rotulo">Secretário(a)</span><span class="valor">{{ adesao.municipio.secretario_nome or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">CPF</span><span class="valor">{{ adesao.municipio.secretaria_cep or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">Endereço</span><span class="valor">{{ adesao.municipio.secretaria_endereco or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">Contato</span><span class="valor">{{ adesao.municipio.secretaria_telefone or '-' }}</span></div>
+  <div class="campo"><span class="rotulo">E-mail</span><span class="valor">{{ adesao.municipio.secretaria_email or '-' }}</span></div>
+</div>
+
+<h2 class="secao">3. Coordenador(a) do Projeto</h2>
+<div class="grid2">
+  <div class="campo"><span class="rotulo">Nome</span><span class="valor">{{ adesao.coordenador.nome if adesao.coordenador else '-' }}</span></div>
+  <div class="campo"><span class="rotulo">E-mail</span><span class="valor">{{ adesao.coordenador.email if adesao.coordenador else '-' }}</span></div>
+  <div class="campo"><span class="rotulo">RG</span><span class="valor">{{ adesao.coordenador.rg if adesao.coordenador else '-' }}</span></div>
+  <div class="campo"><span class="rotulo">CPF</span><span class="valor">{{ adesao.coordenador.cpf if adesao.coordenador else '-' }}</span></div>
+  <div class="campo"><span class="rotulo">Telefone(s)</span><span class="valor">{{ adesao.coordenador.telefone1 if adesao.coordenador else '' }}{% if adesao.coordenador and adesao.coordenador.telefone2 %} / {{ adesao.coordenador.telefone2 }}{% endif %}</span></div>
+</div>
+
+<h2 class="secao">4. Censo da Rede Municipal</h2>
+<div class="grid2">
+  <div class="campo"><span class="rotulo">Total de Escolas (informado)</span><span class="valor">{{ adesao.total_escolas_informado if adesao.total_escolas_informado is not none else '-' }}</span></div>
+  <div class="campo"><span class="rotulo">Total de Professores (informado)</span><span class="valor">{{ adesao.total_professores_informado if adesao.total_professores_informado is not none else '-' }}</span></div>
+</div>
+
+<div style="break-inside:avoid;">
+<p style="font-size:9.3pt;color:#6E6555;margin:10px 0 2px;"><strong>Quantidade de alunos matriculados por série (soma de todas as escolas aderidas)</strong></p>
+<table class="dados">
+  <tr>{% for s in series %}<th>{{ s.nome }}</th>{% endfor %}<th>Total</th></tr>
+  <tr>
+    {% for s in series %}<td class="total">{{ totais_series.get(s.id, 0) }}</td>{% endfor %}
+    <td class="total">{{ totais_series.values() | sum }}</td>
+  </tr>
+</table>
+</div>
+
+<h2 class="secao pagina-nova">5. Escolas Participantes e Matrículas</h2>
+{% for ae in adesao.escolas %}
+<div class="escola-bloco">
+  <h3>{{ loop.index }}. {{ ae.escola.nome }}</h3>
+  <div class="escola-meta">
+    <span><strong>Endereço:</strong> {{ ae.escola.endereco or '-' }}</span>
+    <span><strong>Telefone:</strong> {{ ae.escola.contato_telefone or '-' }}</span>
+    <span><strong>E-mail:</strong> {{ ae.escola.contato_email or '-' }}</span>
+  </div>
+  <div class="escola-meta">
+    <span><strong>Professores:</strong> {{ ae.quantidade_professores or 0 }}</span>
+    <span><strong>Gestor(a) 1:</strong> {{ ae.escola.gestor1_nome or '-' }}</span>
+    {% if ae.escola.gestor2_nome %}<span><strong>Gestor(a) 2:</strong> {{ ae.escola.gestor2_nome }}</span>{% endif %}
+  </div>
+  <table class="dados">
+    <tr>{% for m in ae.matriculas %}<th>{{ m.serie.nome }}</th>{% endfor %}<th>Total</th></tr>
+    <tr>
+      {% for m in ae.matriculas %}<td>{{ m.quantidade }}</td>{% endfor %}
+      <td class="total">{{ ae.matriculas | sum(attribute='quantidade') }}</td>
+    </tr>
+  </table>
+</div>
+{% else %}
+<p>Nenhuma escola cadastrada nesta adesão.</p>
+{% endfor %}
+
+<h2 class="secao pagina-nova">6. Termo de Adesão e Compromisso</h2>
+<div class="termo">
+  Pelo presente termo, o município de <strong>{{ adesao.municipio.nome }}</strong>, por meio de seus representantes
+  abaixo assinados, formaliza sua adesão ao <strong>{{ 'Programa Agrinho' if adesao.programa.nome == 'AGRINHO' else 'Projeto Valores' }}</strong>
+  para o ano de <strong>{{ adesao.ano }}</strong>, comprometendo-se a viabilizar a execução do programa junto às
+  escolas listadas neste documento, garantindo a participação de gestores, professores e alunos nas atividades
+  previstas, bem como o correto envio das informações de acompanhamento solicitadas pela coordenação do projeto.
+</div>
+
+<p style="font-size:9.3pt;color:#6E6555;margin:0 0 4px;"><strong>Representantes do Município</strong></p>
+<div class="assinaturas-municipio">
+  <div class="assinatura-bloco">
+    <div class="assinatura-linha">
+      <div class="assinatura-nome">{{ adesao.municipio.prefeito_nome or '____________________________' }}</div>
+      <div class="assinatura-cargo">Prefeito(a) Municipal — CPF {{ adesao.municipio.prefeito_cpf or '-' }}</div>
+      {% set a = assinaturas_por_papel.get('prefeito') %}
+      {% if a and a.assinado_em %}
+      <div class="assinatura-eletronica">✓ Assinado eletronicamente em {{ a.assinado_em.strftime('%d/%m/%Y %H:%M') }} — Protocolo {{ a.token[:8].upper() }}</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="assinatura-bloco">
+    <div class="assinatura-linha">
+      <div class="assinatura-nome">{{ adesao.municipio.secretario_nome or '____________________________' }}</div>
+      <div class="assinatura-cargo">Secretário(a) de Educação</div>
+      {% set a = assinaturas_por_papel.get('secretario') %}
+      {% if a and a.assinado_em %}
+      <div class="assinatura-eletronica">✓ Assinado eletronicamente em {{ a.assinado_em.strftime('%d/%m/%Y %H:%M') }} — Protocolo {{ a.token[:8].upper() }}</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="assinatura-bloco">
+    <div class="assinatura-linha">
+      <div class="assinatura-nome">{{ adesao.coordenador.nome if adesao.coordenador else '____________________________' }}</div>
+      <div class="assinatura-cargo">Coordenador(a) do Projeto</div>
+      {% set a = assinaturas_por_papel.get('coordenador') %}
+      {% if a and a.assinado_em %}
+      <div class="assinatura-eletronica">✓ Assinado eletronicamente em {{ a.assinado_em.strftime('%d/%m/%Y %H:%M') }} — Protocolo {{ a.token[:8].upper() }}</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="assinatura-bloco">
+    <div class="assinatura-linha">
+      <div class="assinatura-nome">{{ adesao.responsavel_preenchimento or '____________________________' }}</div>
+      <div class="assinatura-cargo">Responsável pelo Preenchimento</div>
+    </div>
+  </div>
+</div>
+
+<p style="font-size:9.3pt;color:#6E6555;margin:18px 0 4px;"><strong>Assinaturas dos Membros de cada Escola Participante</strong></p>
+{% for ae in adesao.escolas %}
+<div class="escola-bloco" style="break-inside:avoid;">
+  <h3 style="margin-bottom:2px;">{{ ae.escola.nome }}</h3>
+  <div class="escola-assinaturas">
+    <div class="assinatura-bloco" style="padding-top:22px;">
+      <div class="assinatura-linha">
+        <div class="assinatura-nome">{{ ae.escola.gestor1_nome or '____________________________' }}</div>
+        <div class="assinatura-cargo">Gestor(a) Escolar 1</div>
+      </div>
+    </div>
+    <div class="assinatura-bloco" style="padding-top:22px;">
+      <div class="assinatura-linha">
+        <div class="assinatura-nome">{{ ae.escola.gestor2_nome or '____________________________' }}</div>
+        <div class="assinatura-cargo">Gestor(a) Escolar 2</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<div class="rodape-info">
+  Gerado automaticamente pelo Sistema de Adesões em {{ gerado_em.strftime('%d/%m/%Y às %H:%M') }}.
+  Responsável pelo preenchimento: {{ adesao.responsavel_preenchimento or '-' }}.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{% macro badge_status(status) -%}
+  {%- if status == 'concluida' -%}
+    <span class="badge concluida">Concluída</span>
+  {%- elif status == 'aguardando_assinaturas' -%}
+    <span class="badge aguardando">Aguardando assinaturas</span>
+  {%- else -%}
+    <span class="badge rascunho">Rascunho</span>
+  {%- endif -%}
+{%- endmacro %}

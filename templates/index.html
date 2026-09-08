@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Adesão aos programas educacionais</h1>
+<p style="color:var(--ink-soft)">Escolha o programa para registrar a adesão do seu município e cadastrar as escolas participantes deste ano.</p>
+
+<div class="hero-grid">
+  <a class="program-card" href="{{ url_for('adesao_form', programa_slug='agrinho') }}">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3F6F4C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 21V11"/>
+      <path d="M12 11C12 6.5 8.5 3 4 3c0 5.5 3.5 9 8 9Z"/>
+      <path d="M12 11c0-4 3-7 8-7 0 5-3 8-8 8Z"/>
+    </svg>
+    <h2>Programa Agrinho</h2>
+    <p>Do 2º ao 9º ano do ensino fundamental.</p>
+  </a>
+  <a class="program-card valores" href="{{ url_for('adesao_form', programa_slug='valores') }}">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C98A2B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 20.5c-4-2.7-8-5.8-8-10.3a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 4.5-4 7.6-8 10.3Z"/>
+    </svg>
+    <h2>Projeto Valores</h2>
+    <p>Infantil 3, Infantil 4 e Infantil 5.</p>
+  </a>
+</div>
+
+<h1 style="margin-top:40px;">Outras solicitações</h1>
+<div class="hero-grid" style="grid-template-columns:1fr;max-width:400px;">
+  <a class="program-card" href="{{ url_for('carreta_form') }}" style="border-top-color:#A6412B;">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#A6412B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="7" width="15" height="11" rx="1.5"/>
+      <path d="M16 10h3.5l3 3.5V18h-6.5"/>
+      <circle cx="6" cy="19.5" r="1.7"/>
+      <circle cx="18" cy="19.5" r="1.7"/>
+    </svg>
+    <h2>Carreta do Agro</h2>
+    <p>Solicitar a Carreta do Agro pra um evento no seu município.</p>
+  </a>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'admin_base.html' %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
+<div class="page-head">
+  <h1>Nova solicitação</h1>
+  <p class="sub">Cadastro direto — por exemplo, um pedido que chegou por telefone ou que você quer registrar depois de já ter acontecido.</p>
+</div>
+
+<div class="secao-card" style="margin-bottom:16px;">
+  <h2 style="margin-bottom:10px;">Calendário — {{ tipos_recurso.get(tipo, tipo) }}</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+    {% for chave, rotulo in tipos_recurso.items() %}
+    <a class="btn aba-programa {{ 'agro' if chave == 'carreta_agro' else 'saude' }} {{ 'secundario' if tipo != chave else '' }}" href="{{ url_for('admin_carreta_nova', tipo=chave, ano=ano, mes=mes) }}">{{ rotulo }}</a>
+    {% endfor %}
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <a class="btn secundario" href="{{ url_for('admin_carreta_nova', tipo=tipo, ano=ano-1 if mes==1 else ano, mes=12 if mes==1 else mes-1) }}">← Mês anterior</a>
+    <strong>{{ MESES_NOMES[mes] }} de {{ ano }}</strong>
+    <a class="btn secundario" href="{{ url_for('admin_carreta_nova', tipo=tipo, ano=ano+1 if mes==12 else ano, mes=1 if mes==12 else mes+1) }}">Próximo mês →</a>
+  </div>
+  <table style="text-align:center;">
+    <thead><tr><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th></tr></thead>
+    <tbody>
+      {% for semana in semanas %}
+      <tr>
+        {% for dia in semana %}
+        {% if dia %}
+        {% set ocupado = calendario.get(dia) %}
+        {% set bloqueio_dia = bloqueados.get(dia) %}
+        {% if bloqueio_dia %}
+        <td style="background:#444;color:#fff;font-weight:700;" title="🚫 {{ bloqueio_dia|map(attribute='motivo')|join(', ') }}">{{ dia.day }}</td>
+        {% else %}
+        <td style="{% if ocupado %}background:#F9E7E0;color:#A6412B;font-weight:700;{% endif %}" title="{% if ocupado %}{{ ocupado|map(attribute='evento')|join(', ') }}{% endif %}">{{ dia.day }}</td>
+        {% endif %}
+        {% else %}
+        <td></td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">🟥 Dias já ocupados — dos DOIS programas juntos (Agro e Saúde usam o mesmo motorista/veículo, então um bloqueia o outro). ⬛ Dias bloqueados pelo admin (feriado, manutenção, etc — veja em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>).</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="secao-card">
+  <h2>Programa e local</h2>
+  <p class="hint" style="margin-top:-6px;margin-bottom:14px;">
+    Dica: clique na aba do programa certo no calendário acima ANTES de preencher, pra ver a
+    disponibilidade dele — trocar o programa aqui embaixo não atualiza o calendário sozinho.
+  </p>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Programa *</span>
+      <select name="tipo_recurso" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        {% for chave, rotulo in tipos_recurso.items() %}
+        <option value="{{ chave }}" {% if chave == tipo %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Município *</span>
+      <select name="municipio_nome" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        <option value="">Selecione...</option>
+        {% for m in municipios %}
+        <option value="{{ m }}">{{ m }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Sindicato solicitante</span>
+      <input type="text" name="sindicato_nome" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Nome do evento *</span>
+      <input type="text" name="evento" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data de início *</span>
+      <input type="date" name="data_inicio" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data de fim *</span>
+      <input type="date" name="data_fim" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Ofício</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Número do ofício</span>
+      <input type="text" name="numero_oficio" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data do ofício</span>
+      <input type="date" name="data_oficio" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Anexar ofício(s) em PDF</span>
+      <input type="file" name="oficios" accept="application/pdf" multiple>
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Responsável</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Nome <span style="color:var(--danger);">* obrigatório</span></span>
+      <input type="text" name="responsavel_nome" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone <span style="color:var(--danger);">* obrigatório</span></span>
+      <input type="text" name="responsavel_telefone" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail <span style="color:var(--danger);">* obrigatório</span></span>
+      <input type="email" name="responsavel_email" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Observações</span>
+      <textarea name="observacoes" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-family:inherit;"></textarea>
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Situação</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Situação inicial</span>
+      <select name="status" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        {% for chave, rotulo in status_label.items() %}
+        <option value="{{ chave }}" {% if chave == 'pendente' %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
+      <input type="text" name="alterado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <div style="margin-top:22px;">
+    <button type="submit">💾 Cadastrar solicitação</button>
+  </div>
+</form>
+{% endblock %}

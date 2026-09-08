@@ -1,0 +1,56 @@
+{% extends 'admin_base.html' %}
+{% block title %}Escolas Cadastradas{% endblock %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Escolas Cadastradas</h1>
+  <p class="sub">
+    Todas as escolas já cadastradas em alguma adesão (o cadastro é reaproveitado ano a ano).
+  </p>
+</div>
+
+<form method="get" class="filtro-form">
+  <label>Município
+    <select name="municipio">
+      <option value="" {% if not filtro_municipio %}selected{% endif %}>Todos os municípios</option>
+      {% for mun in municipios %}
+      <option value="{{ mun }}" {% if filtro_municipio == mun %}selected{% endif %}>{{ mun }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Filtrar</button>
+</form>
+
+<div class="tabela-wrap">
+<table>
+  <thead>
+  <tr>
+    <th>Escola</th><th>Município</th><th>Endereço</th><th>Telefone</th><th>E-mail</th>
+    <th>Gestor(a) 1</th><th>Gestor(a) 2</th><th>Localização</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for escola in escolas %}
+  <tr>
+    <td><strong>{{ escola.nome }}</strong></td>
+    <td>{{ escola.municipio.nome }}</td>
+    <td>{{ escola.endereco or '-' }}</td>
+    <td>{{ escola.contato_telefone or '-' }}</td>
+    <td>{{ escola.contato_email or '-' }}</td>
+    <td>{{ escola.gestor1_nome or '-' }}</td>
+    <td>{{ escola.gestor2_nome or '-' }}</td>
+    <td>
+      {% if escola.latitude and escola.longitude %}
+      <a href="https://www.google.com/maps?q={{ escola.latitude }},{{ escola.longitude }}" target="_blank">📍 Ver no mapa</a>
+      {% else %}
+      -
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8" class="vazio">Nenhuma escola cadastrada ainda{% if filtro_municipio %} para {{ filtro_municipio }}{% endif %}.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p style="margin-top:12px;color:var(--ink-faint);font-size:.85rem;">{{ escolas|length }} escola(s) encontrada(s).</p>
+{% endblock %}

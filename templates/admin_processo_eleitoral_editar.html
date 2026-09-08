@@ -1,0 +1,114 @@
+{% extends 'admin_base.html' %}
+{% block title %}{% if processo %}Editar{% else %}Novo{% endif %} Processo Eleitoral · {{ sindicato.nome }}{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_processos_eleitorais', sindicato_id=sindicato.id) }}">← Voltar para o histórico</a>
+<div class="page-head">
+  <h1>{% if processo %}Editar{% else %}Novo{% endif %} Processo Eleitoral</h1>
+  <p class="sub">{{ sindicato.nome }}</p>
+</div>
+
+<form method="post" class="secao-card">
+  <h2>Datas do processo</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data do Edital de Convocação</span>
+      <input type="date" name="edital_data" value="{{ processo.edital_data or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Prazo de Registro de Chapa</span>
+      <input type="date" name="registro_chapa_prazo" value="{{ processo.registro_chapa_prazo or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data da Eleição</span>
+      <input type="date" name="eleicao_data" value="{{ processo.eleicao_data or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Situação do processo</span>
+      <select name="situacao" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        {% for chave, rotulo in situacao_label.items() %}
+        <option value="{{ chave }}" {% if processo and processo.situacao == chave %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <p style="margin:20px 0 8px;font-size:.85rem;color:var(--ink-faint);">
+    Período do mandato desta diretoria — quando a situação acima estiver como
+    <strong>"Posse realizada"</strong> e as duas datas abaixo estiverem preenchidas, o sistema já
+    atualiza sozinho o mandato atual do sindicato (o que aparece no aviso de "mandato vencendo"
+    e na ficha em PDF):
+  </p>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Início do Mandato (Posse)</span>
+      <input type="date" name="posse_data" value="{{ processo.posse_data or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Fim do Mandato</span>
+      <input type="date" name="mandato_fim" value="{{ processo.mandato_fim or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Diretoria eleita</h2>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Presidente eleito</span>
+      <input type="text" name="presidente_eleito" value="{{ processo.presidente_eleito or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Secretário(a) eleito(a)</span>
+      <input type="text" name="secretario_eleito" value="{{ processo.secretario_eleito or '' if processo else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <p style="margin:16px 0 8px;font-size:.85rem;color:var(--ink-faint);">
+    Demais cargos (vice-presidente, tesoureiro, conselho fiscal etc.):
+  </p>
+  <div id="membros-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
+  <button type="button" id="btn-add-membro" class="secundario" style="margin-top:10px;padding:8px 16px;font-size:.85rem;">➕ Adicionar membro</button>
+
+  <div style="margin-top:24px;">
+    <label style="display:block;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Observações (opcional)</span>
+      <textarea name="observacoes" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-family:inherit;">{{ processo.observacoes or '' if processo else '' }}</textarea>
+    </label>
+  </div>
+
+  <div style="margin-top:22px;">
+    <button type="submit">💾 Salvar processo eleitoral</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const CARGOS = {{ cargos_diretoria|tojson }};
+  const lista = document.getElementById('membros-lista');
+
+  function opcoesCargo(selecionado) {
+    return CARGOS.map(c => `<option value="${c}" ${c === selecionado ? 'selected' : ''}>${c}</option>`).join('');
+  }
+
+  function novaLinha(cargoSelecionado, nome) {
+    const linha = document.createElement('div');
+    linha.style.cssText = 'display:flex;gap:10px;align-items:center;flex-wrap:wrap;';
+    linha.innerHTML =
+      `<select name="membro_cargo" style="flex:1;min-width:200px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">` +
+      opcoesCargo(cargoSelecionado) +
+      `</select>` +
+      `<input type="text" name="membro_nome" placeholder="Nome" value="${nome ? nome.replace(/"/g, '&quot;') : ''}" style="flex:2;min-width:200px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">` +
+      `<button type="button" class="remover-membro secundario" style="padding:8px 12px;">✖</button>`;
+    linha.querySelector('.remover-membro').addEventListener('click', () => linha.remove());
+    lista.appendChild(linha);
+  }
+
+  document.getElementById('btn-add-membro').addEventListener('click', () => novaLinha());
+
+  // pré-preenche com os membros já cadastrados (se estiver editando)
+  const membrosExistentes = {{ (processo.membros if processo else [])|map(attribute='cargo')|list|tojson }};
+  const nomesExistentes = {{ (processo.membros if processo else [])|map(attribute='nome')|list|tojson }};
+  membrosExistentes.forEach((cargo, i) => novaLinha(cargo, nomesExistentes[i]));
+})();
+</script>
+{% endblock %}

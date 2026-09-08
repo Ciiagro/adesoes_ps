@@ -1,0 +1,31 @@
+{% extends 'admin_base.html' %}
+{% block title %}Histórico · {{ municipio.nome }}{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_sindicato_editar', cod_ibge=municipio.cod_ibge) }}">← Voltar para edição</a>
+<div class="page-head">
+  <h1>Histórico de {{ municipio.nome }}</h1>
+  <p class="sub">Todas as alterações já feitas nesse município (nada aqui é apagado).</p>
+</div>
+
+<div class="tabela-wrap">
+<table>
+  <thead>
+  <tr><th>Quando</th><th>Campo</th><th>Valor anterior</th><th>Valor novo</th><th>Alterado por</th><th>Observação</th></tr>
+  </thead>
+  <tbody>
+  {% for h in historico %}
+  <tr>
+    <td>{{ h.alterado_em.strftime('%d/%m/%Y %H:%M') if h.alterado_em else '-' }}</td>
+    <td>{{ h.campo }}</td>
+    <td>{{ h.valor_antigo or '-' }}</td>
+    <td>{{ h.valor_novo or '-' }}</td>
+    <td>{{ h.alterado_por }}</td>
+    <td>{{ h.observacao or '-' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="vazio">Nenhuma alteração registrada ainda para este município.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

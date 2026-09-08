@@ -1,0 +1,155 @@
+{% extends 'admin_base.html' %}
+{% block title %}Mapa dos Sindicatos{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  .mapas-lado-a-lado { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width: 980px) { .mapas-lado-a-lado { grid-template-columns:1fr; } }
+  .mapa-bloco h2 { font-size:1rem; margin:0 0 10px; }
+  #mapa-sindicatos, #mapa-regioes {
+    height: 560px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+  }
+  .leaflet-popup-content { font-family: 'Inter', system-ui, sans-serif; }
+  .leaflet-popup-content b { font-family: 'Fraunces', Georgia, serif; }
+  .leaflet-popup-content a { white-space: nowrap; }
+  .pin-sindicato { background: transparent !important; border: none !important; }
+  .legenda-regioes { display:flex; flex-wrap:wrap; gap:8px 16px; margin:14px 0 20px; }
+  .legenda-regioes .item { display:flex; align-items:center; gap:7px; font-size:.82rem; color:var(--ink-soft); }
+  .legenda-regioes .bolinha { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="page-head">
+  <h1>Mapa dos Sindicatos</h1>
+  <p class="sub">
+    {{ dados_mapa.sindicatos|length }} sindicato(s) georreferenciado(s) (com endereço/coordenadas cadastrados),
+    coloridos por região FAEC — mesma cor nos dois mapas, pra dar pra comparar.
+  </p>
+</div>
+
+{% if dados_mapa.regioes %}
+<div class="legenda-regioes">
+  {% for r in dados_mapa.regioes %}
+  <span class="item"><span class="bolinha" style="background:{{ r.cor }};"></span>{{ r.nome }}</span>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="mapas-lado-a-lado">
+  <div class="mapa-bloco">
+    <h2>📍 Sindicatos (sede cadastrada)</h2>
+    <div id="mapa-sindicatos"></div>
+  </div>
+  <div class="mapa-bloco">
+    <h2>🗺️ Municípios por região FAEC</h2>
+    <div id="mapa-regioes"></div>
+  </div>
+</div>
+
+{% if not dados_mapa.sindicatos %}
+<p class="vazio" style="margin-top:14px;">
+  Nenhum sindicato com latitude/longitude cadastradas ainda. Preencha o endereço/coordenadas em
+  "Editar sindicato" → "Endereço, localização e foto do presidente" pra ele aparecer no mapa da esquerda.
+</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const sindicatos = {{ dados_mapa.sindicatos|tojson }};
+  const regiaoPorCodIbge = {{ dados_mapa.regiao_por_cod_ibge|tojson }};
+  const corPorRegiao = {{ dados_mapa.cor_por_regiao|tojson }};
+  const CENTRO_CEARA = [-5.2, -39.3];
+  const COR_SEM_REGIAO = '#CFC7B0';
+  // "999999" é só um placeholder pra poder trocar pelo id de cada sindicato lá embaixo
+  const URL_EDITAR_TEMPLATE = "{{ url_for('admin_sindicato_grupo_editar', sindicato_id=999999) }}";
+  const URL_FICHA_TEMPLATE = "{{ url_for('admin_sindicato_ficha_individual', sindicato_id=999999) }}";
+
+  // ---------- Mapa 1: sindicatos (ponto na sede) ----------
+  const mapaSindicatos = L.map('mapa-sindicatos').setView(CENTRO_CEARA, 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(mapaSindicatos);
+
+  if (sindicatos.length > 0) {
+    const grupo = L.featureGroup();
+    sindicatos.forEach(s => {
+      const municipiosTxt = s.municipios.length ? s.municipios.join(', ') : 'nenhum município vinculado';
+      const iconePin = L.divIcon({
+        className: 'pin-sindicato',
+        html: `<svg width="26" height="34" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M13 0C5.8 0 0 5.8 0 13c0 9.2 13 21 13 21s13-11.8 13-21C26 5.8 20.2 0 13 0z"
+                       fill="${s.cor}" stroke="#fff" stroke-width="2"/>
+                 <circle cx="13" cy="13" r="5" fill="#fff"/>
+               </svg>`,
+        iconSize: [26, 34],
+        iconAnchor: [13, 34],
+        popupAnchor: [0, -30],
+      });
+      const marcador = L.marker([s.lat, s.lng], { icon: iconePin }).bindPopup(
+        `<b>${s.nome}</b>${s.ativo ? '' : ' (inativo)'}<br>` +
+        `${s.regiao || 'sem região definida'}<br>` +
+        `Municípios: ${municipiosTxt}<br>` +
+        `<div style="margin-top:8px;display:flex;gap:10px;">` +
+        `<a href="${URL_EDITAR_TEMPLATE.replace('999999', s.id)}">✏️ Ver/editar</a>` +
+        `<a href="${URL_FICHA_TEMPLATE.replace('999999', s.id)}" target="_blank">📄 Ficha em PDF</a>` +
+        `</div>`,
+        { maxWidth: 300 }
+      );
+      marcador.addTo(grupo);
+    });
+    grupo.addTo(mapaSindicatos);
+    mapaSindicatos.fitBounds(grupo.getBounds(), { padding: [30, 30], maxZoom: 12 });
+  }
+
+  // ---------- Mapa 2: municípios coloridos por região ----------
+  const mapaRegioes = L.map('mapa-regioes').setView(CENTRO_CEARA, 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(mapaRegioes);
+
+  fetch("{{ url_for('static', filename='ceara_municipios.geojson') }}")
+    .then(r => r.json())
+    .then(geojson => {
+      const camada = L.geoJSON(geojson, {
+        style: feature => {
+          const regiao = regiaoPorCodIbge[feature.properties.id];
+          return {
+            fillColor: regiao ? corPorRegiao[regiao] : COR_SEM_REGIAO,
+            fillOpacity: 0.65, color: '#fff', weight: 1,
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          const regiao = regiaoPorCodIbge[feature.properties.id];
+          layer.bindPopup(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}`);
+        },
+      }).addTo(mapaRegioes);
+
+      // pins pequenos marcando onde tem sindicato, por cima das regiões
+      sindicatos.forEach(s => {
+        const iconePinPequeno = L.divIcon({
+          className: 'pin-sindicato',
+          html: `<svg width="14" height="18" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg">
+                   <path d="M13 0C5.8 0 0 5.8 0 13c0 9.2 13 21 13 21s13-11.8 13-21C26 5.8 20.2 0 13 0z"
+                         fill="${s.cor}" stroke="#fff" stroke-width="2.5"/>
+                 </svg>`,
+          iconSize: [14, 18],
+          iconAnchor: [7, 18],
+          popupAnchor: [0, -16],
+        });
+        L.marker([s.lat, s.lng], { icon: iconePinPequeno })
+          .bindTooltip(s.nome)
+          .addTo(mapaRegioes);
+      });
+
+      mapaRegioes.fitBounds(camada.getBounds(), { padding: [10, 10] });
+    });
+</script>
+{% endblock %}

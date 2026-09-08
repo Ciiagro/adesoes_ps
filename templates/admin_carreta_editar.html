@@ -1,0 +1,96 @@
+{% extends 'admin_base.html' %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=solicitacao.id) }}">← Voltar para o detalhe</a>
+<div class="page-head">
+  <h1>Editar solicitação</h1>
+  <p class="sub">{{ solicitacao.evento }} — {{ solicitacao.municipio_nome }}</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="secao-card">
+  <h2>Programa e local</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Programa *</span>
+      <select name="tipo_recurso" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        {% for chave, rotulo in tipos_recurso.items() %}
+        <option value="{{ chave }}" {% if chave == solicitacao.tipo_recurso %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Município *</span>
+      <select name="municipio_nome" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        {% for m in municipios %}
+        <option value="{{ m }}" {% if m == solicitacao.municipio_nome %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Sindicato solicitante</span>
+      <input type="text" name="sindicato_nome" value="{{ solicitacao.sindicato_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Nome do evento *</span>
+      <input type="text" name="evento" required value="{{ solicitacao.evento }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data de início *</span>
+      <input type="date" name="data_inicio" required value="{{ solicitacao.data_inicio.strftime('%Y-%m-%d') }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data de fim *</span>
+      <input type="date" name="data_fim" required value="{{ solicitacao.data_fim.strftime('%Y-%m-%d') }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Ofício</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Número do ofício</span>
+      <input type="text" name="numero_oficio" value="{{ solicitacao.numero_oficio or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Data do ofício</span>
+      <input type="date" name="data_oficio" value="{{ solicitacao.data_oficio.strftime('%Y-%m-%d') if solicitacao.data_oficio else '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Anexar ofício(s) adicional(is) em PDF</span>
+      <input type="file" name="oficios" accept="application/pdf" multiple>
+      <span style="display:block;font-size:.8rem;color:var(--ink-faint);margin-top:4px;">
+        Isso ADICIONA arquivos novos — não remove os que já estão anexados. Pra ver/remover os
+        existentes, volte pro detalhe da solicitação.
+      </span>
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Responsável</h2>
+  <div class="info-grid">
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Nome <span style="color:var(--danger);">* obrigatório</span></span>
+      <input type="text" name="responsavel_nome" required value="{{ solicitacao.responsavel_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone <span style="color:var(--danger);">* obrigatório</span></span>
+      <input type="text" name="responsavel_telefone" required value="{{ solicitacao.responsavel_telefone or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail <span style="color:var(--danger);">* obrigatório</span></span>
+      <input type="email" name="responsavel_email" required value="{{ solicitacao.responsavel_email or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Observações</span>
+      <textarea name="observacoes" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-family:inherit;">{{ solicitacao.observacoes or '' }}</textarea>
+    </label>
+  </div>
+
+  <p class="hint" style="margin-top:14px;">
+    A situação (pendente/aprovada/realizada/cancelada) não se muda aqui — isso fica na tela de
+    detalhe, junto com o histórico de aprovação.
+  </p>
+
+  <div style="margin-top:22px;display:flex;gap:10px;">
+    <button type="submit">💾 Salvar alterações</button>
+    <a class="btn secundario" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=solicitacao.id) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

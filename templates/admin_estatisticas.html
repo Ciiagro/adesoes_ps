@@ -1,0 +1,58 @@
+{% extends 'admin_base.html' %}
+{% block title %}Estatísticas{% endblock %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Estatísticas</h1>
+  <p class="sub">Panorama das adesões, matrículas por série e municípios participantes.</p>
+</div>
+
+<div class="secao-card">
+  <h2>Adesões por status</h2>
+  <div class="barra-status">
+    {% if total_adesoes %}
+    <div class="seg" style="width:{{ (contagem_status.get('concluida',0) / total_adesoes * 100)|round(1) }}%;background:#3F6F4C;"></div>
+    <div class="seg" style="width:{{ (contagem_status.get('aguardando_assinaturas',0) / total_adesoes * 100)|round(1) }}%;background:#C98A2B;"></div>
+    <div class="seg" style="width:{{ (contagem_status.get('rascunho',0) / total_adesoes * 100)|round(1) }}%;background:#E1D8C0;"></div>
+    {% endif %}
+  </div>
+  <div class="legenda-status">
+    <span><span class="ponto" style="background:#3F6F4C;"></span>Concluídas ({{ contagem_status.get('concluida',0) }})</span>
+    <span><span class="ponto" style="background:#C98A2B;"></span>Aguardando assinaturas ({{ contagem_status.get('aguardando_assinaturas',0) }})</span>
+    <span><span class="ponto" style="background:#E1D8C0;"></span>Rascunhos ({{ contagem_status.get('rascunho',0) }})</span>
+  </div>
+</div>
+
+<div class="secao-card">
+  <h2>Matrículas por série</h2>
+  <form method="get" class="filtro-form" style="margin-bottom:14px;">
+    <label>Programa
+      <select name="programa" onchange="this.form.submit()">
+        <option value="agrinho" {% if programa_slug == 'agrinho' %}selected{% endif %}>Agrinho</option>
+        <option value="valores" {% if programa_slug == 'valores' %}selected{% endif %}>Projeto Valores</option>
+      </select>
+    </label>
+  </form>
+  {% for s in series %}
+  <div class="barra-h">
+    <div class="rotulo">{{ s.nome }}</div>
+    <div class="trilho"><div class="preenchido" style="width:{{ (totais_series.get(s.id,0) / maior_serie * 100)|round(1) }}%;"></div></div>
+    <div class="num">{{ totais_series.get(s.id, 0) }}</div>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma matrícula registrada para este programa ainda.</p>
+  {% endfor %}
+</div>
+
+<div class="secao-card">
+  <h2>Municípios com mais escolas cadastradas</h2>
+  {% for nome, qtd in top_municipios %}
+  <div class="barra-h">
+    <div class="rotulo">{{ nome }}</div>
+    <div class="trilho"><div class="preenchido" style="width:{{ (qtd / maior_municipio * 100)|round(1) }}%;background:linear-gradient(90deg,#C98A2B,#E0AC5C);"></div></div>
+    <div class="num">{{ qtd }}</div>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma escola cadastrada ainda.</p>
+  {% endfor %}
+</div>
+{% endblock %}

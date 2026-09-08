@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Confira a ficha antes de enviar</h1>
+<p>
+  Os dados foram salvos. Antes de avisar por e-mail o(a) prefeito(a), o(a)
+  secretário(a) e o(a) coordenador(a) para assinatura, confira abaixo como a
+  ficha de adesão ao <strong>{{ nome_programa }} {{ adesao.ano }}</strong> —
+  <strong>{{ adesao.municipio.nome }}</strong> — ficou. Se algo estiver
+  errado, é só voltar e corrigir; nada será enviado até você confirmar.
+</p>
+
+<fieldset>
+  <legend>📄 Prévia da ficha</legend>
+  <iframe
+    src="{{ url_for('adesao_pdf', adesao_id=adesao.id) }}"
+    style="width:100%;height:70vh;border:1px solid var(--line);border-radius:7px;background:#fff;"
+    title="Prévia da ficha de adesão">
+  </iframe>
+  <p class="hint">
+    Se a prévia não aparecer aqui (alguns celulares não exibem PDF embutido),
+    <a href="{{ url_for('adesao_pdf', adesao_id=adesao.id) }}" target="_blank">abra a ficha em outra aba</a>.
+  </p>
+</fieldset>
+
+<fieldset>
+  <legend>✉️ Quem vai receber o e-mail de assinatura</legend>
+  <table>
+    <thead>
+      <tr><th>Responsável</th><th>Nome</th><th>E-mail</th></tr>
+    </thead>
+    <tbody>
+      {% for d in destinatarios %}
+      <tr>
+        <td>{{ d.papel_label }}</td>
+        <td>{{ d.nome or '—' }}</td>
+        <td>
+          {% if d.email %}
+            {{ d.email }}
+          {% else %}
+            <span style="color:var(--danger);font-weight:600;">sem e-mail cadastrado</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% set faltando_email = destinatarios|rejectattr('email')|list %}
+  {% if faltando_email %}
+  <p class="hint" style="color:var(--danger);">
+    Pelo menos um responsável está sem e-mail cadastrado e não vai receber o
+    link de assinatura automaticamente. Se for o caso, volte e complete o
+    e-mail antes de confirmar (ou confirme mesmo assim e avise essa pessoa por
+    outro meio depois, pela área administrativa).
+  </p>
+  {% endif %}
+</fieldset>
+
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+  <a href="{{ link_editar }}" style="display:inline-block;padding:11px 22px;border:1px solid var(--line);border-radius:7px;color:var(--ink-soft);text-decoration:none;font-weight:600;">✏️ Voltar e corrigir</a>
+  <form method="post" action="{{ url_for('adesao_confirmar_envio', adesao_id=adesao.id) }}" style="margin:0;">
+    <button type="submit">✅ Está certo — confirmar e enviar para assinatura</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'admin_base.html' %}
+{% block title %}Processos Eleitorais{% endblock %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Processos Eleitorais</h1>
+  <p class="sub">
+    O processo eleitoral mais recente de cada sindicato. Clique em um sindicato pra ver
+    o histórico completo dele ou cadastrar um novo processo.
+  </p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+    <a class="btn" href="{{ url_for('admin_sindicato_novo') }}">➕ Novo sindicato</a>
+    <a class="btn secundario" href="{{ url_for('admin_todos_processos_eleitorais_exportar') }}">⬇️ Baixar planilha (.xlsx)</a>
+    <a class="btn secundario" href="{{ url_for('admin_cronograma_eleitoral_exportar') }}">📅 Cronograma Consolidado (.xlsx)</a>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Sindicato</th>
+      <th>Data da Eleição</th>
+      <th>Início do Mandato</th>
+      <th>Fim do Mandato</th>
+      <th>Situação do processo mais recente</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for sindicato, processo in com_processo %}
+    <tr>
+      <td>
+        <a href="{{ url_for('admin_processos_eleitorais', sindicato_id=sindicato.id) }}" style="font-weight:600;">{{ sindicato.nome }}</a>
+        {% if not sindicato.ativo %} <span style="color:var(--danger);font-size:.75rem;">(inativo)</span>{% endif %}
+      </td>
+      <td>{{ processo.eleicao_data.strftime('%d/%m/%Y') if processo.eleicao_data else '—' }}</td>
+      <td>{{ processo.posse_data.strftime('%d/%m/%Y') if processo.posse_data else '—' }}</td>
+      <td>{{ processo.mandato_fim.strftime('%d/%m/%Y') if processo.mandato_fim else '—' }}</td>
+      <td><span class="badge" style="background:var(--ochre-soft);color:#8C5F1D;border-color:#EEDCB4;">{{ situacao_label.get(processo.situacao, processo.situacao) }}</span></td>
+      <td>
+        <a class="btn secundario" href="{{ url_for('admin_processo_eleitoral_novo', sindicato_id=sindicato.id) }}" style="padding:5px 12px;font-size:.8rem;">➕ Novo</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if not com_processo %}
+<p class="vazio">Nenhum sindicato com processo eleitoral cadastrado ainda.</p>
+{% endif %}
+
+{% if sem_processo %}
+<details open style="margin-top:20px;">
+  <summary style="cursor:pointer;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--danger);padding:6px 0;">
+    Sem processo cadastrado — mandato vencendo em 2025/2026 ({{ sem_processo|length }})
+  </summary>
+  <p class="sub" style="margin:4px 0 10px;">
+    Prioridade: sindicatos sem nenhum processo eleitoral cadastrado e cujo mandato atual
+    vence (ou já venceu) em 2025 ou 2026, do mais urgente pro menos urgente.
+    {% if total_sem_processo > sem_processo|length %}
+    Há mais {{ total_sem_processo - sem_processo|length }} sindicato(s) sem processo cadastrado,
+    mas com mandato vencendo depois de 2026 (não listados aqui por não serem prioridade agora).
+    {% endif %}
+  </p>
+  <table style="margin-top:10px;">
+    <thead>
+      <tr><th>Sindicato</th><th>Início do Mandato</th><th>Fim do Mandato</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for sindicato in sem_processo %}
+      <tr>
+        <td>
+          <a href="{{ url_for('admin_processos_eleitorais', sindicato_id=sindicato.id) }}">{{ sindicato.nome }}</a>
+          {% if not sindicato.ativo %} <span style="color:var(--danger);font-size:.75rem;">(inativo)</span>{% endif %}
+        </td>
+        <td>{{ sindicato.gestao_inicio.strftime('%d/%m/%Y') if sindicato.gestao_inicio else '—' }}</td>
+        <td>{{ sindicato.gestao_fim.strftime('%d/%m/%Y') if sindicato.gestao_fim else '—' }}</td>
+        <td>
+          <a class="btn secundario" href="{{ url_for('admin_processo_eleitoral_novo', sindicato_id=sindicato.id) }}" style="padding:5px 12px;font-size:.8rem;">➕ Novo</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</details>
+{% elif total_sem_processo %}
+<p class="vazio" style="margin-top:20px;">
+  {{ total_sem_processo }} sindicato(s) sem processo cadastrado, mas nenhum com mandato
+  vencendo em 2025/2026 — nada urgente por enquanto.
+</p>
+{% endif %}
+{% endblock %}

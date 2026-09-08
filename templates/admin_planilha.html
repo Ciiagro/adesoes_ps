@@ -1,0 +1,163 @@
+{% extends 'admin_base.html' %}
+{% block title %}Planilha de Adesões{% endblock %}
+
+{% block extra_head %}
+<style>
+  .tabs-programa{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab-programa{
+    padding:9px 16px;border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+    border:1px solid var(--line);border-bottom:none;background:var(--line-soft);
+    color:var(--ink-soft);font-weight:600;font-size:.88rem;cursor:pointer;
+  }
+  .tab-programa.ativa{background:#fff;color:var(--ink);box-shadow:0 -2px 8px -6px rgba(0,0,0,.15);}
+  .aba-planilha{display:none;}
+  .aba-planilha.ativa{display:block;}
+  .planilha-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
+  table.planilha{border-collapse:collapse;width:100%;table-layout:fixed;font-size:.82rem;}
+  table.planilha th{
+    color:#fff;padding:10px 8px;text-align:center;white-space:normal;word-wrap:break-word;
+    vertical-align:bottom;line-height:1.25;text-transform:none;letter-spacing:normal;font-size:.78rem;
+  }
+  table.planilha td{padding:8px;border-bottom:1px solid var(--line-soft);white-space:normal;word-wrap:break-word;text-align:center;}
+  table.planilha tbody tr:hover{background:var(--line-soft);}
+  table.planilha tbody tr:last-child td{border-bottom:none;}
+  .btn-escolas{
+    border:none;background:none;padding:2px 6px;border-radius:6px;cursor:pointer;
+    font:inherit;font-weight:600;color:inherit;
+  }
+  .btn-escolas:hover{background:var(--line-soft);}
+  tr.linha-escolas td{background:#fafafa;text-align:left;padding:14px 16px;}
+  .lista-escolas{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;}
+  .lista-escolas li{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:8px 10px;font-size:.85rem;border-bottom:1px solid var(--line-soft);
+  }
+  .lista-escolas li:last-child{border-bottom:none;}
+  .lista-escolas .nome-escola{font-weight:600;}
+  .lista-escolas .stats-escola{display:flex;gap:16px;color:var(--ink-soft);white-space:nowrap;font-size:.8rem;}
+  .lista-escolas .stats-escola b{color:var(--ink);}
+  .vazio-escolas{color:var(--ink-soft);font-size:.85rem;}
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="page-head">
+  <h1>Planilha de Adesões</h1>
+  <p class="sub">Mesmos dados da exportação em Excel, visualizados direto na tela.</p>
+</div>
+
+<form method="get" class="filtro-form">
+  <label>Programa
+    <select name="programa">
+      <option value="" {% if not filtro_programa %}selected{% endif %}>Todos</option>
+      <option value="agrinho" {% if filtro_programa == 'agrinho' %}selected{% endif %}>Agrinho</option>
+      <option value="valores" {% if filtro_programa == 'valores' %}selected{% endif %}>Projeto Valores</option>
+    </select>
+  </label>
+  <label>Ano
+    <select name="ano">
+      <option value="">Todos</option>
+      {% for a in anos %}
+      <option value="{{ a }}" {% if filtro_ano == a %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Status
+    <select name="status">
+      <option value="" {% if not filtro_status %}selected{% endif %}>Todos</option>
+      <option value="rascunho" {% if filtro_status == 'rascunho' %}selected{% endif %}>Rascunho</option>
+      <option value="aguardando_assinaturas" {% if filtro_status == 'aguardando_assinaturas' %}selected{% endif %}>Aguardando assinaturas</option>
+      <option value="concluida" {% if filtro_status == 'concluida' %}selected{% endif %}>Concluída</option>
+    </select>
+  </label>
+  <button type="submit">Filtrar</button>
+  <a class="btn secundario" href="{{ url_for('admin_adesoes_exportar', programa=filtro_programa, ano=filtro_ano or '', status=filtro_status) }}">📊 Exportar .xlsx</a>
+</form>
+
+{% if abas|length > 1 %}
+<div class="tabs-programa">
+  {% for aba in abas %}
+  <button type="button" class="tab-programa {{ 'ativa' if loop.first else '' }}" onclick="mostrarAba('{{ aba.slug }}')" id="tab-{{ aba.slug }}">{{ aba.nome }}</button>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% for aba in abas %}
+<div class="aba-planilha {{ 'ativa' if loop.first else '' }}" id="aba-{{ aba.slug }}">
+  <div class="planilha-wrap">
+    <table class="planilha">
+      <thead>
+        <tr>
+          {% for coluna in aba.colunas %}
+          {% if loop.index0 >= 2 %}
+          {% set texto = coluna|capitalize %}
+          {% if loop.index0 > 4 and loop.index0 < aba.indice_total_alunos %}
+          {% set partes = texto.split(' ', 1) %}
+          <th style="background:{{ aba.cor }};">{{ partes[0] }}{% if partes|length > 1 %}<br>{{ partes[1] }}{% endif %}</th>
+          {% else %}
+          <th style="background:{{ aba.cor }};">{{ texto }}</th>
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for linha in aba.linhas %}
+        {% set idx_linha = loop.index0 %}
+        <tr>
+          {% for valor in linha %}
+          {% if loop.index0 >= 2 %}
+          {% if loop.index0 == aba.indice_total_escolas %}
+          <td><button type="button" class="btn-escolas" onclick="toggleEscolas('{{ aba.slug }}-{{ idx_linha }}')">{{ valor }} 🏫</button></td>
+          {% else %}
+          <td {% if loop.index0 == aba.indice_total_alunos %}style="font-weight:600;"{% endif %}>{{ valor }}</td>
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+        </tr>
+        <tr class="linha-escolas" id="escolas-{{ aba.slug }}-{{ idx_linha }}" style="display:none;">
+          <td colspan="{{ aba.colunas|length - 2 }}">
+            {% set nomes = aba.escolas_por_linha[idx_linha] %}
+            {% if nomes %}
+            <ul class="lista-escolas">
+              {% for escola in nomes %}
+              <li>
+                <span class="nome-escola">{{ escola.nome }}</span>
+                <span class="stats-escola">
+                  <span>👩‍🏫 <b>{{ escola.total_professores }}</b> professor{{ 'es' if escola.total_professores != 1 else '' }}</span>
+                  <span>🎓 <b>{{ escola.total_alunos }}</b> aluno{{ 's' if escola.total_alunos != 1 else '' }}</span>
+                </span>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <span class="vazio-escolas">Nenhuma escola cadastrada nessa adesão.</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="{{ aba.colunas|length - 2 }}" class="vazio">Nenhuma adesão encontrada com esse filtro.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function mostrarAba(slug) {
+    document.querySelectorAll('.aba-planilha').forEach(el => el.classList.remove('ativa'));
+    document.querySelectorAll('.tab-programa').forEach(el => el.classList.remove('ativa'));
+    document.getElementById('aba-' + slug).classList.add('ativa');
+    document.getElementById('tab-' + slug).classList.add('ativa');
+  }
+
+  function toggleEscolas(idLinha) {
+    const linha = document.getElementById('escolas-' + idLinha);
+    if (!linha) return;
+    linha.style.display = linha.style.display === 'none' ? 'table-row' : 'none';
+  }
+</script>
+{% endblock %}

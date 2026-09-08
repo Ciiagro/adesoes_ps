@@ -1,0 +1,20 @@
+# Nunca suba o .env com senhas reais — só o .env.example deve ir pro Git
+.env
+
+# Ambiente virtual Python
+venv/
+.venv/
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Configuração local do Vercel
+.vercel/
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+
+bloco.txt

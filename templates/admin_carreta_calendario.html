@@ -1,0 +1,63 @@
+{% extends 'admin_base.html' %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Calendário — {{ tipos_recurso.get(tipo, tipo) }}</h1>
+  <p class="sub">Dias já com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em cinza-escuro (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>.</p>
+</div>
+
+<div class="secao-card" style="margin-bottom:16px;">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% for chave, rotulo in tipos_recurso.items() %}
+    <a class="btn aba-programa {{ 'agro' if chave == 'carreta_agro' else 'saude' }} {{ 'secundario' if tipo != chave else '' }}" href="{{ url_for('admin_carreta_calendario', tipo=chave, ano=ano, mes=mes) }}">{{ rotulo }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="secao-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', tipo=tipo, ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
+    <h2 style="margin:0;">{{ MESES_NOMES[mes] }} de {{ ano }}</h2>
+    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', tipo=tipo, ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
+  </div>
+
+  <table style="text-align:center;">
+    <thead>
+      <tr><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th></tr>
+    </thead>
+    <tbody>
+      {% for semana in semanas %}
+      <tr>
+        {% for dia in semana %}
+        {% if dia %}
+        {% set ocupado = calendario.get(dia) %}
+        {% set bloqueio_dia = bloqueados.get(dia) %}
+        <td style="vertical-align:top;height:110px;max-width:150px;{% if bloqueio_dia %}background:#3a3a3a1a;{% elif ocupado %}background:#F9E7E0;{% endif %}">
+          <div style="font-weight:700;">{{ dia.day }}</div>
+          {% for b in bloqueio_dia or [] %}
+          <div title="{{ b.motivo }}" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#444;color:#fff;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            🚫 {{ b.motivo }}
+          </div>
+          {% endfor %}
+          {% for s in ocupado or [] %}
+          {% set eh_agro = s.tipo_recurso == 'carreta_agro' %}
+          <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}"
+             title="{{ s.evento }} — {{ s.municipio_nome }} — Solicitante: {{ s.responsavel_nome or 'não informado' }}"
+             style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;text-decoration:none;
+                    background:{{ 'var(--agro-bg)' if eh_agro else 'var(--saude-bg)' }};
+                    border-left:3px solid {{ 'var(--agro)' if eh_agro else 'var(--saude)' }};">
+            <span style="display:block;font-size:.7rem;font-weight:700;color:{{ 'var(--agro)' if eh_agro else 'var(--saude)' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.evento }}</span>
+            <span style="display:block;font-size:.65rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.municipio_nome }} · {{ tipos_recurso.get(s.tipo_recurso, s.tipo_recurso) }}</span>
+            <span style="display:block;font-size:.65rem;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.responsavel_nome or 'sem responsável' }}</span>
+          </a>
+          {% endfor %}
+        </td>
+        {% else %}
+        <td></td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

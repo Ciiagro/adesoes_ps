@@ -1,0 +1,123 @@
+{% extends 'admin_base.html' %}
+{% block title %}Editar · {{ municipio.nome }}{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
+<div class="page-head">
+  <h1>{{ municipio.nome }}</h1>
+  <p class="sub">
+    Região FAEC: {{ municipio.regiao_faec or '-' }} · Região Sebrae: {{ municipio.regiao_sebrae or '-' }}
+    · Região Planejamento: {{ municipio.regiao_planejamento or '-' }}
+  </p>
+</div>
+
+<form method="post" class="secao-card">
+  <h2>Sindicato responsável</h2>
+  {% if municipio.sindicato %}
+  <p style="margin:-4px 0 12px;font-size:.85rem;color:var(--ink-faint);">
+    Só quer trocar o presidente ou contato deste sindicato? Isso vale pra todos os
+    municípios dele de uma vez em
+    <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=municipio.sindicato.id) }}">Editar sindicato "{{ municipio.sindicato.nome }}"</a>
+    — aqui embaixo é só pra mudar QUAL sindicato é responsável por este município específico.
+  </p>
+  {% endif %}
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Sindicato atual</span>
+      <select name="sindicato_id" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        <option value="">— nenhum —</option>
+        {% for s in sindicatos %}
+        <option value="{{ s.id }}" {% if municipio.sindicato and municipio.sindicato.id == s.id %}selected{% endif %}>{{ s.nome }}{% if not s.ativo %} (inativo){% endif %}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Ou digite o nome de um sindicato novo (tem prioridade sobre o campo acima)</span>
+      <input type="text" name="sindicato_novo" placeholder="Ex.: Sindicato Rural de..." style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Contato do Sindicato</h2>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Presidente do Sindicato</span>
+      <input type="text" name="presidente_nome" value="{{ municipio.presidente_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Secretário(a) do Sindicato</span>
+      <input type="text" name="secretario_nome" value="{{ municipio.secretario_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone 1</span>
+      <input type="text" name="telefone1" value="{{ municipio.telefone1 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone 2</span>
+      <input type="text" name="telefone2" value="{{ municipio.telefone2 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 1</span>
+      <input type="email" name="email1" value="{{ municipio.email1 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 2</span>
+      <input type="email" name="email2" value="{{ municipio.email2 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 3</span>
+      <input type="email" name="email3" value="{{ municipio.email3 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail 4</span>
+      <input type="email" name="email4" value="{{ municipio.email4 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Contato do Vice-Presidente Regional</h2>
+  <p style="margin:-4px 0 12px;font-size:.85rem;color:var(--ink-faint);">
+    Pessoa responsável pela região (às vezes é também presidente de algum
+    sindicato específico) — o contato abaixo é dela(e) no papel de
+    vice-presidente/diretor(a) regional, separado do contato do sindicato acima.
+  </p>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Vice-Presidente Regional</span>
+      <input type="text" name="vice_presidente_texto" value="{{ municipio.vice_presidente_texto or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Telefone</span>
+      <input type="text" name="telefone_vice_presidente" value="{{ municipio.telefone_vice_presidente or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">E-mail</span>
+      <input type="email" name="email_vice_presidente" value="{{ municipio.email_vice_presidente or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+  </div>
+
+  <div style="margin-top:22px;">
+    <button type="submit">💾 Salvar alterações</button>
+  </div>
+</form>
+
+<div class="secao-card">
+  <h2>Últimas alterações</h2>
+  {% if historico %}
+  <table>
+    <thead><tr><th>Quando</th><th>Campo</th><th>De</th><th>Para</th><th>Por</th></tr></thead>
+    <tbody>
+    {% for h in historico %}
+    <tr>
+      <td>{{ h.alterado_em.strftime('%d/%m/%Y %H:%M') if h.alterado_em else '-' }}</td>
+      <td>{{ h.campo }}</td>
+      <td>{{ h.valor_antigo or '-' }}</td>
+      <td>{{ h.valor_novo or '-' }}</td>
+      <td>{{ h.alterado_por }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p style="margin-top:10px;"><a href="{{ url_for('admin_sindicato_historico', cod_ibge=municipio.cod_ibge) }}">Ver histórico completo →</a></p>
+  {% else %}
+  <p class="vazio">Nenhuma alteração registrada ainda para este município.</p>
+  {% endif %}
+</div>
+{% endblock %}

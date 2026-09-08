@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Solicitar a Carreta do Agro</h1>
+<p>
+  Preencha os dados abaixo pra pedir a Carreta do Agro pra um evento no seu município.
+  Confira antes no calendário se a data já não está comprometida.
+</p>
+
+<fieldset>
+  <legend>📅 Disponibilidade</legend>
+</fieldset>
+
+<div style="background:var(--card, #fff);border:1px solid var(--line, #ddd);border-radius:12px;padding:16px;margin:14px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <a href="{{ url_for('carreta_form') }}?ano={{ ano_anterior }}&mes={{ mes_anterior }}" style="text-decoration:none;font-weight:700;">←</a>
+    <strong>{{ MESES_NOMES[mes] }} de {{ ano }}</strong>
+    <a href="{{ url_for('carreta_form') }}?ano={{ ano_proximo }}&mes={{ mes_proximo }}" style="text-decoration:none;font-weight:700;">→</a>
+  </div>
+  <table style="width:100%;border-collapse:collapse;text-align:center;font-size:.85rem;">
+    <thead>
+      <tr style="color:var(--ink-faint,#888);">
+        <th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for semana in semanas %}
+      <tr>
+        {% for dia in semana %}
+        {% if dia %}
+        {% set ocupado = calendario.get(dia) %}
+        {% set bloqueio_dia = bloqueados.get(dia) %}
+        {% if bloqueio_dia %}
+        <td style="padding:8px 4px;border-radius:6px;background:#444;color:#fff;font-weight:700;"
+            title="Indisponível: {{ bloqueio_dia|map(attribute='motivo')|join(', ') }}">
+          {{ dia.day }}
+        </td>
+        {% else %}
+        <td style="padding:8px 4px;border-radius:6px;{% if ocupado %}background:#F9E7E0;color:#A6412B;font-weight:700;{% endif %}"
+            title="{% if ocupado %}{{ ocupado|map(attribute='evento')|join(', ') }}{% endif %}">
+          {{ dia.day }}
+        </td>
+        {% endif %}
+        {% else %}
+        <td></td>
+        {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint" style="margin-top:10px;">🟥 Dias já com pedido pendente ou aprovado. ⬛ Dias indisponíveis (feriado, manutenção, etc). Passe o mouse pra ver o motivo.</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="form-carreta">
+  <fieldset>
+    <legend>📍 Local e evento</legend>
+
+    <label>Município <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <select name="municipio_nome" required>
+        <option value="">Selecione...</option>
+        {% for m in municipios %}
+        <option value="{{ m }}" {% if request.form.get('municipio_nome') == m %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>Sindicato solicitante (se houver)
+      <input type="text" name="sindicato_nome" value="{{ request.form.get('sindicato_nome', '') }}" placeholder="Ex.: Sindicato Rural de...">
+    </label>
+
+    <label>Nome do evento <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="text" name="evento" required value="{{ request.form.get('evento', '') }}" placeholder="Ex.: Expoagro 2026">
+    </label>
+
+    <label>Data de início <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="date" name="data_inicio" required value="{{ request.form.get('data_inicio', '') }}">
+    </label>
+
+    <label>Data de fim <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="date" name="data_fim" required value="{{ request.form.get('data_fim', '') }}">
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>📄 Ofício</legend>
+    <label>Número do ofício
+      <input type="text" name="numero_oficio" value="{{ request.form.get('numero_oficio', '') }}" placeholder="Ex.: 021/2026">
+    </label>
+    <label>Data do ofício
+      <input type="date" name="data_oficio" value="{{ request.form.get('data_oficio', '') }}">
+    </label>
+    <label>Anexar ofício(s) em PDF <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="file" name="oficios" accept="application/pdf" multiple required>
+    </label>
+    <p class="hint">Pode anexar mais de um arquivo (por exemplo, o ofício do sindicato e o da secretaria de agricultura). Tamanho máximo: 10 MB por arquivo.
+    {% if request.method == 'POST' %}⚠️ Por segurança do navegador, o(s) arquivo(s) NÃO ficam salvos ao voltar aqui — se deu erro, escolha o PDF de novo.{% endif %}</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>👤 Responsável</legend>
+    <label>Nome do responsável <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="text" name="responsavel_nome" required value="{{ request.form.get('responsavel_nome', '') }}">
+    </label>
+    <label>Telefone <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="text" name="responsavel_telefone" required value="{{ request.form.get('responsavel_telefone', '') }}">
+    </label>
+    <label>E-mail do responsável <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="email" name="responsavel_email" required value="{{ request.form.get('responsavel_email', '') }}">
+    </label>
+    <p class="hint">É pra esse e-mail que mandamos a confirmação do pedido e o aviso de aprovação/recusa.</p>
+    <label>Observações (opcional)
+      <textarea name="observacoes" rows="3">{{ request.form.get('observacoes', '') }}</textarea>
+    </label>
+  </fieldset>
+
+  <button type="submit" class="prox">Enviar solicitação</button>
+</form>
+{% endblock %}

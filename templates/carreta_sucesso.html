@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Solicitação enviada!</h1>
+<p>
+  Pedido da Carreta do Agro pra <strong>{{ solicitacao.evento }}</strong>, em
+  <strong>{{ solicitacao.municipio_nome }}</strong>, de
+  <strong>{{ solicitacao.data_inicio.strftime('%d/%m/%Y') }}</strong> a
+  <strong>{{ solicitacao.data_fim.strftime('%d/%m/%Y') }}</strong>, registrado com sucesso.
+</p>
+<p class="hint">
+  A equipe responsável vai analisar o pedido e os ofícios anexados. Situação atual:
+  <strong>Pendente</strong>.
+</p>
+
+{% if tem_conflito %}
+<fieldset style="border-color:#EEDCB4;background:#FBEED6;">
+  <legend>⚠️ Atenção</legend>
+  <p style="margin:0;">
+    Já existe outro pedido (pendente ou aprovado) que ocupa alguma data dentro do período que
+    você solicitou. Isso não impede o seu pedido, mas a equipe vai avaliar o conflito antes de
+    aprovar.
+  </p>
+</fieldset>
+{% endif %}
+
+{% if avisos_deslocamento %}
+<fieldset style="border-color:#EEDCB4;background:#FBEED6;">
+  <legend>🚚 Atenção</legend>
+  <p style="margin:0;">
+    Há outro compromisso perto dessa data numa cidade bem distante, e o motorista pode não ter
+    tempo suficiente pra viajar entre um e outro. Isso não impede o seu pedido, mas a equipe vai
+    avaliar antes de aprovar.
+  </p>
+</fieldset>
+{% endif %}
+
+<p><a href="{{ url_for('carreta_form') }}">Fazer outra solicitação</a></p>
+{% endblock %}

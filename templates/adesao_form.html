@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Adesão - {{ 'Programa Agrinho' if programa.nome == 'AGRINHO' else 'Projeto Valores' }}</h1>
+<form method="post" id="form-adesao">
+
+  <div class="ano-selector">
+    <label for="ano">Ano de referência desta adesão</label>
+    <span class="ano-travado">{{ ano_travado }}</span>
+    <input type="hidden" name="ano" id="ano" value="{{ ano_travado }}">
+  </div>
+
+  <div class="form-tabs">
+    <div class="form-tabs-nav" role="tablist">
+      <button type="button" class="form-tab-btn ativa" data-tab="1" onclick="mostrarAba(1)">
+        <span class="form-tab-numero">1</span> Identificação do Município
+      </button>
+      <button type="button" class="form-tab-btn" data-tab="2" onclick="mostrarAba(2)">
+        <span class="form-tab-numero">2</span> Secretaria de Educação
+      </button>
+      <button type="button" class="form-tab-btn" data-tab="3" onclick="mostrarAba(3)">
+        <span class="form-tab-numero">3</span> Coordenador(a) do Projeto
+      </button>
+    </div>
+
+    <div class="tab-panel-card" data-panel="1">
+      <label>Município
+        <select name="municipio_nome" id="municipio_nome" required>
+          <option value="" disabled selected>Selecione o município...</option>
+          {% for m in municipios %}
+          <option value="{{ m }}" {% if municipio_selecionado and m.lower() == municipio_selecionado.lower() %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Prefeito(a)<input name="prefeito_nome"></label>
+      <div class="field-row">
+        <label>RG do Prefeito<input name="prefeito_rg"></label>
+        <label>CPF do Prefeito<input name="prefeito_cpf" data-mask="cpf" placeholder="000.000.000-00"></label>
+      </div>
+      <label>Endereço da Prefeitura<input name="prefeitura_endereco"></label>
+      <label>CEP<input name="prefeitura_cep" id="prefeitura_cep" data-mask="cep" placeholder="00000-000"></label>
+      <div class="field-row">
+        <label>Telefone<input name="prefeitura_telefone" data-mask="telefone" placeholder="(00) 00000-0000"></label>
+        <label>E-mail<input type="email" name="prefeitura_email"></label>
+      </div>
+      <div class="tab-nav-actions">
+        <button type="button" class="secundario prox" onclick="mostrarAba(2)">Próximo: Secretaria de Educação →</button>
+      </div>
+    </div>
+
+    <div class="tab-panel-card" data-panel="2" hidden>
+      <label>Secretário(a)<input name="secretario_nome"></label>
+      <label>Endereço<input name="secretaria_endereco"></label>
+      <div class="field-row">
+        <label>CPF<input name="secretaria_cep" data-mask="cpf" placeholder="000.000.000-00"></label>
+        <label>Contato<input name="secretaria_telefone" data-mask="telefone" placeholder="(00) 00000-0000"></label>
+      </div>
+      <label>E-mail<input type="email" name="secretaria_email"></label>
+      <div class="tab-nav-actions">
+        <button type="button" class="secundario" onclick="mostrarAba(1)">← Voltar</button>
+        <button type="button" class="secundario prox" onclick="mostrarAba(3)">Próximo: Coordenador(a) →</button>
+      </div>
+    </div>
+
+    <div class="tab-panel-card" data-panel="3" hidden>
+      <label>Nome<input name="coordenador_nome" required></label>
+      <div class="field-row">
+        <label>RG<input name="coordenador_rg"></label>
+        <label>CPF<input name="coordenador_cpf" data-mask="cpf" placeholder="000.000.000-00"></label>
+      </div>
+      <div class="field-row">
+        <label>Telefone 1<input name="coordenador_telefone1" data-mask="telefone" placeholder="(00) 00000-0000"></label>
+        <label>Telefone 2<input name="coordenador_telefone2" data-mask="telefone" placeholder="(00) 00000-0000"></label>
+      </div>
+      <label>E-mail<input type="email" name="coordenador_email"></label>
+      <div class="tab-nav-actions">
+        <button type="button" class="secundario" onclick="mostrarAba(2)">← Voltar</button>
+      </div>
+    </div>
+  </div>
+
+  <fieldset>
+    <legend>4. Censo da Rede Municipal</legend>
+    <label>Total de Escolas<input type="number" name="total_escolas" id="total_escolas" min="0"></label>
+    <label>Total de Professores<input type="number" name="total_professores" min="0"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>5. Escolas e Matrículas</legend>
+    <p class="hint" id="escolas-hint"></p>
+
+    <div class="escolas-toolbar">
+      <div class="escolas-tabs" id="escolas-tabs"></div>
+      <div class="escolas-toolbar-actions">
+        <button type="button" class="ver-todas-btn" id="btn-ver-todas" onclick="alternarResumo()">Ver todas as escolas</button>
+        <button type="button" class="add-escola-btn" id="btn-adicionar-escola" onclick="adicionarEscola()">+ Adicionar Escola</button>
+      </div>
+    </div>
+
+    <div id="escolas-container"></div>
+
+    <div class="escolas-resumo" id="escolas-resumo" hidden>
+      <table>
+        <thead>
+          <tr>
+            <th>Escola</th>
+            <th>Endereço</th>
+            <th>Telefone</th>
+            <th class="num">Professores</th>
+            <th class="num">Matrículas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="escolas-resumo-corpo"></tbody>
+      </table>
+      <p class="hint" id="escolas-resumo-vazio" hidden>Nenhuma escola cadastrada ainda. Clique em "+ Adicionar Escola" para começar.</p>
+    </div>
+  </fieldset>
+
+  <label>Responsável pelo preenchimento<input name="responsavel_preenchimento" required></label>
+
+  <input type="hidden" name="continuar_token" value="{{ continuar_token }}">
+  <div class="tab-nav-actions" style="border-top:none;">
+    <button type="submit" name="acao" value="rascunho" class="secundario">💾 Salvar rascunho e continuar depois</button>
+    <button type="submit" name="acao" value="enviar" class="prox">Enviar Adesão (envia p/ assinatura dos responsáveis)</button>
+  </div>
+</form>
+
+<script>
+function mostrarAba(n) {
+  document.querySelectorAll('.form-tab-btn').forEach(btn => {
+    btn.classList.toggle('ativa', Number(btn.dataset.tab) === n);
+  });
+  document.querySelectorAll('.tab-panel-card').forEach(panel => {
+    panel.hidden = Number(panel.dataset.panel) !== n;
+  });
+}
+
+// se um campo obrigatório de uma aba escondida falhar na validação nativa,
+// o navegador não conseguiria mostrá-lo — então abrimos a aba certa antes.
+document.getElementById('form-adesao').addEventListener('invalid', function (e) {
+  const painel = e.target.closest('.tab-panel-card');
+  if (painel) mostrarAba(Number(painel.dataset.panel));
+}, true);
+
+// --- Máscaras de digitação (CPF, CEP, telefone) ---
+const MASCARAS = {
+  cpf: v => v.replace(/\D/g, '').slice(0, 11)
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2'),
+  cep: v => v.replace(/\D/g, '').slice(0, 8)
+    .replace(/(\d{5})(\d)/, '$1-$2'),
+  telefone: v => {
+    v = v.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 10) return v.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+    if (v.length > 6)  return v.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    if (v.length > 2)  return v.replace(/^(\d{2})(\d{0,4})/, '($1) $2');
+    if (v.length > 0)  return v.replace(/^(\d*)/, '($1');
+    return v;
+  }
+};
+
+function aplicarMascaras(raiz) {
+  (raiz || document).querySelectorAll('[data-mask]').forEach(input => {
+    if (input.dataset.maskAtiva) return; // evita duplicar o listener
+    input.dataset.maskAtiva = '1';
+    input.setAttribute('inputmode', 'numeric');
+    input.setAttribute('autocomplete', 'off');
+    const tipo = input.dataset.mask;
+    const maxLen = { cpf: 14, cep: 9, telefone: 15 }[tipo];
+    if (maxLen) input.setAttribute('maxlength', maxLen);
+    input.addEventListener('input', () => {
+      input.value = MASCARAS[tipo](input.value);
+    });
+  });
+}
+
+aplicarMascaras();
+
+// --- Autopreenchimento do CEP a partir do Município selecionado ---
+const cepsPorMunicipio = {{ ceps_por_municipio | tojson }};
+document.getElementById('municipio_nome').addEventListener('change', function () {
+  const cep = cepsPorMunicipio[this.value];
+  const campoCep = document.getElementById('prefeitura_cep');
+  if (cep) {
+    campoCep.value = cep;
+  }
+});
+
+const series = {{ series | tojson }}; // [{id, nome}, ...]
+let blocos = []; // cada item é a <div class="escola-bloco"> de uma escola, na ordem das abas
+let ativa = -1;
+let resumoVisivel = false;
+
+function nomeDaEscola(bloco) {
+  const v = bloco.querySelector('input[data-campo="nome"]').value.trim();
+  return v || 'Sem nome';
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('escolas-tabs');
+  tabs.innerHTML = '';
+  blocos.forEach((bloco, i) => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'escola-tab' + (i === ativa && !resumoVisivel ? ' ativa' : '');
+    tab.innerHTML = `<span class="escola-tab-numero">${i + 1}</span><span class="escola-tab-nome"></span>`;
+    tab.querySelector('.escola-tab-nome').textContent = nomeDaEscola(bloco);
+    tab.onclick = () => mostrarEscola(i);
+    tabs.appendChild(tab);
+  });
+  if (resumoVisivel) atualizarResumo();
+}
+
+function mostrarEscola(i) {
+  resumoVisivel = false;
+  document.getElementById('escolas-resumo').hidden = true;
+  document.getElementById('escolas-container').hidden = false;
+  document.getElementById('btn-ver-todas').classList.remove('ativo');
+  document.getElementById('btn-ver-todas').textContent = 'Ver todas as escolas';
+  ativa = i;
+  blocos.forEach((bloco, j) => bloco.style.display = (j === i ? '' : 'none'));
+  renderTabs();
+}
+
+function alternarResumo() {
+  resumoVisivel = !resumoVisivel;
+  const container = document.getElementById('escolas-container');
+  const resumo = document.getElementById('escolas-resumo');
+  const btn = document.getElementById('btn-ver-todas');
+  container.hidden = resumoVisivel;
+  resumo.hidden = !resumoVisivel;
+  btn.classList.toggle('ativo', resumoVisivel);
+  btn.textContent = resumoVisivel ? 'Voltar ao formulário' : 'Ver todas as escolas';
+  renderTabs();
+}
+
+function totalMatriculas(bloco) {
+  let total = 0;
+  bloco.querySelectorAll('[data-name^="serie_"]').forEach(el => {
+    total += parseInt(el.value, 10) || 0;
+  });
+  return total;
+}
+
+function celula(texto) {
+  const td = document.createElement('td');
+  td.textContent = texto;
+  return td;
+}
+
+function atualizarResumo() {
+  const corpo = document.getElementById('escolas-resumo-corpo');
+  const vazio = document.getElementById('escolas-resumo-vazio');
+  corpo.innerHTML = '';
+
+  if (blocos.length === 0) {
+    vazio.hidden = false;
+    return;
+  }
+  vazio.hidden = true;
+
+  blocos.forEach((bloco, i) => {
+    const tr = document.createElement('tr');
+    tr.appendChild(celula(nomeDaEscola(bloco)));
+    tr.appendChild(celula(bloco.querySelector('[data-name^="escola_endereco"]').value || '—'));
+    tr.appendChild(celula(bloco.querySelector('[data-name^="escola_telefone"]').value || '—'));
+
+    const tdProf = celula(bloco.querySelector('[data-name^="escola_professores"]').value || '0');
+    tdProf.className = 'num';
+    tr.appendChild(tdProf);
+
+    const tdMat = celula(String(totalMatriculas(bloco)));
+    tdMat.className = 'num';
+    tr.appendChild(tdMat);
+
+    const tdAcoes = document.createElement('td');
+    const btnEditar = document.createElement('button');
+    btnEditar.type = 'button';
+    btnEditar.className = 'acao-btn';
+    btnEditar.textContent = 'Editar';
+    btnEditar.onclick = () => mostrarEscola(i);
+    const sep = document.createElement('span');
+    sep.className = 'acao-sep';
+    sep.textContent = '·';
+    const btnRemover = document.createElement('button');
+    btnRemover.type = 'button';
+    btnRemover.className = 'acao-btn remover';
+    btnRemover.textContent = 'Remover';
+    btnRemover.onclick = () => removerEscola(bloco);
+    tdAcoes.append(btnEditar, sep, btnRemover);
+    tr.appendChild(tdAcoes);
+
+    corpo.appendChild(tr);
+  });
+}
+
+function reindexar() {
+  // reatribui os names com índices sequenciais 0..n-1, sem buracos,
+  // pois o backend lê escola_nome_0, escola_nome_1, ... até faltar um
+  blocos.forEach((bloco, i) => {
+    bloco.querySelectorAll('[data-name]').forEach(el => {
+      el.name = el.dataset.name.replace('__IDX__', i);
+    });
+  });
+}
+
+function limiteEscolas() {
+  const v = parseInt(document.getElementById('total_escolas').value, 10);
+  return (Number.isFinite(v) && v > 0) ? v : null;
+}
+
+function atualizarControles() {
+  const limite = limiteEscolas();
+  const btn = document.getElementById('btn-adicionar-escola');
+  const hint = document.getElementById('escolas-hint');
+
+  if (limite !== null) {
+    btn.disabled = blocos.length >= limite;
+    hint.textContent = blocos.length >= limite
+      ? `Limite de ${limite} escola(s) atingido, conforme informado no Total de Escolas.`
+      : `${blocos.length} de ${limite} escola(s) cadastradas.`;
+  } else {
+    btn.disabled = false;
+    hint.textContent = '';
+  }
+}
+
+function sincronizarComTotal() {
+  const limite = limiteEscolas();
+  if (limite === null) { atualizarControles(); return; }
+  // se o total foi reduzido abaixo da quantidade de abas já abertas, remove as últimas
+  while (blocos.length > limite) {
+    blocos[blocos.length - 1].remove();
+    blocos.pop();
+  }
+  reindexar();
+  if (blocos.length === 0) {
+    ativa = -1;
+    renderTabs();
+  } else if (ativa >= blocos.length) {
+    mostrarEscola(blocos.length - 1);
+  }
+  atualizarControles();
+}
+
+function adicionarEscola() {
+  const limite = limiteEscolas();
+  if (limite !== null && blocos.length >= limite) {
+    alert(`Você informou ${limite} escola(s) no Total de Escolas. Aumente esse número para adicionar mais.`);
+    return;
+  }
+
+  const container = document.getElementById('escolas-container');
+  const div = document.createElement('div');
+  div.className = 'escola-bloco';
+
+  let seriesHtml = '<div class="serie-grid">';
+  series.forEach(s => {
+    seriesHtml += `<label>${s.nome}<input type="number" min="0" value="0" data-name="serie_${s.id}___IDX__"></label>`;
+  });
+  seriesHtml += '</div>';
+
+  div.innerHTML = `
+    <div class="escola-bloco-header">
+      <span class="escola-numero"></span>
+      <input class="escola-nome-input" data-campo="nome" data-name="escola_nome___IDX__" oninput="renderTabs()" placeholder="Nome da escola" required>
+      <button type="button" class="escola-remover" onclick="removerEscola(this.closest('.escola-bloco'))" title="Remover escola" aria-label="Remover escola">✕</button>
+    </div>
+    <div class="escola-grid">
+      <label>Endereço<input data-name="escola_endereco___IDX__"></label>
+      <label>Telefone<input data-name="escola_telefone___IDX__" data-mask="telefone" placeholder="(00) 00000-0000"></label>
+      <label>E-mail<input type="email" data-name="escola_email___IDX__"></label>
+      <label>Nº de Professores<input type="number" min="0" data-name="escola_professores___IDX__"></label>
+      <label>Gestor(a) 1<input data-name="escola_gestor1___IDX__"></label>
+      <label>Gestor(a) 2<input data-name="escola_gestor2___IDX__"></label>
+      <label>Latitude<input data-name="escola_latitude___IDX__" placeholder="Ex.: -3.7304444"></label>
+      <label>Longitude<input data-name="escola_longitude___IDX__" placeholder="Ex.: -38.5434567"></label>
+    </div>
+    <p class="escola-subtitulo" style="font-weight:400;font-size:.8rem;">
+      Dica: abra a escola no Google Maps, clique com o botão direito sobre o ponto exato e copie as
+      duas coordenadas que aparecem (a primeira é a latitude, a segunda a longitude).
+    </p>
+    <p class="escola-subtitulo">Matrículas por série</p>
+    ${seriesHtml}
+  `;
+  container.appendChild(div);
+  blocos.push(div);
+  reindexar();
+  atualizarNumeros();
+  aplicarMascaras(div);
+  mostrarEscola(blocos.length - 1);
+  atualizarControles();
+}
+
+function atualizarNumeros() {
+  blocos.forEach((bloco, i) => {
+    bloco.querySelector('.escola-numero').textContent = i + 1;
+  });
+}
+
+function removerEscola(bloco) {
+  const i = blocos.indexOf(bloco);
+  if (i === -1) return;
+  bloco.remove();
+  blocos.splice(i, 1);
+  reindexar();
+  atualizarNumeros();
+  if (blocos.length === 0) {
+    ativa = -1;
+    renderTabs();
+    if (resumoVisivel) atualizarResumo();
+  } else if (resumoVisivel) {
+    atualizarResumo();
+  } else {
+    mostrarEscola(Math.max(0, i - 1));
+  }
+  atualizarControles();
+}
+
+document.getElementById('total_escolas').addEventListener('input', sincronizarComTotal);
+
+// --- Retomando um rascunho: pré-preenche o formulário com os dados salvos ---
+const dadosExistentes = {{ dados | tojson if dados else 'null' }};
+
+function preencherSimples(dados) {
+  const form = document.getElementById('form-adesao');
+  const camposSimples = ['municipio_nome','prefeito_nome','prefeito_rg','prefeito_cpf',
+    'prefeitura_endereco','prefeitura_cep','prefeitura_telefone','prefeitura_email',
+    'secretario_nome','secretaria_endereco','secretaria_cep','secretaria_telefone','secretaria_email',
+    'coordenador_nome','coordenador_rg','coordenador_cpf','coordenador_telefone1','coordenador_telefone2','coordenador_email',
+    'total_escolas','total_professores','responsavel_preenchimento'];
+  camposSimples.forEach(nome => {
+    const valor = dados[nome];
+    if (valor === undefined || valor === null || !form.elements[nome]) return;
+    if (nome === 'municipio_nome') {
+      // o nome salvo pode estar em MAIÚSCULO; a lista do <select> usa a
+      // grafia normal (ex.: "Fortaleza") — compara ignorando maiúsculas/
+      // minúsculas pra achar a opção certa.
+      const select = form.elements[nome];
+      const opcao = Array.from(select.options).find(
+        opt => opt.value.toLowerCase() === String(valor).toLowerCase()
+      );
+      if (opcao) select.value = opcao.value;
+    } else {
+      form.elements[nome].value = valor;
+    }
+  });
+  if (dados.ano && form.elements['ano']) form.elements['ano'].value = dados.ano;
+}
+
+function preencherEscolas(listaEscolas) {
+  listaEscolas.forEach(escolaDados => {
+    adicionarEscola();
+    const bloco = blocos[blocos.length - 1];
+    const mapaCampos = {
+      nome: 'nome', endereco: 'endereco', telefone: 'telefone', email: 'email',
+      professores: 'professores', gestor1: 'gestor1', gestor2: 'gestor2',
+      latitude: 'latitude', longitude: 'longitude'
+    };
+    Object.entries(mapaCampos).forEach(([chave, campo]) => {
+      const el = bloco.querySelector(`[data-name^="escola_${campo}_"]`);
+      const valor = escolaDados[chave];
+      if (el && valor !== undefined && valor !== null) {
+        el.value = valor;
+      }
+    });
+    if (escolaDados.series) {
+      Object.entries(escolaDados.series).forEach(([serieId, qtd]) => {
+        const campo = bloco.querySelector(`[data-name^="serie_${serieId}_"]`);
+        if (campo) campo.value = qtd;
+      });
+    }
+  });
+}
+
+if (dadosExistentes && dadosExistentes.escolas && dadosExistentes.escolas.length) {
+  // remove o bloco em branco criado por padrão antes de preencher os salvos
+  blocos.forEach(b => b.remove());
+  blocos = [];
+  preencherEscolas(dadosExistentes.escolas);
+} else {
+  // já abre com uma escola pronta para preencher (comportamento padrão)
+  adicionarEscola();
+}
+
+if (dadosExistentes) {
+  preencherSimples(dadosExistentes);
+  aplicarMascaras();
+}
+
+reindexar();
+atualizarNumeros();
+atualizarControles();
+if (blocos.length) mostrarEscola(0);
+</script>
+{% endblock %}

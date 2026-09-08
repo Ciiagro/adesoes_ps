@@ -1,0 +1,68 @@
+{% extends 'admin_base.html' %}
+{% import '_admin_macros.html' as m %}
+{% block title %}Adesões{% endblock %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>
+    {% if filtro_status == 'rascunho' %}Rascunhos
+    {% elif filtro_status == 'aguardando_assinaturas' %}Aguardando Assinaturas
+    {% elif filtro_status == 'concluida' %}Concluídas
+    {% else %}Todas as Adesões{% endif %}
+  </h1>
+  <p class="sub">{{ adesoes|length }} adesão(ões) listada(s). Use os filtros para refinar a busca.</p>
+</div>
+
+<form method="get" class="filtro-form">
+  <label>Programa
+    <select name="programa">
+      <option value="" {% if not filtro_programa %}selected{% endif %}>Todos</option>
+      <option value="agrinho" {% if filtro_programa == 'agrinho' %}selected{% endif %}>Agrinho</option>
+      <option value="valores" {% if filtro_programa == 'valores' %}selected{% endif %}>Projeto Valores</option>
+    </select>
+  </label>
+  <label>Ano
+    <select name="ano">
+      <option value="">Todos</option>
+      {% for a in anos %}
+      <option value="{{ a }}" {% if filtro_ano == a %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Status
+    <select name="status">
+      <option value="" {% if not filtro_status %}selected{% endif %}>Todos</option>
+      <option value="rascunho" {% if filtro_status == 'rascunho' %}selected{% endif %}>Rascunho</option>
+      <option value="aguardando_assinaturas" {% if filtro_status == 'aguardando_assinaturas' %}selected{% endif %}>Aguardando assinaturas</option>
+      <option value="concluida" {% if filtro_status == 'concluida' %}selected{% endif %}>Concluída</option>
+    </select>
+  </label>
+  <button type="submit">Filtrar</button>
+  <a class="btn secundario" href="{{ url_for('admin_adesoes_planilha', programa=filtro_programa, ano=filtro_ano or '', status=filtro_status) }}">📋 Visualizar planilha</a>
+  <a class="btn secundario" href="{{ url_for('admin_adesoes_exportar', programa=filtro_programa, ano=filtro_ano or '', status=filtro_status) }}">📊 Exportar .xlsx</a>
+</form>
+
+<div class="tabela-wrap">
+<table>
+<thead>
+<tr>
+  <th>Ano</th><th>Programa</th><th>Município</th><th>Coordenador</th><th>Status</th><th>Enviado em</th><th></th>
+</tr>
+</thead>
+<tbody>
+{% for a in adesoes %}
+<tr>
+  <td>{{ a.ano }}</td>
+  <td>{{ a.programa.nome }}</td>
+  <td>{{ a.municipio.nome }}</td>
+  <td>{{ a.coordenador.nome if a.coordenador else '' }}</td>
+  <td>{{ m.badge_status(a.status) }}</td>
+  <td>{{ a.criado_em.strftime('%d/%m/%Y %H:%M') if a.criado_em else '' }}</td>
+  <td><a href="{{ url_for('admin_adesao_detalhe', adesao_id=a.id) }}">Ver detalhes →</a></td>
+</tr>
+{% else %}
+<tr><td colspan="7" class="vazio">Nenhuma adesão encontrada com esse filtro.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Painel Administrativo{% endblock %} · Sistema de Adesões</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4F1E6;
+    --card: #FFFFFF;
+    --ink: #23201A;
+    --ink-soft: #6E6555;
+    --ink-faint: #948A76;
+    --green: #3F6F4C;
+    --green-dark: #23452E;
+    --green-deep: #1B3524;
+    --green-soft: #E7F0E8;
+    --ochre: #C98A2B;
+    --ochre-soft: #FBEED6;
+    --line: #E4DCC6;
+    --line-soft: #F0EADA;
+    --danger: #A6412B;
+    --danger-bg: #F9E7E0;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --sidebar-w: 258px;
+    --shadow-sm: 0 1px 2px rgba(35,32,26,.05), 0 1px 3px rgba(35,32,26,.04);
+    --shadow-md: 0 4px 12px -4px rgba(35,32,26,.10), 0 10px 30px -18px rgba(35,32,26,.28);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased}
+  body{
+    margin:0;
+    font-family:'Inter', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 520px at 82% -10%, #FBF8EF 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    line-height:1.55;
+  }
+  h1,h2,h3{font-family:'Fraunces', Georgia, serif; font-weight:600; margin:0 0 .35em; color:var(--ink); letter-spacing:-.01em;}
+  h1{font-size:1.75rem}
+  h2{font-size:1.12rem}
+  p{margin:0 0 .6em}
+  a{color:var(--green);text-decoration:none}
+  a:hover{color:var(--green-dark);text-decoration:underline}
+
+  .layout{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:var(--sidebar-w); flex-shrink:0;
+    background:linear-gradient(180deg, var(--green-dark) 0%, var(--green-deep) 100%);
+    color:#EDEADC;
+    padding:22px 14px 18px;
+    display:flex; flex-direction:column; gap:2px;
+    position:sticky; top:0; height:100vh;
+  }
+  .sidebar .brand{
+    display:flex; align-items:center; gap:10px;
+    color:#fff; text-decoration:none; padding:2px 10px 0;
+    margin-bottom:26px;
+  }
+  .sidebar .brand .mark{
+    width:34px;height:34px;border-radius:10px;flex-shrink:0;
+    background:linear-gradient(140deg,#5C9367,#3F6F4C);
+    display:grid;place-items:center;
+    font-family:'Fraunces',serif;font-weight:700;font-size:.95rem;color:#fff;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .sidebar .brand .nome{font-family:'Fraunces',serif;font-weight:600;font-size:1rem;line-height:1.15;}
+  .sidebar .brand .sub{display:block;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#9FBBA4;}
+  .sidebar .brand:hover{text-decoration:none}
+
+  .sidebar nav{display:flex;flex-direction:column;gap:2px;}
+  .sidebar a.nav-item{
+    position:relative;
+    display:flex;align-items:center;gap:11px;
+    color:#D8DFCF;text-decoration:none;
+    padding:9px 12px;border-radius:10px;font-size:.885rem;font-weight:500;
+    transition:background .16s ease,color .16s ease,transform .16s ease;
+  }
+  .sidebar a.nav-item .ic{width:18px;text-align:center;font-size:.95rem;opacity:.85;flex-shrink:0}
+  .sidebar a.nav-item .contador{
+    margin-left:auto;background:var(--danger,#C0392B);color:#fff;font-size:.72rem;font-weight:700;
+    line-height:1;padding:3px 7px;border-radius:99px;
+  }
+  .sidebar a.nav-item.ativo .contador{background:var(--danger,#C0392B);color:#fff;}
+  .sidebar a.nav-item:hover{background:rgba(255,255,255,.09);color:#fff;text-decoration:none}
+  .sidebar a.nav-item.ativo{
+    background:rgba(255,255,255,.96);color:var(--green-deep);font-weight:600;
+    box-shadow:0 6px 16px -10px rgba(0,0,0,.7);
+  }
+  .sidebar a.nav-item.ativo .ic{opacity:1}
+  .sidebar .nav-sep{
+    margin:18px 0 6px;font-size:.66rem;text-transform:uppercase;letter-spacing:.12em;
+    color:#8FAA96;padding:0 12px;font-weight:600;
+  }
+  .sidebar .rodape-sidebar{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.14);}
+  .sidebar .rodape-sidebar a{
+    display:flex;align-items:center;gap:11px;
+    color:#CBD6C4;font-size:.86rem;text-decoration:none;padding:9px 12px;border-radius:10px;
+  }
+  .sidebar .rodape-sidebar a:hover{background:rgba(255,255,255,.09);color:#fff;text-decoration:none}
+
+  /* ---------- Conteúdo ---------- */
+  .conteudo{flex:1;padding:34px 40px 64px;max-width:1240px;width:100%;}
+  .page-head{margin-bottom:26px;}
+  .page-head h1{margin-bottom:.15em}
+  .page-head .sub{color:var(--ink-soft);font-size:.93rem;margin:0;max-width:70ch}
+
+  .flash{
+    background:var(--danger-bg);color:var(--danger);border:1px solid #EDC9BC;
+    padding:11px 16px;border-radius:var(--radius-sm);margin-bottom:20px;font-size:.9rem;
+    box-shadow:var(--shadow-sm);
+  }
+
+  /* ---------- Stat cards ---------- */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:14px;margin-bottom:32px;}
+  .stat-card{
+    position:relative;overflow:hidden;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px 18px;
+    box-shadow:var(--shadow-sm);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .stat-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--green);}
+  .stat-card.ochre::before{background:var(--ochre);}
+  .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .stat-card .valor{font-family:'Fraunces',serif;font-size:1.85rem;font-weight:600;color:var(--green-dark);line-height:1.05;}
+  .stat-card.ochre .valor{color:#9A6817;}
+  .stat-card .rotulo{font-size:.8rem;color:var(--ink-soft);margin-top:5px;font-weight:500;}
+
+  /* ---------- Tabelas ---------- */
+  .tabela-wrap{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);overflow:hidden;margin-top:14px;
+  }
+  .tabela-wrap table{margin-top:0;border:0}
+  table{width:100%;border-collapse:collapse;margin-top:14px;background:var(--card);}
+  th,td{padding:11px 14px;text-align:left;font-size:.875rem;border-bottom:1px solid var(--line-soft);}
+  th{
+    background:var(--line-soft);
+    font-family:'Inter',sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;
+  }
+  tbody tr:last-child td, tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:#FBF9F2}
+  td a{font-weight:600}
+
+  /* ---------- Badges ---------- */
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 11px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.75}
+  .badge.rascunho{background:var(--line-soft);color:var(--ink-soft);border-color:var(--line);}
+  .badge.aguardando{background:var(--ochre-soft);color:#8C5F1D;border-color:#EEDCB4;}
+  .badge.concluida{background:var(--green-soft);color:var(--green-dark);border-color:#CCE0CF;}
+  .badge.realizada{background:#DCE9F5;color:#2E6DA4;border-color:#C2D9EE;}
+
+  /* ---------- Programa (Carreta do Agro / Carreta da Saúde) ---------- */
+  :root{ --agro:#3E8E52; --agro-bg:#E3F2E6; --agro-border:#C7E4CC;
+         --saude:#2E5FA3; --saude-bg:#E2EAF7; --saude-border:#C7D6EC; }
+  .badge-programa{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 11px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;
+    border:1px solid transparent;
+  }
+  .badge-programa::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
+  .badge-programa.agro{background:var(--agro-bg);color:var(--agro);border-color:var(--agro-border);}
+  .badge-programa.saude{background:var(--saude-bg);color:var(--saude);border-color:var(--saude-border);}
+  .aba-programa.agro{border-color:var(--agro-border) !important;box-shadow:inset 0 0 0 1px var(--agro-border);}
+  .aba-programa.saude{border-color:var(--saude-border) !important;box-shadow:inset 0 0 0 1px var(--saude-border);}
+  .aba-programa.agro:not(.secundario){background:var(--agro) !important;border-color:var(--agro) !important;box-shadow:none;}
+  .aba-programa.saude:not(.secundario){background:var(--saude) !important;border-color:var(--saude) !important;box-shadow:none;}
+
+  /* ---------- Filtros ---------- */
+  .filtro-form{
+    display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;box-shadow:var(--shadow-sm);
+  }
+  .filtro-form label{
+    display:flex;flex-direction:column;font-size:.72rem;color:var(--ink-faint);gap:5px;
+    text-transform:uppercase;letter-spacing:.07em;font-weight:600;
+  }
+  .filtro-form select, .filtro-form input{
+    padding:9px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);
+    font-family:inherit;font-size:.9rem;background:#fff;color:var(--ink);
+    text-transform:none;letter-spacing:0;font-weight:500;min-width:170px;
+  }
+  .filtro-form select:focus, .filtro-form input:focus{
+    outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(63,111,76,.14);
+  }
+  button, .btn{
+    background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:var(--radius-sm);
+    cursor:pointer;font-size:.88rem;font-weight:600;font-family:inherit;text-decoration:none;
+    display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 6px 14px -8px rgba(63,111,76,.8);
+    transition:background .16s ease, transform .16s ease;
+  }
+  button:hover, .btn:hover{background:var(--green-dark);text-decoration:none;color:#fff;transform:translateY(-1px);}
+  .btn.secundario{background:#fff;color:var(--green-dark);border:1px solid var(--line);box-shadow:var(--shadow-sm);}
+  .btn.secundario:hover{background:var(--line-soft);color:var(--green-dark);}
+  .link-voltar{display:inline-flex;align-items:center;gap:6px;font-size:.86rem;font-weight:600;color:var(--ink-soft);margin-bottom:10px;}
+  .link-voltar:hover{color:var(--green-dark)}
+
+  /* ---------- Cards de seção ---------- */
+  .secao-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 24px;margin-bottom:20px;box-shadow:var(--shadow-sm);
+  }
+  .secao-card h2{margin-bottom:.6em}
+
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 22px;}
+  .info-item .rot{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);font-weight:600;}
+  .info-item .val{font-size:.95rem;font-weight:500;margin-top:2px;}
+
+  /* ---------- Gráficos ---------- */
+  .barra-h{display:flex;align-items:center;gap:12px;margin:9px 0;}
+  .barra-h .rotulo{width:110px;font-size:.83rem;color:var(--ink-soft);flex-shrink:0;font-weight:500;}
+  .barra-h .trilho{flex:1;background:var(--line-soft);border-radius:999px;height:14px;overflow:hidden;}
+  .barra-h .preenchido{background:linear-gradient(90deg,var(--green),#5C9367);height:100%;border-radius:999px;}
+  .barra-h .num{width:52px;text-align:right;font-size:.85rem;font-weight:600;flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+  .barra-status{display:flex;border-radius:999px;overflow:hidden;height:20px;margin:8px 0 12px;background:var(--line-soft);}
+  .barra-status .seg{height:100%;}
+  .legenda-status{display:flex;gap:20px;flex-wrap:wrap;font-size:.85rem;color:var(--ink-soft);}
+  .legenda-status .ponto{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;}
+
+  .vazio{color:var(--ink-faint);font-size:.9rem;}
+
+  @media (max-width: 900px){
+    .layout{flex-direction:column}
+    .sidebar{width:100%;height:auto;position:static;padding:16px}
+    .sidebar nav{flex-direction:row;flex-wrap:wrap}
+    .sidebar .nav-sep{width:100%;margin:10px 0 2px}
+    .sidebar .rodape-sidebar{margin-top:12px}
+    .conteudo{padding:24px 18px 48px}
+  }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('admin_dashboard') }}">
+      <span class="mark">SA</span>
+      <span class="nome">Sistema de Adesões<span class="sub">Painel administrativo</span></span>
+    </a>
+    <nav>
+      {% if not apenas_sindicatos and not apenas_carreta %}
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'dashboard' else '' }}" href="{{ url_for('admin_dashboard') }}"><span class="ic">📊</span> Dashboard</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'adesoes' else '' }}" href="{{ url_for('admin_adesoes') }}"><span class="ic">📋</span> Todas as Adesões</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'rascunho' else '' }}" href="{{ url_for('admin_adesoes', status='rascunho') }}"><span class="ic">📝</span> Rascunhos</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'aguardando' else '' }}" href="{{ url_for('admin_adesoes', status='aguardando_assinaturas') }}"><span class="ic">⏳</span> Aguardando Assinaturas</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'concluida' else '' }}" href="{{ url_for('admin_adesoes', status='concluida') }}"><span class="ic">✅</span> Concluídas</a>
+      <div class="nav-sep">Cadastros</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'escolas' else '' }}" href="{{ url_for('admin_escolas') }}"><span class="ic">🏫</span> Escolas Cadastradas</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_escolas' else '' }}" href="{{ url_for('admin_mapa_escolas') }}"><span class="ic">🗺️</span> Mapa das Escolas</a>
+      <div class="nav-sep">Relatórios</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'estatisticas' else '' }}" href="{{ url_for('admin_estatisticas') }}"><span class="ic">📈</span> Estatísticas</a>
+      <div class="nav-sep">Sindicatos</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">🤝</span> Sindicatos x Municípios</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_sindicatos' else '' }}" href="{{ url_for('admin_sindicatos_mapa') }}"><span class="ic">🗺️</span> Mapa dos Sindicatos</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'processos_eleitorais' else '' }}" href="{{ url_for('admin_todos_processos_eleitorais') }}"><span class="ic">🗳️</span> Processos Eleitorais</a>
+      <div class="nav-sep">Carreta do Agro</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta' else '' }}" href="{{ url_for('admin_carreta', status='pendente' if carreta_pendentes_count else None) }}"><span class="ic">🚛</span> Solicitações{% if carreta_pendentes_count %}<span class="contador">{{ carreta_pendentes_count }}</span>{% endif %}</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_bloqueios' else '' }}" href="{{ url_for('admin_carreta_bloqueios') }}"><span class="ic">🚫</span> Bloqueio de Datas</a>
+      {% endif %}
+
+      {% if apenas_sindicatos %}
+      <div class="nav-sep">Sindicatos</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">🤝</span> Sindicatos x Municípios</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_sindicatos' else '' }}" href="{{ url_for('admin_sindicatos_mapa') }}"><span class="ic">🗺️</span> Mapa dos Sindicatos</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'processos_eleitorais' else '' }}" href="{{ url_for('admin_todos_processos_eleitorais') }}"><span class="ic">🗳️</span> Processos Eleitorais</a>
+      {% endif %}
+
+      {% if apenas_carreta %}
+      <div class="nav-sep">Carreta do Agro</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta' else '' }}" href="{{ url_for('admin_carreta', status='pendente' if carreta_pendentes_count else None) }}"><span class="ic">🚛</span> Solicitações{% if carreta_pendentes_count %}<span class="contador">{{ carreta_pendentes_count }}</span>{% endif %}</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_bloqueios' else '' }}" href="{{ url_for('admin_carreta_bloqueios') }}"><span class="ic">🚫</span> Bloqueio de Datas</a>
+      {% endif %}
+    </nav>
+    <div class="rodape-sidebar"><a href="{{ url_for('admin_logout') }}"><span class="ic">🚪</span> Sair</a></div>
+  </aside>
+  <main class="conteudo">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+    {% block admin_content %}{% endblock %}
+  </main>
+</div>
+<script>
+(function () {
+  function maskTelefone(v) {
+    v = v.replace(/\D/g, "").slice(0, 11);
+    if (v.length === 0) return "";
+    if (v.length <= 2) return "(" + v;
+    if (v.length <= 6) return "(" + v.slice(0, 2) + ") " + v.slice(2);
+    if (v.length <= 10) return "(" + v.slice(0, 2) + ") " + v.slice(2, 6) + "-" + v.slice(6);
+    return "(" + v.slice(0, 2) + ") " + v.slice(2, 7) + "-" + v.slice(7);
+  }
+  function maskCpf(v) {
+    v = v.replace(/\D/g, "").slice(0, 11);
+    var out = v.slice(0, 3);
+    if (v.length > 3) out += "." + v.slice(3, 6);
+    if (v.length > 6) out += "." + v.slice(6, 9);
+    if (v.length > 9) out += "-" + v.slice(9, 11);
+    return out;
+  }
+  document.addEventListener("input", function (e) {
+    var campo = e.target;
+    if (!campo.matches || !campo.matches("input")) return;
+    var nome = (campo.name || "").toLowerCase();
+    if (nome.indexOf("telefone") !== -1) {
+      campo.value = maskTelefone(campo.value);
+    } else if (nome.indexOf("cpf") !== -1) {
+      campo.value = maskCpf(campo.value);
+    }
+  });
+})();
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,205 @@
+{% extends 'admin_base.html' %}
+{% block title %}Mapa da Carreta{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  #mapa-carreta {
+    height: 560px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+  }
+  .leaflet-popup-content { font-family: 'Inter', system-ui, sans-serif; }
+  .leaflet-popup-content b { font-family: 'Fraunces', Georgia, serif; }
+  .pin-carreta { background: transparent !important; border: none !important; }
+  .legenda-mapa-carreta {
+    background: rgba(255,255,255,.95); padding: 9px 12px; border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: .8rem; color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .legenda-mapa-carreta .item { display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .legenda-mapa-carreta .bolinha {
+    width:11px; height:11px; border-radius:50%; flex-shrink:0; border:2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+  }
+  .cartao-atual {
+    display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:var(--radius);
+    border:1px solid var(--line); background:#fff; margin-bottom:16px;
+  }
+  .cartao-atual .emoji { font-size:1.8rem; }
+  .cartao-atual .disponivel { color:var(--ink-soft); }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="page-head">
+  <h1>Mapa da Carreta</h1>
+  <p class="sub">Onde a carreta está hoje, os próximos compromissos aprovados e por onde já passou — Carreta do Agro e Carreta da Saúde juntas, porque é o mesmo motorista/veículo.</p>
+</div>
+
+{% if ultima_posicao %}
+<div class="cartao-atual">
+  <span class="emoji">{{ '🚛' if ultima_eh_atual else '📍' }}</span>
+  <div>
+    <div>
+      <strong>{{ 'Agora em' if ultima_eh_atual else 'Última posição conhecida:' }} {{ ultima_posicao.municipio_nome }}</strong>
+      — {{ ultima_posicao.tipo_recurso }}
+    </div>
+    <div style="color:var(--ink-faint);font-size:.85rem;">
+      {{ ultima_posicao.evento }} · {{ ultima_posicao.data_inicio }} a {{ ultima_posicao.data_fim }}
+      {% if not ultima_eh_atual %}(sem compromisso rolando hoje){% endif %}
+    </div>
+  </div>
+</div>
+{% elif tem_ultima_sem_coordenada %}
+<div class="cartao-atual">
+  <span class="emoji">🚛</span>
+  <div>Tem um compromisso aprovado, mas não achei o município no mapa (nome pode estar diferente da lista oficial). Confere em <a href="{{ url_for('admin_carreta') }}">Solicitações</a>.</div>
+</div>
+{% else %}
+<div class="cartao-atual">
+  <span class="emoji">🅿️</span>
+  <div class="disponivel">Nenhum compromisso aprovado registrado ainda — a carreta está disponível.</div>
+</div>
+{% endif %}
+
+<div class="secao-card" style="margin-bottom:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <a class="btn secundario" href="{{ url_for('admin_carreta_mapa', ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
+    <h2 style="margin:0;">{{ MESES_NOMES[mes] }} de {{ ano }}</h2>
+    <a class="btn secundario" href="{{ url_for('admin_carreta_mapa', ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
+  </div>
+</div>
+
+{% if not eh_mes_atual and not anteriores and not proximas %}
+<div class="cartao-atual">
+  <span class="emoji">🗓️</span>
+  <div class="disponivel">Nenhum compromisso aprovado nesse mês.</div>
+</div>
+{% endif %}
+
+<div id="mapa-carreta"></div>
+
+{% if anteriores %}
+<p style="margin-top:16px;font-weight:600;">Já aconteceram (mais recentes primeiro)</p>
+<ul>
+  {% for p in anteriores %}
+  <li>
+    <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.tipo_recurso }}, {{ p.data_inicio }} a {{ p.data_fim }})</a>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if proximas %}
+<p style="margin-top:16px;font-weight:600;">Próximos compromissos aprovados</p>
+<ul>
+  {% for p in proximas %}
+  <li>
+    <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.tipo_recurso }}, {{ p.data_inicio }} a {{ p.data_fim }})</a>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const atual = {{ atual|tojson }};
+  const proximas = {{ proximas|tojson }};
+  const anteriores = {{ anteriores|tojson }};
+  const CENTRO_CEARA = [-5.2, -39.3];
+
+  const mapa = L.map('mapa-carreta').setView(CENTRO_CEARA, 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(mapa);
+
+  const legenda = L.control({ position: 'bottomleft' });
+  legenda.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legenda-mapa-carreta');
+    div.innerHTML = `
+      <div class="item"><span class="bolinha" style="background:#3E8E52;"></span> Carreta do Agro</div>
+      <div class="item"><span class="bolinha" style="background:#2E5FA3;"></span> Carreta da Saúde</div>
+      <div style="margin-top:6px;border-top:1px solid rgba(0,0,0,.08);padding-top:6px;">
+        <div class="item"><span class="bolinha" style="background:#999;opacity:.45;"></span> Apagado = já aconteceu</div>
+        <div class="item"><span class="bolinha" style="background:#999;box-shadow:0 0 0 3px rgba(0,0,0,.18);"></span> Com aro = acontecendo agora</div>
+      </div>
+      <div style="margin-top:4px;font-size:.72rem;opacity:.8;">Números = ordem do trajeto</div>
+    `;
+    return div;
+  };
+  legenda.addTo(mapa);
+
+  fetch("{{ url_for('static', filename='ceara_municipios.geojson') }}")
+    .then(r => r.json())
+    .then(geojson => {
+      L.geoJSON(geojson, {
+        style: { fillColor: '#E7E1CD', fillOpacity: 0.35, color: '#fff', weight: 1 },
+      }).addTo(mapa);
+    });
+
+  // Cor = programa, sempre (regra única, sem exceção). O momento no tempo
+  // (já aconteceu / agora / próximo) é indicado por opacidade e tamanho,
+  // nunca por cor — pra não confundir com a cor do programa.
+  const COR_PROGRAMA = { carreta_agro: '#3E8E52', carreta_saude: '#2E5FA3' };
+
+  function iconePin(cor, tamanho, numero, opacidade, comAro) {
+    const aroSvg = comAro
+      ? `<circle cx="13" cy="13" r="12" fill="none" stroke="${cor}" stroke-width="1.5" opacity="0.55"/>`
+      : '';
+    return L.divIcon({
+      className: 'pin-carreta',
+      html: `<svg width="${tamanho}" height="${tamanho * 1.3}" viewBox="0 0 26 34" xmlns="http://www.w3.org/2000/svg" style="opacity:${opacidade};">
+               ${aroSvg}
+               <path d="M13 0C5.8 0 0 5.8 0 13c0 9.2 13 21 13 21s13-11.8 13-21C26 5.8 20.2 0 13 0z"
+                     fill="${cor}" stroke="#fff" stroke-width="2"/>
+               <circle cx="13" cy="13" r="9" fill="#fff"/>
+               <text x="13" y="17" text-anchor="middle" font-size="12" font-weight="700"
+                     font-family="Inter, system-ui, sans-serif" fill="${cor}">${numero}</text>
+             </svg>`,
+      iconSize: [tamanho, tamanho * 1.3],
+      iconAnchor: [tamanho / 2, tamanho * 1.3],
+      popupAnchor: [0, -tamanho],
+    });
+  }
+
+  // Monta a sequência inteira do trajeto, em ordem cronológica, pra numerar
+  // os pinos de forma corrida (1, 2, 3...) do mais antigo pro mais futuro —
+  // assim dá pra ver de onde a carreta veio e pra onde vai, na ordem certa.
+  const sequenciaCompleta = [
+    ...[...anteriores].reverse().map(p => ({ ...p, papel: 'anterior' })),
+    ...(atual ? [{ ...atual, papel: 'atual' }] : []),
+    ...proximas.map(p => ({ ...p, papel: 'proxima' })),
+  ];
+
+  const ROTULOS = { anterior: 'Já aconteceu', atual: '🚛 Está aqui agora', proxima: 'Próximo compromisso' };
+  const TAMANHOS = { anterior: 24, atual: 34, proxima: 28 };
+  const OPACIDADES = { anterior: 0.45, atual: 1, proxima: 1 };
+
+  const pontosRota = [];
+  const grupo = L.featureGroup();
+
+  sequenciaCompleta.forEach((p, i) => {
+    const numero = i + 1;
+    const cor = COR_PROGRAMA[p.tipo_recurso_chave] || '#8A8A8A';
+    const icone = iconePin(cor, TAMANHOS[p.papel], numero, OPACIDADES[p.papel], p.papel === 'atual');
+    L.marker([p.lat, p.lng], { icon: icone })
+      .bindPopup(`<b>${numero}º — ${ROTULOS[p.papel]}</b><br>${p.municipio_nome} — ${p.tipo_recurso}<br>${p.evento}<br>${p.data_inicio} a ${p.data_fim}`)
+      .addTo(grupo);
+    pontosRota.push([p.lat, p.lng]);
+  });
+
+  grupo.addTo(mapa);
+
+  if (pontosRota.length > 1) {
+    L.polyline(pontosRota, { color: '#8A6D4F', weight: 2, dashArray: '6 6', opacity: 0.6 }).addTo(mapa);
+  }
+
+  if (pontosRota.length > 0) {
+    mapa.fitBounds(L.featureGroup(grupo.getLayers()).getBounds(), { padding: [40, 40], maxZoom: 10 });
+  }
+</script>
+{% endblock %}

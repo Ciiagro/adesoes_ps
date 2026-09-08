@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Área Administrativa</h1>
+<form method="post">
+  <label>Senha<input type="password" name="senha" required autofocus></label>
+  <button type="submit">Entrar</button>
+</form>
+<p style="color:#6E6555;font-size:.85rem;margin-top:10px;">
+  Use a senha de Admin/Comissão para o painel completo, ou a senha específica
+  de gestão de sindicatos para acessar só o módulo Sindicatos x Municípios.
+</p>
+{% endblock %}

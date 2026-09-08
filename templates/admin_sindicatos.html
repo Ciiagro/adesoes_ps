@@ -1,0 +1,133 @@
+{% extends 'admin_base.html' %}
+{% block title %}Sindicatos x Municípios{% endblock %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Sindicatos Rurais x Municípios</h1>
+  <p class="sub">
+    Sindicato responsável e contatos (presidente, vice/diretor regional) de cada
+    município do Ceará. Edite quando um município mudar de sindicato ou trocar de
+    presidente — cada mudança fica registrada no histórico. Depois é só gerar a
+    planilha atualizada para os setores.
+  </p>
+</div>
+
+{% if avisos_gestao %}
+<div class="secao-card" style="border-left:4px solid var(--danger);background:var(--danger-bg);margin-bottom:20px;">
+  <h2 style="color:var(--danger);margin-bottom:{% if avisos_vencidos or avisos_a_vencer %}4px{% else %}0{% endif %};">⚠️ Mandato de presidente vencendo</h2>
+
+  {% if avisos_vencidos %}
+  <details style="margin-top:10px;">
+    <summary style="cursor:pointer;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--danger);padding:4px 0;">
+      Já venceu ({{ avisos_vencidos|length }})
+    </summary>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+      {% for s, dias in avisos_vencidos %}
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid rgba(192,57,43,.3);border-radius:8px;padding:8px 12px;">
+        <span style="background:var(--danger);color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;">
+          {{ -dias }} DIA{{ 's' if -dias != 1 else '' }} VENCIDO
+        </span>
+        <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}" style="font-weight:700;">{{ s.nome }}</a>
+        <span style="font-size:.8rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap;">venceu em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {% if avisos_a_vencer %}
+  <details style="margin-top:10px;">
+    <summary style="cursor:pointer;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#9A6817;padding:4px 0;">
+      Vence em breve ({{ avisos_a_vencer|length }})
+    </summary>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+      {% for s, dias in avisos_a_vencer %}
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid rgba(154,104,23,.3);border-radius:8px;padding:8px 12px;">
+        <span style="background:#9A6817;color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;">
+          {% if dias == 0 %}VENCE HOJE{% else %}EM {{ dias }} DIA{{ 's' if dias != 1 else '' }}{% endif %}
+        </span>
+        <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}" style="font-weight:700;">{{ s.nome }}</a>
+        <span style="font-size:.8rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap;">vence em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+</div>
+{% endif %}
+
+<form method="get" class="filtro-form">
+  <label>Buscar município
+    <input type="text" name="busca" value="{{ filtro_busca }}" placeholder="Nome do município">
+  </label>
+  <label>Região FAEC
+    <select name="regiao_faec" onchange="this.form.sindicato_id.value=''; this.form.submit()">
+      <option value="" {% if not filtro_regiao_faec %}selected{% endif %}>Todas as regiões</option>
+      {% for r in regioes_faec %}
+      <option value="{{ r }}" {% if filtro_regiao_faec == r %}selected{% endif %}>{{ r }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Sindicato responsável
+    <select name="sindicato_id">
+      <option value="" {% if not filtro_sindicato_id %}selected{% endif %}>Todos os sindicatos</option>
+      {% for s in sindicatos %}
+      <option value="{{ s.id }}" {% if filtro_sindicato_id == s.id %}selected{% endif %}>{{ s.nome }}{% if not s.ativo %} (inativo){% endif %}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Filtrar</button>
+  {% if pode_editar_sindicatos %}
+  <a class="btn secundario" href="{{ url_for('admin_sindicatos_exportar', busca=filtro_busca, regiao_faec=filtro_regiao_faec, sindicato_id=filtro_sindicato_id) }}">⬇️ Gerar planilha para os setores</a>
+  <a class="btn secundario" href="{{ url_for('admin_sindicatos_ficha') }}" target="_blank">📄 Gerar ficha de distribuição (PDF)</a>
+  {% endif %}
+</form>
+
+<div class="tabela-wrap">
+<table>
+  <thead>
+  <tr>
+    <th>Município</th><th>Região FAEC</th><th>Sindicato responsável</th>
+    <th>Presidente</th><th>E-mail</th>
+    {% if pode_editar_sindicatos %}<th>Telefone 1</th><th>Atualizado em</th>{% endif %}
+  </tr>
+  </thead>
+  <tbody>
+  {% for m in municipios %}
+  <tr>
+    <td>
+      {% if pode_editar_sindicatos %}
+      <a href="{{ url_for('admin_sindicato_editar', cod_ibge=m.cod_ibge) }}"><strong>{{ m.nome }}</strong></a>
+      <br><a href="{{ url_for('admin_sindicato_historico', cod_ibge=m.cod_ibge) }}" style="font-size:.78rem;color:var(--ink-faint);font-weight:500;">Histórico</a>
+      {% else %}
+      <strong>{{ m.nome }}</strong>
+      {% endif %}
+    </td>
+    <td>{{ m.regiao_faec or '-' }}</td>
+    <td>
+      {% if pode_editar_sindicatos and m.sindicato %}
+      <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=m.sindicato.id) }}" title="Editar nome, presidente e contatos deste sindicato">✏️ {{ m.sindicato.nome }}</a>
+      {% if not m.sindicato.ativo %}<span style="color:var(--danger);font-size:.75rem;font-weight:600;"> (inativo)</span>{% endif %}
+      {% else %}
+      {{ m.sindicato.nome if m.sindicato else '-' }}
+      {% if m.sindicato and not m.sindicato.ativo %}<span style="color:var(--danger);font-size:.75rem;font-weight:600;"> (inativo)</span>{% endif %}
+      {% endif %}
+    </td>
+    <td>{{ m.presidente_nome or '-' }}</td>
+    <td>{{ m.email1 or '-' }}</td>
+    {% if pode_editar_sindicatos %}
+    <td>{{ m.telefone1 or '-' }}</td>
+    <td>
+      {% if m.atualizado_em %}{{ m.atualizado_em.strftime('%d/%m/%Y %H:%M') }}
+        {% if m.atualizado_por %}<br><span style="color:var(--ink-faint);font-size:.8rem;">por {{ m.atualizado_por }}</span>{% endif %}
+      {% else %}-{% endif %}
+    </td>
+    {% endif %}
+  </tr>
+  {% else %}
+  <tr><td colspan="{{ 7 if pode_editar_sindicatos else 5 }}" class="vazio">Nenhum município encontrado com esse filtro.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p style="margin-top:12px;color:var(--ink-faint);font-size:.85rem;">{{ municipios|length }} município(s) encontrado(s).</p>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'admin_base.html' %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Bloqueio de Datas</h1>
+  <p class="sub">
+    Datas em que a carreta NÃO pode ser usada por nenhum dos dois programas (feriado, manutenção do
+    veículo, motorista de férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir a
+    carreta nessas datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua:
+    o sistema nunca bloqueia data nenhuma sozinho.
+  </p>
+</div>
+
+<div class="secao-card" style="margin-bottom:16px;">
+  <h2>Novo bloqueio</h2>
+  <form method="post">
+    <div class="info-grid">
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Data de início *</span>
+        <input type="date" name="data_inicio" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Data de fim *</span>
+        <input type="date" name="data_fim" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label style="grid-column:1/-1;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Motivo *</span>
+        <input type="text" name="motivo" required placeholder="Ex.: Manutenção do veículo, Feriado, Motorista de férias..." style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label style="grid-column:1/-1;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
+        <input type="text" name="criado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+    </div>
+    <button type="submit" style="margin-top:14px;">🚫 Bloquear essas datas</button>
+  </form>
+</div>
+
+<div class="secao-card">
+  <h2>Bloqueios cadastrados</h2>
+  {% if not bloqueios %}
+  <p class="vazio">Nenhum bloqueio cadastrado.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr><th>Período</th><th>Motivo</th><th>Cadastrado por</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for b in bloqueios %}
+      <tr>
+        <td>{{ b.data_inicio.strftime('%d/%m/%Y') }} a {{ b.data_fim.strftime('%d/%m/%Y') }}</td>
+        <td>{{ b.motivo }}</td>
+        <td>{{ b.criado_por or '—' }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_carreta_bloqueio_excluir', bloqueio_id=b.id) }}" onsubmit="return confirm('Remover esse bloqueio? A data volta a ficar disponível.');">
+            <button type="submit" class="btn secundario" style="color:var(--danger);padding:5px 12px;font-size:.8rem;">Remover</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

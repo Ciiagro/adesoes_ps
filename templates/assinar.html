@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Confirmação de Adesão — {{ papel_label }}</h1>
+<p>
+  Município de <strong>{{ adesao.municipio.nome }}</strong> &middot;
+  {{ nome_programa }} {{ adesao.ano }}
+</p>
+
+{% if assinatura.assinado_em %}
+  <fieldset>
+    <legend>Já confirmado</legend>
+    <p>Esta assinatura já foi confirmada em
+    <strong>{{ assinatura.assinado_em.strftime('%d/%m/%Y às %H:%M') }}</strong> por
+    <strong>{{ assinatura.nome or '-' }}</strong>. Não é necessário fazer nada.</p>
+  </fieldset>
+{% else %}
+  <fieldset>
+    <legend>Confira os dados desta função</legend>
+    {% for rotulo, valor in dados_papel.items() %}
+      <p><strong>{{ rotulo }}:</strong> {{ valor or '-' }}</p>
+    {% endfor %}
+  </fieldset>
+
+  <form method="post">
+    <fieldset>
+      <legend>Confirmação e assinatura eletrônica</legend>
+      <p class="hint">
+        Ao confirmar abaixo, você declara que revisou os dados acima e concorda com a
+        adesão do município ao {{ nome_programa }} para {{ adesao.ano }}, na condição de
+        {{ papel_label }}.
+      </p>
+      <label>Digite seu nome completo para confirmar
+        <input name="confirmacao_nome" required value="{{ assinatura.nome or '' }}">
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:16px;">
+        <input type="checkbox" required style="width:auto;margin:0;">
+        Li e confirmo os dados acima.
+      </label>
+      <button type="submit">Confirmar assinatura</button>
+    </fieldset>
+  </form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'admin_base.html' %}
+{% import '_admin_macros.html' as m %}
+{% block title %}Dashboard{% endblock %}
+{% block admin_content %}
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <p class="sub">Visão geral de todas as adesões e escolas cadastradas no sistema.</p>
+</div>
+
+<div class="cards-grid">
+  <div class="stat-card">
+    <div class="valor">{{ total_adesoes }}</div>
+    <div class="rotulo">Total de adesões</div>
+  </div>
+  <div class="stat-card">
+    <div class="valor">{{ total_rascunho }}</div>
+    <div class="rotulo">📝 Em rascunho</div>
+  </div>
+  <div class="stat-card ochre">
+    <div class="valor">{{ total_aguardando }}</div>
+    <div class="rotulo">⏳ Aguardando assinaturas</div>
+  </div>
+  <div class="stat-card">
+    <div class="valor">{{ total_concluida }}</div>
+    <div class="rotulo">✅ Concluídas</div>
+  </div>
+  <div class="stat-card ochre">
+    <div class="valor">{{ total_escolas }}</div>
+    <div class="rotulo">🏫 Escolas cadastradas</div>
+  </div>
+  <div class="stat-card">
+    <div class="valor">{{ total_municipios }}</div>
+    <div class="rotulo">🏛️ Municípios participantes</div>
+  </div>
+</div>
+
+<h2>Adesões mais recentes</h2>
+<div class="tabela-wrap">
+<table>
+  <thead>
+    <tr><th>Ano</th><th>Programa</th><th>Município</th><th>Status</th><th>Enviado em</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for a in recentes %}
+  <tr>
+    <td>{{ a.ano }}</td>
+    <td>{{ a.programa.nome }}</td>
+    <td>{{ a.municipio.nome }}</td>
+    <td>{{ m.badge_status(a.status) }}</td>
+    <td>{{ a.criado_em.strftime('%d/%m/%Y %H:%M') if a.criado_em else '' }}</td>
+    <td><a href="{{ url_for('admin_adesao_detalhe', adesao_id=a.id) }}">Ver detalhes →</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="vazio">Nenhuma adesão recebida ainda.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p style="margin-top:16px;"><a class="btn secundario" href="{{ url_for('admin_adesoes') }}">Ver todas as adesões →</a></p>
+{% endblock %}

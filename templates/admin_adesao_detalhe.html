@@ -1,0 +1,99 @@
+{% extends 'admin_base.html' %}
+{% import '_admin_macros.html' as m %}
+{% block title %}{{ adesao.municipio.nome }} - {{ adesao.programa.nome }} {{ adesao.ano }}{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_adesoes') }}">← Voltar para a lista</a>
+
+<div class="page-head">
+  <h1>{{ adesao.municipio.nome }} · {{ adesao.programa.nome }} {{ adesao.ano }}</h1>
+  <p class="sub">{{ m.badge_status(adesao.status) }}</p>
+</div>
+
+<div class="secao-card">
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="rot">Coordenador(a)</div>
+      <div class="val">{{ adesao.coordenador.nome if adesao.coordenador else '-' }}</div>
+    </div>
+    <div class="info-item">
+      <div class="rot">Responsável pelo preenchimento</div>
+      <div class="val">{{ adesao.responsavel_preenchimento or '-' }}</div>
+    </div>
+    <div class="info-item">
+      <div class="rot">Escolas nesta adesão</div>
+      <div class="val">{{ adesao.escolas|length }}</div>
+    </div>
+  </div>
+  <p style="margin:18px 0 0;">
+    <a class="btn" href="{{ url_for('adesao_pdf', adesao_id=adesao.id) }}" target="_blank">
+      📄 Baixar Ficha de Adesão em PDF
+    </a>
+  </p>
+</div>
+
+<h2>Assinaturas dos Responsáveis</h2>
+<div class="tabela-wrap">
+<table>
+  <thead><tr><th>Papel</th><th>Nome</th><th>E-mail</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for chave, rotulo in papeis.items() %}
+    {% set a = (adesao.assinaturas | selectattr('papel', 'equalto', chave) | list | first) %}
+    <tr>
+      <td><strong>{{ rotulo }}</strong></td>
+      <td>{{ a.nome if a else '-' }}</td>
+      <td>{{ a.email if a else '-' }}</td>
+      <td>
+        {% if a and a.assinado_em %}
+          <span class="badge concluida">Assinado em {{ a.assinado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+        {% elif a %}
+          <span class="badge aguardando">Pendente</span>
+        {% else %}
+          <span class="badge rascunho">Adesão em rascunho</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if a and not a.assinado_em %}
+          <a href="{{ url_for('admin_reenviar_assinatura', adesao_id=adesao.id, papel=chave) }}">Reenviar e-mail</a>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<h2 style="margin-top:28px;">Escolas</h2>
+{% for ae in adesao.escolas %}
+<div class="secao-card">
+  <h2 style="font-size:1rem;margin-bottom:.35em;">{{ ae.escola.nome }}</h2>
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="rot">Endereço</div>
+      <div class="val">{{ ae.escola.endereco or '-' }}</div>
+    </div>
+    <div class="info-item">
+      <div class="rot">Professores</div>
+      <div class="val">{{ ae.quantidade_professores or 0 }}</div>
+    </div>
+    <div class="info-item">
+      <div class="rot">Localização</div>
+      <div class="val">
+        {% if ae.escola.latitude and ae.escola.longitude %}
+        <a href="https://www.google.com/maps?q={{ ae.escola.latitude }},{{ ae.escola.longitude }}" target="_blank">📍 Ver no mapa</a>
+        {% else %}
+        -
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="tabela-wrap">
+  <table>
+    <thead><tr>{% for mat in ae.matriculas %}<th>{{ mat.serie.nome }}</th>{% endfor %}</tr></thead>
+    <tbody><tr>{% for mat in ae.matriculas %}<td>{{ mat.quantidade }}</td>{% endfor %}</tr></tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<p class="vazio">Nenhuma escola cadastrada nesta adesão.</p>
+{% endfor %}
+{% endblock %}

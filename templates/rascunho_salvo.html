@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Rascunho salvo!</h1>
+<p>
+  Nada foi perdido. Você pode continuar de onde parou a qualquer momento — em
+  qualquer computador ou celular — usando o link abaixo. Não é necessário fazer
+  login nem lembrar senha nenhuma.
+</p>
+
+<fieldset>
+  <legend>📎 Seu link para continuar depois</legend>
+  <p style="word-break:break-all;background:var(--line-soft);border-radius:7px;padding:12px 14px;font-family:monospace;font-size:.88rem;">
+    <a href="{{ link }}" id="link-continuar">{{ link }}</a>
+  </p>
+  <button type="button" onclick="copiarLink()" id="botao-copiar">📋 Copiar link</button>
+  <span id="mensagem-copiado" class="hint" style="display:none;color:var(--green-dark);font-weight:600;">Copiado!</span>
+
+  {% if email_enviado %}
+  <p class="hint">Também enviamos este link por e-mail para <strong>{{ destinatario }}</strong> — você pode
+  continuar a partir do link que chegar lá também.</p>
+  {% elif destinatario %}
+  <p class="hint">Tentamos enviar este link para <strong>{{ destinatario }}</strong>, mas não foi
+  possível no momento. Por isso é importante guardar o link acima agora.</p>
+  {% else %}
+  <p class="hint">Não há e-mail cadastrado ainda, então este link não foi enviado pra ninguém — guarde-o
+  agora, antes de sair desta tela.</p>
+  {% endif %}
+</fieldset>
+
+<fieldset>
+  <legend>O que fazer com esse link</legend>
+  <ol style="margin:0;padding-left:20px;">
+    <li style="margin-bottom:10px;">
+      Clique em <strong>"📋 Copiar link"</strong> acima.
+    </li>
+    <li style="margin-bottom:10px;">
+      Cole esse link em algum lugar que você sempre tem à mão — por exemplo,
+      numa mensagem de WhatsApp pra você mesmo(a), num e-mail, nas notas do celular,
+      ou até anotado num papel perto do computador.
+    </li>
+    <li>
+      Quando quiser continuar o preenchimento, é só abrir esse link de novo
+      (colar no navegador ou clicar nele) — o formulário volta exatamente de
+      onde você parou, com tudo que já foi preenchido.
+    </li>
+  </ol>
+</fieldset>
+
+<p><a href="{{ url_for('index') }}">Voltar ao início</a></p>
+
+<script>
+function copiarLink() {
+  const link = document.getElementById('link-continuar').innerText;
+  const mensagem = document.getElementById('mensagem-copiado');
+  function mostrarSucesso() {
+    mensagem.style.display = 'inline';
+    setTimeout(() => { mensagem.style.display = 'none'; }, 2500);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(link).then(mostrarSucesso).catch(copiarComFallback);
+  } else {
+    copiarComFallback();
+  }
+  function copiarComFallback() {
+    const campoTemporario = document.createElement('textarea');
+    campoTemporario.value = link;
+    campoTemporario.style.position = 'fixed';
+    campoTemporario.style.opacity = '0';
+    document.body.appendChild(campoTemporario);
+    campoTemporario.focus();
+    campoTemporario.select();
+    try { document.execCommand('copy'); mostrarSucesso(); } catch (e) {}
+    document.body.removeChild(campoTemporario);
+  }
+}
+</script>
+{% endblock %}

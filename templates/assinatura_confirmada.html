@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Assinatura confirmada!</h1>
+<p>
+  Obrigado! Sua confirmação como <strong>{{ papel_label }}</strong> para a adesão do
+  município de <strong>{{ adesao.municipio.nome }}</strong> ao
+  <strong>{{ nome_programa }} {{ adesao.ano }}</strong> foi registrada com sucesso.
+</p>
+{% if adesao.status == 'concluida' %}
+<p>Todos os responsáveis já confirmaram — a adesão está <strong>concluída</strong>.</p>
+{% else %}
+<p>Ainda faltam outros responsáveis confirmarem a assinatura deles.</p>
+{% endif %}
+{% endblock %}

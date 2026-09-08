@@ -1,0 +1,202 @@
+{% extends 'admin_base.html' %}
+{% block title %}Editar sindicato · {{ sindicato.nome }}{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
+<div class="page-head">
+  <h1>{{ sindicato.nome }}{% if not sindicato.ativo %} <span style="color:var(--danger);font-size:.6em;font-weight:600;">(INATIVO)</span>{% endif %}</h1>
+  <p class="sub">
+    Tudo aqui se aplica de uma vez a <strong>todos os {{ municipios|length }} município(s)</strong>
+    vinculados a este sindicato — não precisa repetir município por município.
+  </p>
+  <a class="btn secundario" href="{{ url_for('admin_sindicato_ficha_individual', sindicato_id=sindicato.id) }}" target="_blank" style="margin-top:10px;">📄 Gerar ficha em PDF (dados + histórico)</a>
+  <a class="btn secundario" href="{{ url_for('admin_processos_eleitorais', sindicato_id=sindicato.id) }}" style="margin-top:10px;">🗳️ Processos Eleitorais</a>
+</div>
+
+{% if not municipios %}
+<div class="secao-card" style="border-left:4px solid var(--ochre);">
+  <p>
+    <strong>Nenhum município está vinculado a este sindicato no momento</strong> — provavelmente
+    porque os municípios dele foram todos reatribuídos a outro sindicato. Se for esse o caso,
+    marque-o como inativo abaixo (o registro continua existindo, só fica sinalizado).
+  </p>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="secao-card">
+  <h2>O mais comum: nome e presidente</h2>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Nome do sindicato</span>
+      <input type="text" name="nome" value="{{ sindicato.nome }}" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-weight:600;">
+    </label>
+    {% if municipios %}
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Presidente do Sindicato</span>
+      <input type="text" name="presidente_nome" value="{{ referencia.presidente_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-weight:600;">
+    </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Secretário(a) do Sindicato</span>
+      <input type="text" name="secretario_nome" value="{{ referencia.secretario_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-weight:600;">
+    </label>
+    {% endif %}
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Início da gestão</span>
+      <input type="date" name="gestao_inicio" value="{{ sindicato.gestao_inicio or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+    </label>
+    <label>
+      <span class="rot" style="display:block;margin-bottom:5px;">Fim da gestão</span>
+      <input type="date" name="gestao_fim" value="{{ sindicato.gestao_fim or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      <span style="display:block;font-size:.78rem;color:var(--ink-faint);margin-top:4px;">Deixe em branco se ainda está no cargo.</span>
+    </label>
+  </div>
+
+  <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:16px;">
+    <input type="checkbox" name="ativo" {% if sindicato.ativo %}checked{% endif %} style="width:auto;">
+    Este sindicato está ativo
+  </label>
+  <p style="margin:6px 0 0;font-size:.85rem;color:var(--ink-faint);">
+    Desmarque quando ele deixar de existir/atuar (por exemplo, foi substituído por outro que
+    passou a atender os mesmos municípios). Ele continua no histórico, só sinalizado como inativo.
+  </p>
+
+  {% if municipios %}
+  <details style="margin-top:22px;">
+    <summary style="cursor:pointer;font-weight:600;color:var(--green-dark);padding:4px 0;">
+      Contato do Sindicato (telefones, e-mails)
+    </summary>
+    <div class="info-grid" style="margin-top:14px;">
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Telefone 1</span>
+        <input type="text" name="telefone1" value="{{ referencia.telefone1 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Telefone 2</span>
+        <input type="text" name="telefone2" value="{{ referencia.telefone2 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 1</span>
+        <input type="email" name="email1" value="{{ referencia.email1 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 2</span>
+        <input type="email" name="email2" value="{{ referencia.email2 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 3</span>
+        <input type="email" name="email3" value="{{ referencia.email3 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 4</span>
+        <input type="email" name="email4" value="{{ referencia.email4 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+    </div>
+  </details>
+
+  <details style="margin-top:14px;">
+    <summary style="cursor:pointer;font-weight:600;color:var(--green-dark);padding:4px 0;">
+      Contato do Vice-Presidente Regional
+    </summary>
+    <p style="margin:10px 0 0;font-size:.85rem;color:var(--ink-faint);">
+      Pessoa responsável pela região (às vezes é também presidente de algum
+      sindicato específico) — o contato abaixo é dela(e) no papel de
+      vice-presidente/diretor(a) regional, separado do contato do sindicato acima.
+    </p>
+    <div class="info-grid" style="margin-top:14px;">
+      <label style="grid-column:1/-1;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Vice-Presidente Regional</span>
+        <input type="text" name="vice_presidente_texto" value="{{ referencia.vice_presidente_texto or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Telefone</span>
+        <input type="text" name="telefone_vice_presidente" value="{{ referencia.telefone_vice_presidente or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">E-mail</span>
+        <input type="email" name="email_vice_presidente" value="{{ referencia.email_vice_presidente or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+    </div>
+  </details>
+  {% endif %}
+
+  <details style="margin-top:14px;">
+    <summary style="cursor:pointer;font-weight:600;color:var(--green-dark);padding:4px 0;">
+      Endereço, localização e foto do presidente
+    </summary>
+    <div class="info-grid" style="margin-top:14px;">
+      <label style="grid-column:1/-1;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Endereço da sede</span>
+        <input type="text" name="endereco" value="{{ sindicato.endereco or '' }}" placeholder="Rua, número, bairro, município" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Latitude</span>
+        <input type="text" name="latitude" value="{{ sindicato.latitude or '' }}" placeholder="Ex.: -4.2345678" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label>
+        <span class="rot" style="display:block;margin-bottom:5px;">Longitude</span>
+        <input type="text" name="longitude" value="{{ sindicato.longitude or '' }}" placeholder="Ex.: -38.9876543" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      {% if sindicato.latitude and sindicato.longitude %}
+      <p style="grid-column:1/-1;margin:0;">
+        <a href="https://www.google.com/maps?q={{ sindicato.latitude }},{{ sindicato.longitude }}" target="_blank">📍 Ver localização atual no Google Maps</a>
+      </p>
+      {% endif %}
+      <p style="grid-column:1/-1;font-size:.8rem;color:var(--ink-faint);margin:-4px 0 0;">
+        Dica: abra o local no Google Maps, clique com o botão direito no ponto exato e copie as
+        duas coordenadas que aparecem (a primeira é a latitude, a segunda a longitude).
+      </p>
+      <label style="grid-column:1/-1;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Foto do presidente</span>
+        {% if sindicato.foto_presidente_url or sindicato.foto_presidente %}
+        <img src="{{ url_for('admin_sindicato_foto', sindicato_id=sindicato.id) }}" alt="Foto do presidente" style="display:block;max-width:140px;border-radius:9px;border:1px solid var(--line);margin-bottom:8px;">
+        {% endif %}
+        <input type="file" name="foto_presidente" accept="image/jpeg,image/png,image/webp">
+        <span style="display:block;font-size:.8rem;color:var(--ink-faint);margin-top:4px;">JPG, PNG ou WEBP, até 5 MB. Enviar um arquivo novo substitui a foto atual.</span>
+      </label>
+    </div>
+  </details>
+
+  <div style="margin-top:22px;">
+    <button type="submit">💾 Salvar{% if municipios %} para todos os {{ municipios|length }} município(s){% endif %}</button>
+  </div>
+</form>
+
+<div class="secao-card">
+  <h2>Municípios vinculados a este sindicato</h2>
+  <form method="post" action="{{ url_for('admin_sindicato_municipios_vinculo', sindicato_id=sindicato.id) }}">
+    {% if municipios %}
+    <table>
+      <thead><tr><th>Município</th><th>Região FAEC</th><th></th></tr></thead>
+      <tbody>
+      {% for m in municipios %}
+      <tr>
+        <td><a href="{{ url_for('admin_sindicato_editar', cod_ibge=m.cod_ibge) }}">{{ m.nome }}</a></td>
+        <td>{{ m.regiao_faec or '-' }}</td>
+        <td>
+          <button type="submit" name="remover_cod_ibge" value="{{ m.cod_ibge }}"
+                  class="secundario" style="padding:4px 10px;font-size:.8rem;">
+            ✖ Remover
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="vazio">Nenhum município vinculado no momento.</p>
+    {% endif %}
+
+    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+      <label style="flex:1;min-width:240px;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Adicionar outro município a este sindicato</span>
+        <select name="adicionar_cod_ibge" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+          <option value="">— selecione um município —</option>
+          {% for m in municipios_disponiveis %}
+          <option value="{{ m.cod_ibge }}">{{ m.nome }}{% if m.sindicato %} (hoje em: {{ m.sindicato.nome }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">➕ Adicionar a este sindicato</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

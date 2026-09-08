@@ -1,0 +1,70 @@
+{% extends 'admin_base.html' %}
+{% block title %}Processos Eleitorais · {{ sindicato.nome }}{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=sindicato.id) }}">← Voltar para o sindicato</a>
+<div class="page-head">
+  <h1>Processos Eleitorais · {{ sindicato.nome }}</h1>
+  <p class="sub">
+    Histórico de todos os ciclos eleitorais já registrados (edital, registro de chapa,
+    eleição e posse), do mais recente pro mais antigo.
+  </p>
+  <a class="btn" href="{{ url_for('admin_processo_eleitoral_novo', sindicato_id=sindicato.id) }}" style="margin-top:10px;">➕ Novo processo eleitoral</a>
+</div>
+
+{% if not processos %}
+<div class="secao-card">
+  <p class="vazio">Nenhum processo eleitoral cadastrado ainda para este sindicato.</p>
+</div>
+{% endif %}
+
+{% for p in processos %}
+<div class="secao-card" style="margin-bottom:16px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="margin-bottom:4px;">
+        {% if p.eleicao_data %}Eleição de {{ p.eleicao_data.strftime('%d/%m/%Y') }}{% else %}Processo #{{ p.id }}{% endif %}
+      </h2>
+      <span class="badge" style="background:var(--ochre-soft);color:#8C5F1D;border-color:#EEDCB4;">
+        {{ situacao_label.get(p.situacao, p.situacao) }}
+      </span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="btn secundario" href="{{ url_for('admin_processo_eleitoral_editar', sindicato_id=sindicato.id, processo_id=p.id) }}" style="padding:7px 14px;font-size:.85rem;">✏️ Editar</a>
+      <form method="post" action="{{ url_for('admin_processo_eleitoral_aplicar', sindicato_id=sindicato.id, processo_id=p.id) }}" style="margin:0;">
+        <button type="submit" class="secundario" style="padding:7px 14px;font-size:.85rem;">⭐ Usar como mandato atual</button>
+      </form>
+      <form method="post" action="{{ url_for('admin_processo_eleitoral_excluir', sindicato_id=sindicato.id, processo_id=p.id) }}" style="margin:0;">
+        <button type="submit" class="secundario" style="padding:7px 14px;font-size:.85rem;color:var(--danger);">✖ Remover</button>
+      </form>
+    </div>
+  </div>
+
+  <table style="margin-top:14px;">
+    <tbody>
+      <tr><td style="width:220px;color:var(--ink-faint);">Edital de Convocação</td><td>{{ p.edital_data.strftime('%d/%m/%Y') if p.edital_data else '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Prazo de Registro de Chapa</td><td>{{ p.registro_chapa_prazo.strftime('%d/%m/%Y') if p.registro_chapa_prazo else '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Data da Eleição</td><td>{{ p.eleicao_data.strftime('%d/%m/%Y') if p.eleicao_data else '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Início do Mandato (Posse)</td><td>{{ p.posse_data.strftime('%d/%m/%Y') if p.posse_data else '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Fim do Mandato</td><td>{{ p.mandato_fim.strftime('%d/%m/%Y') if p.mandato_fim else '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Presidente eleito</td><td>{{ p.presidente_eleito or '—' }}</td></tr>
+      <tr><td style="color:var(--ink-faint);">Secretário(a) eleito(a)</td><td>{{ p.secretario_eleito or '—' }}</td></tr>
+    </tbody>
+  </table>
+
+  {% if p.membros %}
+  <p style="margin:14px 0 6px;font-weight:600;font-size:.85rem;color:var(--ink-soft);">Demais membros da diretoria</p>
+  <table>
+    <tbody>
+      {% for m in p.membros %}
+      <tr><td style="width:220px;color:var(--ink-faint);">{{ m.cargo }}</td><td>{{ m.nome }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if p.observacoes %}
+  <p style="margin:14px 0 0;font-size:.85rem;color:var(--ink-faint);">{{ p.observacoes }}</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
