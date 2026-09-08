@@ -422,7 +422,10 @@ def criar_solicitacao(db, form, arquivos_upload):
     responsavel_email = _limpar(form.get("responsavel_email"))
     responsavel_nome = _titulo(form.get("responsavel_nome"))
     responsavel_telefone = _limpar(form.get("responsavel_telefone"))
+    tipo_recurso = form.get("tipo_recurso") or "carreta_agro"
 
+    if tipo_recurso not in TIPOS_RECURSO:
+        raise ValueError("Escolha qual carreta você está solicitando (Agro ou Saúde).")
     if not municipio_nome:
         raise ValueError("Informe o município.")
     if not evento:
@@ -445,7 +448,7 @@ def criar_solicitacao(db, form, arquivos_upload):
         raise ValueError("Informe o e-mail do responsável — é pra onde mandamos a confirmação do pedido.")
 
     solicitacao = SolicitacaoCarreta(
-        tipo_recurso=form.get("tipo_recurso") or "carreta_agro",
+        tipo_recurso=tipo_recurso,
         municipio_nome=municipio_nome,
         sindicato_nome=_titulo(form.get("sindicato_nome")),
         evento=evento,

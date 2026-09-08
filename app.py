@@ -1881,6 +1881,7 @@ def carreta_form():
         return render_template(
             "carreta_form.html",
             municipios=MUNICIPIOS_CE,
+            tipos_recurso=carr.TIPOS_RECURSO,
             calendario=carr.dados_calendario(db, ano, mes),
             bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
             semanas=carr.matriz_semanas(ano, mes),
@@ -1910,6 +1911,7 @@ def carreta_form():
 
         return render_template(
             "carreta_sucesso.html", solicitacao=solicitacao,
+            tipos_recurso=carr.TIPOS_RECURSO,
             tem_conflito=bool(conflitos),
             avisos_deslocamento=avisos_deslocamento,
         )

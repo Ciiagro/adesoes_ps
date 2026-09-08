@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Solicitar a Carreta do Agro</h1>
+<h1>Solicitar a Carreta (Agro ou Saúde)</h1>
 <p>
-  Preencha os dados abaixo pra pedir a Carreta do Agro pra um evento no seu município.
+  Preencha os dados abaixo pra pedir a carreta pra um evento no seu município.
   Confira antes no calendário se a data já não está comprometida.
 </p>
 
@@ -30,7 +30,7 @@
         {% set ocupado = calendario.get(dia) %}
         {% set bloqueio_dia = bloqueados.get(dia) %}
         {% if bloqueio_dia %}
-        <td style="padding:8px 4px;border-radius:6px;background:#444;color:#fff;font-weight:700;"
+        <td style="padding:8px 4px;border-radius:6px;background:#D9CFAE;color:#5C4A1E;font-weight:700;"
             title="Indisponível: {{ bloqueio_dia|map(attribute='motivo')|join(', ') }}">
           {{ dia.day }}
         </td>
@@ -48,12 +48,21 @@
       {% endfor %}
     </tbody>
   </table>
-  <p class="hint" style="margin-top:10px;">🟥 Dias já com pedido pendente ou aprovado. ⬛ Dias indisponíveis (feriado, manutenção, etc). Passe o mouse pra ver o motivo.</p>
+  <p class="hint" style="margin-top:10px;">🟥 Dias já com pedido pendente ou aprovado. 🟤 Dias indisponíveis (feriado, manutenção, etc). Passe o mouse pra ver o motivo.</p>
 </div>
 
 <form method="post" enctype="multipart/form-data" id="form-carreta">
   <fieldset>
     <legend>📍 Local e evento</legend>
+
+    <label>Qual carreta você está solicitando? <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <select name="tipo_recurso" required>
+        <option value="">Selecione...</option>
+        {% for chave, rotulo in tipos_recurso.items() %}
+        <option value="{{ chave }}" {% if request.form.get('tipo_recurso') == chave %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </label>
 
     <label>Município <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
       <select name="municipio_nome" required>

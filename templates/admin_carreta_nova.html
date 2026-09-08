@@ -28,7 +28,7 @@
         {% set ocupado = calendario.get(dia) %}
         {% set bloqueio_dia = bloqueados.get(dia) %}
         {% if bloqueio_dia %}
-        <td style="background:#444;color:#fff;font-weight:700;" title="🚫 {{ bloqueio_dia|map(attribute='motivo')|join(', ') }}">{{ dia.day }}</td>
+        <td style="background:#D9CFAE;color:#5C4A1E;font-weight:700;" title="🚫 {{ bloqueio_dia|map(attribute='motivo')|join(', ') }}">{{ dia.day }}</td>
         {% else %}
         <td style="{% if ocupado %}background:#F9E7E0;color:#A6412B;font-weight:700;{% endif %}" title="{% if ocupado %}{{ ocupado|map(attribute='evento')|join(', ') }}{% endif %}">{{ dia.day }}</td>
         {% endif %}
@@ -40,7 +40,7 @@
       {% endfor %}
     </tbody>
   </table>
-  <p class="hint">🟥 Dias já ocupados — dos DOIS programas juntos (Agro e Saúde usam o mesmo motorista/veículo, então um bloqueia o outro). ⬛ Dias bloqueados pelo admin (feriado, manutenção, etc — veja em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>).</p>
+  <p class="hint">🟥 Dias já ocupados — dos DOIS programas juntos (Agro e Saúde usam o mesmo motorista/veículo, então um bloqueia o outro). 🟤 Dias bloqueados pelo admin (feriado, manutenção, etc — veja em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>).</p>
 </div>
 
 <form method="post" enctype="multipart/form-data" class="secao-card">

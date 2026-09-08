@@ -2,7 +2,7 @@
 {% block admin_content %}
 <div class="page-head">
   <h1>Calendário — {{ tipos_recurso.get(tipo, tipo) }}</h1>
-  <p class="sub">Dias já com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em cinza-escuro (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>.</p>
+  <p class="sub">Dias já com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em bege (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>.</p>
 </div>
 
 <div class="secao-card" style="margin-bottom:16px;">
@@ -31,10 +31,10 @@
         {% if dia %}
         {% set ocupado = calendario.get(dia) %}
         {% set bloqueio_dia = bloqueados.get(dia) %}
-        <td style="vertical-align:top;height:110px;max-width:150px;{% if bloqueio_dia %}background:#3a3a3a1a;{% elif ocupado %}background:#F9E7E0;{% endif %}">
+        <td style="vertical-align:top;height:110px;max-width:150px;{% if bloqueio_dia %}background:#E3DCC8;{% elif ocupado %}background:#F9E7E0;{% endif %}">
           <div style="font-weight:700;">{{ dia.day }}</div>
           {% for b in bloqueio_dia or [] %}
-          <div title="{{ b.motivo }}" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#444;color:#fff;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <div title="{{ b.motivo }}" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#D9CFAE;color:#5C4A1E;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             🚫 {{ b.motivo }}
           </div>
           {% endfor %}

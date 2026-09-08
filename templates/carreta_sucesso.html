@@ -2,7 +2,7 @@
 {% block content %}
 <h1>Solicitação enviada!</h1>
 <p>
-  Pedido da Carreta do Agro pra <strong>{{ solicitacao.evento }}</strong>, em
+  Pedido da {{ tipos_recurso.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso) }} pra <strong>{{ solicitacao.evento }}</strong>, em
   <strong>{{ solicitacao.municipio_nome }}</strong>, de
   <strong>{{ solicitacao.data_inicio.strftime('%d/%m/%Y') }}</strong> a
   <strong>{{ solicitacao.data_fim.strftime('%d/%m/%Y') }}</strong>, registrado com sucesso.

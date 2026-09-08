@@ -269,7 +269,7 @@
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">🤝</span> Sindicatos x Municípios</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_sindicatos' else '' }}" href="{{ url_for('admin_sindicatos_mapa') }}"><span class="ic">🗺️</span> Mapa dos Sindicatos</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'processos_eleitorais' else '' }}" href="{{ url_for('admin_todos_processos_eleitorais') }}"><span class="ic">🗳️</span> Processos Eleitorais</a>
-      <div class="nav-sep">Carreta do Agro</div>
+      <div class="nav-sep">Carreta (Agro/Saúde)</div>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta' else '' }}" href="{{ url_for('admin_carreta', status='pendente' if carreta_pendentes_count else None) }}"><span class="ic">🚛</span> Solicitações{% if carreta_pendentes_count %}<span class="contador">{{ carreta_pendentes_count }}</span>{% endif %}</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
@@ -284,7 +284,7 @@
       {% endif %}
 
       {% if apenas_carreta %}
-      <div class="nav-sep">Carreta do Agro</div>
+      <div class="nav-sep">Carreta (Agro/Saúde)</div>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta' else '' }}" href="{{ url_for('admin_carreta', status='pendente' if carreta_pendentes_count else None) }}"><span class="ic">🚛</span> Solicitações{% if carreta_pendentes_count %}<span class="contador">{{ carreta_pendentes_count }}</span>{% endif %}</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
