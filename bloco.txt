@@ -1,6 +1,0 @@
-Chave :
-
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA8LWYRH3I5u6yzsfCqfOVqxxeitmfi2DIs0MD/cG6Uo geovana@senarce.org.br
-
-Vercel:
-https://adesoes-ps.vercel.app/carreta
