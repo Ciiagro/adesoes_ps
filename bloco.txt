@@ -1,0 +1,10 @@
+
+
+
+ssh-keygen -t ed25519 -C "geovana@senarce.org.br" git add .
+git commit -m "Atualizando .gitignore"
+git push-f ~/.ssh/id_ed25519_ciiagro
+
+
+Vercel:
+https://adesoes-ps.vercel.app/

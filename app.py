@@ -1907,6 +1907,11 @@ def carreta_form():
         destinatario_interno = os.environ.get("CARRETA_MAIL_DESTINATARIO") or os.environ.get("CARRETA_MAIL_USERNAME")
         if destinatario_interno:
             carr.enviar_notificacao_nova_solicitacao(solicitacao, destinatario_interno)
+        else:
+            print(
+                "[carreta] aviso: não enviei notificação de solicitação nova — "
+                "nem CARRETA_MAIL_DESTINATARIO nem CARRETA_MAIL_USERNAME estão configurados."
+            )
         carr.enviar_confirmacao_solicitante(solicitacao)
 
         return render_template(
@@ -2223,8 +2228,13 @@ def admin_carreta_status(solicitacao_id):
     alterado_por = request.form.get("alterado_por", "").strip() or "não informado"
     try:
         carr.atualizar_status(db, solicitacao, status, request.form.get("motivo_recusa", ""), alterado_por)
-        carr.enviar_notificacao_status(solicitacao)
         flash(f"Solicitação marcada como \"{carr.STATUS_LABEL.get(status, status)}\".")
+        if not carr.enviar_notificacao_status(solicitacao):
+            flash(
+                "⚠️ O status foi salvo, mas o e-mail de aviso pro solicitante NÃO foi enviado "
+                "(confira se CARRETA_MAIL_USERNAME/CARRETA_MAIL_PASSWORD estão configurados). "
+                "Avise a pessoa por outro meio, se for urgente."
+            )
     except ValueError as erro:
         flash(str(erro))
 

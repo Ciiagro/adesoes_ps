@@ -21,7 +21,14 @@ def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, se
     servidor = servidor or os.environ.get("MAIL_SERVER", "smtp.gmail.com")
     porta = porta or int(os.environ.get("MAIL_PORT", "587"))
 
-    if not destinatario or not usuario or not senha:
+    if not destinatario:
+        print("[email_utils] Não enviei: nenhum destinatário informado.")
+        return False
+    if not usuario or not senha:
+        print(
+            f"[email_utils] Não enviei pra {destinatario}: credenciais de e-mail não configuradas "
+            f"(usuário {'ok' if usuario else 'FALTANDO'}, senha {'ok' if senha else 'FALTANDO'})."
+        )
         return False
 
     msg = EmailMessage()
