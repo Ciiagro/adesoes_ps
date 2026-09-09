@@ -104,10 +104,27 @@
     <label>Anexar ofício(s) em PDF <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
       <input type="file" name="oficios" id="input-oficios" accept="application/pdf,.pdf" multiple required>
     </label>
-    <p class="hint">Pode anexar mais de um arquivo (por exemplo, o ofício do sindicato e o da secretaria de agricultura). Tamanho máximo: <strong>10 MB por arquivo</strong>.
-    {% if request.method == 'POST' %}⚠️ Por segurança do navegador, o(s) arquivo(s) NÃO ficam salvos ao voltar aqui — se deu erro, escolha o PDF de novo.{% endif %}</p>
+    <p class="hint">Pode anexar mais de um arquivo (por exemplo, o ofício do sindicato e o da secretaria de agricultura). Tamanho máximo: <strong>10 MB por arquivo</strong>.</p>
     <p class="hint" id="aviso-arquivo-grande" style="display:none;color:var(--danger);"></p>
   </fieldset>
+
+  <fieldset>
+    <legend>✍️ Termo de Compromisso</legend>
+    <p class="hint">
+      Antes de enviar o pedido, baixe o Termo de Compromisso, confira os requisitos de espaço e
+      infraestrutura do local do evento, assine digitalmente (pelo <strong>gov.br</strong>, com sua
+      conta gov.br nível prata ou ouro) e anexe aqui o PDF já assinado.
+    </p>
+    <p>
+      <a href="{{ url_for('static', filename='documentos/termo_compromisso_carreta.pdf') }}" target="_blank" class="prox" style="display:inline-block;text-decoration:none;">⬇️ Baixar Termo de Compromisso</a>
+    </p>
+    <label>Anexar Termo de Compromisso assinado (PDF) <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="file" name="termo_compromisso" id="input-termo" accept="application/pdf,.pdf" required>
+    </label>
+    <p class="hint">Tamanho máximo: <strong>10 MB</strong>. Precisa ser o PDF baixado acima, assinado (não vale o modelo em branco).
+    {% if request.method == 'POST' %}⚠️ Por segurança do navegador, o(s) arquivo(s) NÃO ficam salvos ao voltar aqui — se deu erro, escolha os PDFs de novo (ofício e termo).{% endif %}</p>
+  </fieldset>
+
 
   <fieldset>
     <legend>👤 Responsável</legend>
@@ -168,16 +185,21 @@ sindicatoSelect.addEventListener('change', function () {
   }
 })();
 
-// --- Limite de tamanho dos PDFs anexados: avisa e bloqueia o envio antes
-// de a pessoa esperar o upload inteiro pra só então descobrir que passou
-// do limite ---
+// --- Limite de tamanho dos PDFs anexados (ofício e termo de compromisso):
+// avisa e bloqueia o envio antes de a pessoa esperar o upload inteiro pra
+// só então descobrir que passou do limite ---
 const TAMANHO_MAXIMO_MB = 10;
 const TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024;
 const inputOficios = document.getElementById('input-oficios');
+const inputTermo = document.getElementById('input-termo');
 const avisoArquivoGrande = document.getElementById('aviso-arquivo-grande');
 
 function arquivosOficiosValidos() {
-  const grandes = Array.from(inputOficios.files || []).filter(function (arquivo) {
+  const todosArquivos = [
+    ...Array.from(inputOficios.files || []),
+    ...Array.from(inputTermo.files || []),
+  ];
+  const grandes = todosArquivos.filter(function (arquivo) {
     return arquivo.size > TAMANHO_MAXIMO_BYTES;
   });
   if (grandes.length > 0) {
@@ -191,6 +213,7 @@ function arquivosOficiosValidos() {
 }
 
 inputOficios.addEventListener('change', arquivosOficiosValidos);
+inputTermo.addEventListener('change', arquivosOficiosValidos);
 
 document.getElementById('form-carreta').addEventListener('submit', function (evento) {
   if (!arquivosOficiosValidos()) {

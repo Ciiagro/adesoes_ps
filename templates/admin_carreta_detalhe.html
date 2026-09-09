@@ -106,11 +106,12 @@
     </tbody>
   </table>
 
-  <p style="margin:16px 0 8px;font-weight:600;">Ofícios anexados</p>
+  <p style="margin:16px 0 8px;font-weight:600;">Documentos anexados</p>
   {% if solicitacao.arquivos %}
   <ul>
     {% for arq in solicitacao.arquivos %}
     <li>
+      <span style="display:inline-block;font-size:.75rem;font-weight:700;color:var(--ink-faint);margin-right:6px;">[{{ CATEGORIA_ARQUIVO_LABEL.get(arq.categoria, 'Ofício') }}]</span>
       {% if arq.storage_path or arq.conteudo %}
       <a href="{{ url_for('admin_carreta_arquivo', arquivo_id=arq.id) }}" target="_blank">📄 {{ arq.nome_arquivo }}</a>
       {% elif arq.drive_url %}

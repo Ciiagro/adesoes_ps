@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS carreta.arquivos (
     id SERIAL PRIMARY KEY,
     solicitacao_id INTEGER NOT NULL REFERENCES carreta.solicitacoes(id) ON DELETE CASCADE,
     nome_arquivo VARCHAR(200) NOT NULL,
+    categoria VARCHAR(30) NOT NULL DEFAULT 'oficio',
     conteudo BYTEA,
     tipo_mime VARCHAR(80),
     storage_path VARCHAR(400),
@@ -45,6 +46,11 @@ CREATE TABLE IF NOT EXISTS carreta.arquivos (
 -- Se a tabela já existia antes desse campo (rodando esse script de novo
 -- num banco antigo), garante que a coluna nova seja criada:
 ALTER TABLE carreta.arquivos ADD COLUMN IF NOT EXISTS storage_path VARCHAR(400);
+
+-- categoria: "oficio" ou "termo_compromisso" — separa o ofício do termo de
+-- compromisso assinado (novo, ver Guia Técnico da Carreta). Registros já
+-- existentes (de antes desse campo) recebem "oficio" pelo DEFAULT.
+ALTER TABLE carreta.arquivos ADD COLUMN IF NOT EXISTS categoria VARCHAR(30) NOT NULL DEFAULT 'oficio';
 
 CREATE TABLE IF NOT EXISTS carreta.bloqueios (
     id SERIAL PRIMARY KEY,

@@ -1863,7 +1863,7 @@ def admin_reenviar_assinatura(adesao_id, papel):
 
 @app.context_processor
 def _injetar_meses_nomes():
-    return {"MESES_NOMES": carr.MESES_NOMES}
+    return {"MESES_NOMES": carr.MESES_NOMES, "CATEGORIA_ARQUIVO_LABEL": carr.CATEGORIA_ARQUIVO_LABEL}
 
 
 @app.context_processor
@@ -1926,8 +1926,18 @@ def carreta_form():
         if not (request.form.get("sindicato_nome") or "").strip():
             flash("Informe o sindicato solicitante.")
             return _renderizar_formulario()
+        # O Termo de Compromisso assinado também virou obrigatório aqui no
+        # formulário público (baixa o modelo, assina no gov.br e reanexa já
+        # assinado) — mesma lógica: só nesse formulário, o admin continua
+        # podendo cadastrar sem isso.
+        arquivo_termo = request.files.getlist("termo_compromisso")
+        if not any(a and a.filename for a in arquivo_termo):
+            flash("Anexe o Termo de Compromisso assinado (baixe o modelo, assine no gov.br e envie o PDF assinado).")
+            return _renderizar_formulario()
         try:
-            solicitacao = carr.criar_solicitacao(db, request.form, request.files.getlist("oficios"))
+            solicitacao = carr.criar_solicitacao(
+                db, request.form, request.files.getlist("oficios"), arquivo_termo
+            )
         except ValueError as erro:
             flash(str(erro))
             return _renderizar_formulario()
@@ -2016,7 +2026,9 @@ def admin_carreta_nova():
 
     if request.method == "POST":
         try:
-            solicitacao = carr.criar_solicitacao(db, request.form, request.files.getlist("oficios"))
+            solicitacao = carr.criar_solicitacao(
+                db, request.form, request.files.getlist("oficios"), request.files.getlist("termo_compromisso")
+            )
         except ValueError as erro:
             flash(str(erro))
             return redirect(url_for("admin_carreta_nova"))
@@ -2296,7 +2308,10 @@ def admin_carreta_editar(solicitacao_id):
 
     if request.method == "POST":
         try:
-            carr.atualizar_solicitacao(db, solicitacao, request.form, request.files.getlist("oficios"))
+            carr.atualizar_solicitacao(
+                db, solicitacao, request.form,
+                request.files.getlist("oficios"), request.files.getlist("termo_compromisso"),
+            )
             flash("Solicitação atualizada.")
             return redirect(url_for("admin_carreta_detalhe", solicitacao_id=solicitacao.id))
         except ValueError as erro:

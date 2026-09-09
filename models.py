@@ -346,10 +346,12 @@ class SolicitacaoCarreta(Base):
 
 
 class ArquivoCarreta(Base):
-    """Um ofício (PDF) anexado a uma solicitação de carreta. Por enquanto o
-    conteúdo fica guardado aqui mesmo no banco (igual à foto do presidente
-    do sindicato); quando a integração com o Google Drive estiver pronta,
-    `drive_url` passa a ser preenchido e `conteudo` pode ficar vazio."""
+    """Um arquivo (PDF) anexado a uma solicitação de carreta — pode ser o
+    ofício ou o termo de compromisso assinado (ver `categoria`). Por
+    enquanto o conteúdo fica guardado aqui mesmo no banco (igual à foto do
+    presidente do sindicato); quando a integração com o Google Drive
+    estiver pronta, `drive_url` passa a ser preenchido e `conteudo` pode
+    ficar vazio."""
 
     __tablename__ = "arquivos"
     __table_args__ = {"schema": "carreta"}
@@ -357,6 +359,11 @@ class ArquivoCarreta(Base):
     id = Column(Integer, primary_key=True)
     solicitacao_id = Column(Integer, ForeignKey("carreta.solicitacoes.id"), nullable=False)
     nome_arquivo = Column(String(200), nullable=False)
+    # categoria: "oficio" ou "termo_compromisso" — separa o ofício do termo
+    # de compromisso assinado (baixado do site, assinado no gov.br e
+    # reanexado). Registros antigos (antes desse campo existir) vêm como
+    # "oficio" pelo valor padrão do banco.
+    categoria = Column(String(30), nullable=False, server_default="oficio")
     # conteudo: campo ANTIGO (bytea direto no banco) — mantido só pra não
     # quebrar arquivos já existentes (ver migrar_oficios_para_storage.py).
     # Não escrever mais nele; o arquivo novo vai pro Storage e aqui fica só

@@ -36,6 +36,47 @@ STATUS_CONFIRMADOS = ("pendente", "aprovada", "realizada")
 ARQUIVO_TIPOS_PERMITIDOS = {"application/pdf"}
 ARQUIVO_TAMANHO_MAXIMO_BYTES = 10 * 1024 * 1024  # 10 MB por arquivo
 
+# Categorias de arquivo anexado a uma solicitação — hoje são 2 documentos
+# obrigatórios no formulário público: o ofício e o termo de compromisso
+# (baixado do site, assinado no gov.br e reanexado aqui já assinado).
+CATEGORIA_OFICIO = "oficio"
+CATEGORIA_TERMO_COMPROMISSO = "termo_compromisso"
+
+CATEGORIA_ARQUIVO_LABEL = {
+    CATEGORIA_OFICIO: "Ofício",
+    CATEGORIA_TERMO_COMPROMISSO: "Termo de Compromisso assinado",
+}
+
+
+def _processar_anexos(db, solicitacao_id, arquivos, categoria):
+    """Valida (precisa ser PDF e caber no limite de tamanho) e sobe pro
+    Storage cada arquivo da lista, registrando um ArquivoCarreta pra cada
+    um com a `categoria` informada (ofício ou termo de compromisso
+    assinado). Compartilhada entre `criar_solicitacao` e
+    `atualizar_solicitacao` pra não duplicar a mesma validação duas vezes."""
+    for arquivo in arquivos or []:
+        if not arquivo or not arquivo.filename:
+            continue
+        tipo = (arquivo.mimetype or "").lower()
+        if tipo not in ARQUIVO_TIPOS_PERMITIDOS:
+            raise ValueError(f'O arquivo "{arquivo.filename}" precisa ser um PDF.')
+        conteudo = pdf_compressao.comprimir_pdf_se_necessario(arquivo.read())
+        if len(conteudo) > ARQUIVO_TAMANHO_MAXIMO_BYTES:
+            raise ValueError(f'O arquivo "{arquivo.filename}" passou de 10 MB (mesmo após compressão automática).')
+
+        try:
+            caminho = supabase_storage.upload_oficio_carreta(solicitacao_id, conteudo, arquivo.filename)
+        except supabase_storage.SupabaseStorageError as erro:
+            raise ValueError(f"Não consegui enviar o arquivo pro Storage: {erro}")
+
+        db.add(ArquivoCarreta(
+            solicitacao_id=solicitacao_id,
+            nome_arquivo=arquivo.filename,
+            storage_path=caminho,
+            tipo_mime=tipo,
+            categoria=categoria,
+        ))
+
 
 def _limpar(valor):
     if valor is None:
@@ -259,13 +300,13 @@ def obter_solicitacao(db, solicitacao_id):
     return solicitacao
 
 
-def atualizar_solicitacao(db, solicitacao, form, arquivos_upload=None):
+def atualizar_solicitacao(db, solicitacao, form, arquivos_upload=None, arquivos_termo=None):
     """Edita os dados de uma solicitação já cadastrada — corrige qualquer
     campo (programa, município, evento, datas, ofício, responsável...),
-    com as mesmas validações da criação. `arquivos_upload`, se informado,
-    ADICIONA novos ofícios em PDF (não mexe nos que já estavam anexados).
-    Levanta ValueError se faltar algo obrigatório ou a data estiver
-    inválida."""
+    com as mesmas validações da criação. `arquivos_upload`/`arquivos_termo`,
+    se informados, ADICIONAM novos ofícios/termo em PDF (não mexe nos que
+    já estavam anexados). Levanta ValueError se faltar algo obrigatório ou
+    a data estiver inválida."""
     tipo_recurso = form.get("tipo_recurso") or solicitacao.tipo_recurso
     municipio_nome = _limpar(form.get("municipio_nome"))
     evento = _titulo(form.get("evento"))
@@ -311,25 +352,8 @@ def atualizar_solicitacao(db, solicitacao, form, arquivos_upload=None):
     solicitacao.responsavel_email = responsavel_email
     solicitacao.observacoes = _limpar(form.get("observacoes"))
 
-    for arquivo in arquivos_upload or []:
-        if not arquivo or not arquivo.filename:
-            continue
-        tipo = (arquivo.mimetype or "").lower()
-        if tipo not in ARQUIVO_TIPOS_PERMITIDOS:
-            raise ValueError("Cada ofício precisa ser um arquivo PDF.")
-        conteudo = pdf_compressao.comprimir_pdf_se_necessario(arquivo.read())
-        if len(conteudo) > ARQUIVO_TAMANHO_MAXIMO_BYTES:
-            raise ValueError(f'O arquivo "{arquivo.filename}" passou de 10 MB (mesmo após compressão automática).')
-        try:
-            caminho = supabase_storage.upload_oficio_carreta(solicitacao.id, conteudo, arquivo.filename)
-        except supabase_storage.SupabaseStorageError as erro:
-            raise ValueError(f"Não consegui enviar o ofício pro Storage: {erro}")
-        db.add(ArquivoCarreta(
-            solicitacao_id=solicitacao.id,
-            nome_arquivo=arquivo.filename,
-            storage_path=caminho,
-            tipo_mime=tipo,
-        ))
+    _processar_anexos(db, solicitacao.id, arquivos_upload, CATEGORIA_OFICIO)
+    _processar_anexos(db, solicitacao.id, arquivos_termo, CATEGORIA_TERMO_COMPROMISSO)
 
     db.commit()
 
@@ -458,9 +482,10 @@ def verificar_alerta_deslocamento(db, municipio_nome, data_inicio, data_fim, exc
     return avisos
 
 
-def criar_solicitacao(db, form, arquivos_upload):
+def criar_solicitacao(db, form, arquivos_upload, arquivos_termo=None):
     """Cria uma nova solicitação de carreta a partir do formulário público.
-    `arquivos_upload` é uma lista de FileStorage do Flask (request.files).
+    `arquivos_upload` (ofício) e `arquivos_termo` (termo de compromisso
+    assinado) são listas de FileStorage do Flask (request.files).
     Levanta ValueError se faltar algo obrigatório ou a data estiver
     inválida (fim antes do início). Retorna a solicitação criada."""
     municipio_nome = _limpar(form.get("municipio_nome"))
@@ -513,27 +538,8 @@ def criar_solicitacao(db, form, arquivos_upload):
     db.add(solicitacao)
     db.flush()
 
-    for arquivo in arquivos_upload or []:
-        if not arquivo or not arquivo.filename:
-            continue
-        tipo = (arquivo.mimetype or "").lower()
-        if tipo not in ARQUIVO_TIPOS_PERMITIDOS:
-            raise ValueError("Cada ofício precisa ser um arquivo PDF.")
-        conteudo = pdf_compressao.comprimir_pdf_se_necessario(arquivo.read())
-        if len(conteudo) > ARQUIVO_TAMANHO_MAXIMO_BYTES:
-            raise ValueError(f'O arquivo "{arquivo.filename}" passou de 10 MB (mesmo após compressão automática).')
-
-        try:
-            caminho = supabase_storage.upload_oficio_carreta(solicitacao.id, conteudo, arquivo.filename)
-        except supabase_storage.SupabaseStorageError as erro:
-            raise ValueError(f"Não consegui enviar o ofício pro Storage: {erro}")
-
-        db.add(ArquivoCarreta(
-            solicitacao_id=solicitacao.id,
-            nome_arquivo=arquivo.filename,
-            storage_path=caminho,
-            tipo_mime=tipo,
-        ))
+    _processar_anexos(db, solicitacao.id, arquivos_upload, CATEGORIA_OFICIO)
+    _processar_anexos(db, solicitacao.id, arquivos_termo, CATEGORIA_TERMO_COMPROMISSO)
 
     db.commit()
     return solicitacao
@@ -823,7 +829,7 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
     {_tabela_detalhes_email(solicitacao, [("Responsável", solicitacao.responsavel_nome or "não informado")])}
     {f'<p style="margin-top:18px;"><a href="{link}" style="display:inline-block;background:#B5851A;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;">Ver e aprovar essa solicitação →</a></p>' if link else ''}
     <p style="margin-top:16px;color:#8A8168;font-size:.85rem;">
-      {'📎 Os ofícios anexados também estão neste e-mail.' if anexos else 'Nenhum ofício foi anexado a esse pedido.'}
+      {'📎 Os documentos anexados (ofício e termo de compromisso) também estão neste e-mail.' if anexos else 'Nenhum documento foi anexado a esse pedido.'}
     </p>
     """
     corpo = _envelope_email("#B5851A", "🔔 Nova solicitação de carreta", corpo_interno)
