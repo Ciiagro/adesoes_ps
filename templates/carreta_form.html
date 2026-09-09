@@ -64,17 +64,20 @@
       </select>
     </label>
 
-    <label>Município <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
-      <select name="municipio_nome" required>
+    <label>Sindicato solicitante <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <select name="sindicato_nome" id="sindicato_nome" required>
         <option value="">Selecione...</option>
-        {% for m in municipios %}
-        <option value="{{ m }}" {% if request.form.get('municipio_nome') == m %}selected{% endif %}>{{ m }}</option>
+        {% for s in sindicatos %}
+        <option value="{{ s }}" {% if request.form.get('sindicato_nome') == s %}selected{% endif %}>{{ s }}</option>
         {% endfor %}
       </select>
     </label>
 
-    <label>Sindicato solicitante (se houver)
-      <input type="text" name="sindicato_nome" value="{{ request.form.get('sindicato_nome', '') }}" placeholder="Ex.: Sindicato Rural de...">
+    <label>Município <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <select name="municipio_nome" id="municipio_nome" required>
+        <option value="">Selecione o sindicato primeiro...</option>
+      </select>
+      <span class="hint" id="aviso-sem-municipio" style="display:none;color:var(--danger);">Esse sindicato não tem município cadastrado. Fale com o admin antes de continuar.</span>
     </label>
 
     <label>Nome do evento <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
@@ -99,10 +102,11 @@
       <input type="date" name="data_oficio" value="{{ request.form.get('data_oficio', '') }}">
     </label>
     <label>Anexar ofício(s) em PDF <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
-      <input type="file" name="oficios" accept="application/pdf" multiple required>
+      <input type="file" name="oficios" id="input-oficios" accept="application/pdf,.pdf" multiple required>
     </label>
-    <p class="hint">Pode anexar mais de um arquivo (por exemplo, o ofício do sindicato e o da secretaria de agricultura). Tamanho máximo: 10 MB por arquivo.
+    <p class="hint">Pode anexar mais de um arquivo (por exemplo, o ofício do sindicato e o da secretaria de agricultura). Tamanho máximo: <strong>10 MB por arquivo</strong>.
     {% if request.method == 'POST' %}⚠️ Por segurança do navegador, o(s) arquivo(s) NÃO ficam salvos ao voltar aqui — se deu erro, escolha o PDF de novo.{% endif %}</p>
+    <p class="hint" id="aviso-arquivo-grande" style="display:none;color:var(--danger);"></p>
   </fieldset>
 
   <fieldset>
@@ -124,4 +128,75 @@
 
   <button type="submit" class="prox">Enviar solicitação</button>
 </form>
+
+<script>
+// --- Sindicato -> Município (o município mostrado depende do sindicato
+// escolhido, já que cada sindicato responde por um conjunto de municípios) ---
+const municipiosPorSindicato = {{ municipios_por_sindicato | tojson }};
+const sindicatoSelect = document.getElementById('sindicato_nome');
+const municipioSelect = document.getElementById('municipio_nome');
+const avisoSemMunicipio = document.getElementById('aviso-sem-municipio');
+
+function popularMunicipios(nomeSindicato, municipioParaManter) {
+  const lista = municipiosPorSindicato[nomeSindicato] || [];
+  municipioSelect.innerHTML = '';
+  const optPadrao = document.createElement('option');
+  optPadrao.value = '';
+  optPadrao.textContent = nomeSindicato ? 'Selecione...' : 'Selecione o sindicato primeiro...';
+  municipioSelect.appendChild(optPadrao);
+  lista.forEach(function (nome) {
+    const opt = document.createElement('option');
+    opt.value = nome;
+    opt.textContent = nome;
+    if (nome === municipioParaManter) opt.selected = true;
+    municipioSelect.appendChild(opt);
+  });
+  avisoSemMunicipio.style.display = (nomeSindicato && lista.length === 0) ? 'block' : 'none';
+}
+
+sindicatoSelect.addEventListener('change', function () {
+  popularMunicipios(this.value, null);
+});
+
+// Se o formulário voltou por causa de um erro de validação, restaura o
+// sindicato e o município que a pessoa já tinha escolhido.
+(function () {
+  const sindicatoJaEscolhido = sindicatoSelect.value;
+  const municipioParaManter = {{ (request.form.get('municipio_nome') or '') | tojson }};
+  if (sindicatoJaEscolhido) {
+    popularMunicipios(sindicatoJaEscolhido, municipioParaManter);
+  }
+})();
+
+// --- Limite de tamanho dos PDFs anexados: avisa e bloqueia o envio antes
+// de a pessoa esperar o upload inteiro pra só então descobrir que passou
+// do limite ---
+const TAMANHO_MAXIMO_MB = 10;
+const TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024;
+const inputOficios = document.getElementById('input-oficios');
+const avisoArquivoGrande = document.getElementById('aviso-arquivo-grande');
+
+function arquivosOficiosValidos() {
+  const grandes = Array.from(inputOficios.files || []).filter(function (arquivo) {
+    return arquivo.size > TAMANHO_MAXIMO_BYTES;
+  });
+  if (grandes.length > 0) {
+    const nomes = grandes.map(function (a) { return a.name; }).join(', ');
+    avisoArquivoGrande.textContent = 'Arquivo(s) acima de ' + TAMANHO_MAXIMO_MB + ' MB: ' + nomes + '. Reduza o tamanho do PDF (ou divida em partes) antes de anexar.';
+    avisoArquivoGrande.style.display = 'block';
+    return false;
+  }
+  avisoArquivoGrande.style.display = 'none';
+  return true;
+}
+
+inputOficios.addEventListener('change', arquivosOficiosValidos);
+
+document.getElementById('form-carreta').addEventListener('submit', function (evento) {
+  if (!arquivosOficiosValidos()) {
+    evento.preventDefault();
+    avisoArquivoGrande.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+</script>
 {% endblock %}

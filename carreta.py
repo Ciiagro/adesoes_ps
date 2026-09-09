@@ -11,7 +11,7 @@ from flask import url_for
 from sqlalchemy import or_
 
 from email_utils import enviar_email
-from models import SolicitacaoCarreta, ArquivoCarreta, BloqueioCarreta
+from models import SolicitacaoCarreta, ArquivoCarreta, BloqueioCarreta, SindicatoRural, MunicipioSindicato
 import distancia_municipios
 import supabase_storage
 import pdf_compressao
@@ -42,6 +42,29 @@ def _limpar(valor):
         return None
     valor = str(valor).strip()
     return valor or None
+
+
+def obter_sindicatos_e_municipios(db):
+    """Pra alimentar o formulário público: a lista de sindicatos ativos
+    (em ordem alfabética) e, pra cada um, a lista de municípios pelos quais
+    ele responde (também em ordem alfabética) — usado pro campo de
+    Município se limitar às opções do sindicato escolhido."""
+    sindicatos = (
+        db.query(SindicatoRural)
+        .filter(SindicatoRural.ativo.is_(True))
+        .order_by(SindicatoRural.nome)
+        .all()
+    )
+    municipios_por_sindicato = {}
+    for sindicato in sindicatos:
+        nomes = (
+            db.query(MunicipioSindicato.nome)
+            .filter(MunicipioSindicato.sindicato_id == sindicato.id)
+            .order_by(MunicipioSindicato.nome)
+            .all()
+        )
+        municipios_por_sindicato[sindicato.nome] = [n[0] for n in nomes]
+    return [s.nome for s in sindicatos], municipios_por_sindicato
 
 
 def _titulo(valor):

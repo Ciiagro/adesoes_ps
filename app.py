@@ -1903,9 +1903,12 @@ def carreta_form():
         mes = request.args.get("mes", type=int) or hoje.month
         mes_anterior, ano_anterior = (12, ano - 1) if mes == 1 else (mes - 1, ano)
         mes_proximo, ano_proximo = (1, ano + 1) if mes == 12 else (mes + 1, ano)
+        sindicatos, municipios_por_sindicato = carr.obter_sindicatos_e_municipios(db)
         return render_template(
             "carreta_form.html",
             municipios=MUNICIPIOS_CE,
+            sindicatos=sindicatos,
+            municipios_por_sindicato=municipios_por_sindicato,
             tipos_recurso=carr.TIPOS_RECURSO,
             calendario=carr.dados_calendario(db, ano, mes),
             bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
@@ -1916,6 +1919,13 @@ def carreta_form():
         )
 
     if request.method == "POST":
+        # O sindicato solicitante virou obrigatório aqui no formulário
+        # público (a pessoa escolhe o sindicato de uma lista, e o município
+        # abaixo é filtrado por ele) — só nesse formulário público, sem
+        # mexer na regra do cadastro pelo admin.
+        if not (request.form.get("sindicato_nome") or "").strip():
+            flash("Informe o sindicato solicitante.")
+            return _renderizar_formulario()
         try:
             solicitacao = carr.criar_solicitacao(db, request.form, request.files.getlist("oficios"))
         except ValueError as erro:
