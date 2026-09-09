@@ -5,6 +5,7 @@ data já reservada). As rotas Flask (em app.py) só chamam essas funções.
 """
 import calendar
 from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 
 from flask import url_for
 
@@ -495,7 +496,7 @@ def atualizar_status(db, solicitacao, status, motivo_recusa=None, alterado_por=N
     if status not in STATUS_LABEL:
         raise ValueError("Situação inválida.")
     solicitacao.status = status
-    solicitacao.motivo_recusa = _limpar(motivo_recusa) if status == "recusada" else None
+    solicitacao.motivo_recusa = _titulo(motivo_recusa) if status == "recusada" else None
     solicitacao.atualizado_em = datetime.utcnow()
     solicitacao.atualizado_por = _limpar(alterado_por) or "não informado"
     db.commit()
@@ -619,6 +620,60 @@ def _credenciais_email_carreta():
     return usuario, senha
 
 
+FUSO_BRASIL = ZoneInfo("America/Fortaleza")  # UTC-3, sem horário de verão
+
+
+def _data_hora_brasil_str(valor):
+    """Formata um datetime (do banco, geralmente em UTC) já convertido pro
+    horário do Brasil, pra mostrar nos e-mails (ex: 'Solicitado em ...')."""
+    if not valor:
+        return "—"
+    if valor.tzinfo is None:
+        valor = valor.replace(tzinfo=ZoneInfo("UTC"))
+    return valor.astimezone(FUSO_BRASIL).strftime("%d/%m/%Y às %H:%M")
+
+
+def _envelope_email(cor, titulo_faixa, corpo_interno):
+    """Deixa todos os e-mails da Carreta com a mesma cara: uma faixa
+    colorida no topo (a cor muda conforme o tipo de aviso) e o conteúdo
+    dentro de um cartão branco arredondado."""
+    return f"""
+    <div style="font-family:Georgia,'Times New Roman',serif;max-width:560px;margin:0 auto;">
+      <div style="background:{cor};color:#fff;padding:16px 22px;border-radius:12px 12px 0 0;">
+        <h2 style="margin:0;font-size:1.15rem;font-family:Georgia,serif;">{titulo_faixa}</h2>
+      </div>
+      <div style="border:1px solid #E3DCC8;border-top:none;border-radius:0 0 12px 12px;
+                  padding:22px;background:#fff;font-family:Arial,Helvetica,sans-serif;
+                  font-size:.95rem;color:#3A3226;line-height:1.5;">
+        {corpo_interno}
+      </div>
+      <p style="color:#948A76;font-size:.72rem;margin-top:14px;text-align:center;
+                font-family:Arial,Helvetica,sans-serif;">
+        Sistema de Solicitação de Carreta — SENAR-CE
+      </p>
+    </div>
+    """
+
+
+def _tabela_detalhes_email(solicitacao, linhas_extras=None):
+    """Tabelinha padrão com os dados do pedido, usada em todos os e-mails."""
+    linhas = [
+        ("Programa", TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)),
+        ("Evento", solicitacao.evento),
+        ("Município", solicitacao.municipio_nome),
+        ("Período", f"{solicitacao.data_inicio.strftime('%d/%m/%Y')} a {solicitacao.data_fim.strftime('%d/%m/%Y')}"),
+        ("Solicitado em", _data_hora_brasil_str(solicitacao.criado_em)),
+    ]
+    if linhas_extras:
+        linhas += linhas_extras
+    linhas_html = "".join(
+        f'<tr><td style="padding:7px 12px 7px 0;color:#8A8168;white-space:nowrap;vertical-align:top;">{rotulo}</td>'
+        f'<td style="padding:7px 0;font-weight:700;">{valor}</td></tr>'
+        for rotulo, valor in linhas
+    )
+    return f'<table style="width:100%;border-collapse:collapse;margin:14px 0;">{linhas_html}</table>'
+
+
 def enviar_confirmacao_solicitante(solicitacao):
     """Manda pro PRÓPRIO solicitante uma confirmação de que o pedido foi
     recebido — usa a mesma conta de e-mail própria do módulo
@@ -627,17 +682,14 @@ def enviar_confirmacao_solicitante(solicitacao):
     if not usuario or not solicitacao.responsavel_email:
         return False
 
-    corpo = f"""
+    corpo_interno = f"""
     <p>Olá, {solicitacao.responsavel_nome or ''}.</p>
-    <p>Recebemos sua solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)}:</p>
-    <ul>
-      <li><b>Município:</b> {solicitacao.municipio_nome}</li>
-      <li><b>Evento:</b> {solicitacao.evento}</li>
-      <li><b>Período:</b> {solicitacao.data_inicio.strftime('%d/%m/%Y')} a {solicitacao.data_fim.strftime('%d/%m/%Y')}</li>
-    </ul>
+    <p>Recebemos sua solicitação. Confira os dados abaixo:</p>
+    {_tabela_detalhes_email(solicitacao)}
     <p>Situação atual: <b>Pendente</b>. Assim que o pedido for analisado, você recebe um novo
     e-mail avisando se foi aprovado ou não.</p>
     """
+    corpo = _envelope_email("#B5851A", "📨 Solicitação recebida", corpo_interno)
     return enviar_email(
         solicitacao.responsavel_email, f"Recebemos sua solicitação — {solicitacao.evento}", corpo,
         usuario=usuario, senha=senha,
@@ -652,22 +704,21 @@ def enviar_notificacao_status(solicitacao):
 
     if solicitacao.status == "aprovada":
         assunto = f"Solicitação aprovada — {solicitacao.evento}"
-        corpo = f"""
+        corpo_interno = f"""
         <p>Olá, {solicitacao.responsavel_nome or ''}.</p>
-        <p>Sua solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)} pro evento
-        <b>{solicitacao.evento}</b> ({solicitacao.data_inicio.strftime('%d/%m/%Y')} a
-        {solicitacao.data_fim.strftime('%d/%m/%Y')}) foi <b>aprovada</b>.</p>
+        <p>Boa notícia: sua solicitação foi <b>aprovada</b>! Confira os dados abaixo:</p>
+        {_tabela_detalhes_email(solicitacao)}
         """
+        corpo = _envelope_email("#3E8E52", "✅ Solicitação aprovada", corpo_interno)
     else:
-        motivo = f"<p><b>Motivo:</b> {solicitacao.motivo_recusa}</p>" if solicitacao.motivo_recusa else ""
+        linhas_extras = [("Motivo do cancelamento", solicitacao.motivo_recusa)] if solicitacao.motivo_recusa else None
         assunto = f"Solicitação cancelada — {solicitacao.evento}"
-        corpo = f"""
+        corpo_interno = f"""
         <p>Olá, {solicitacao.responsavel_nome or ''}.</p>
-        <p>Sua solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)} pro evento
-        <b>{solicitacao.evento}</b> ({solicitacao.data_inicio.strftime('%d/%m/%Y')} a
-        {solicitacao.data_fim.strftime('%d/%m/%Y')}) foi <b>cancelada</b>.</p>
-        {motivo}
+        <p>Sua solicitação foi <b>cancelada</b>. Confira os dados abaixo:</p>
+        {_tabela_detalhes_email(solicitacao, linhas_extras)}
         """
+        corpo = _envelope_email("#A6412B", "✖ Solicitação cancelada", corpo_interno)
 
     return enviar_email(
         solicitacao.responsavel_email, assunto, corpo,
@@ -710,17 +761,15 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
         if conteudo:
             anexos.append({"nome": arquivo.nome_arquivo, "conteudo": conteudo, "tipo_mime": "application/pdf"})
 
-    corpo = f"""
-    <p>Nova solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)} recebida:</p>
-    <ul>
-      <li><b>Município:</b> {solicitacao.municipio_nome}</li>
-      <li><b>Evento:</b> {solicitacao.evento}</li>
-      <li><b>Período:</b> {solicitacao.data_inicio.strftime('%d/%m/%Y')} a {solicitacao.data_fim.strftime('%d/%m/%Y')}</li>
-      <li><b>Responsável:</b> {solicitacao.responsavel_nome or 'não informado'}</li>
-    </ul>
-    {f'<p><a href="{link}">Clique aqui pra ver e aprovar essa solicitação</a></p>' if link else ''}
-    <p>{'Os ofícios anexados também estão neste e-mail.' if anexos else 'Nenhum ofício foi anexado a esse pedido.'}</p>
+    corpo_interno = f"""
+    <p>Chegou uma nova solicitação, aguardando análise:</p>
+    {_tabela_detalhes_email(solicitacao, [("Responsável", solicitacao.responsavel_nome or "não informado")])}
+    {f'<p style="margin-top:18px;"><a href="{link}" style="display:inline-block;background:#B5851A;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;">Ver e aprovar essa solicitação →</a></p>' if link else ''}
+    <p style="margin-top:16px;color:#8A8168;font-size:.85rem;">
+      {'📎 Os ofícios anexados também estão neste e-mail.' if anexos else 'Nenhum ofício foi anexado a esse pedido.'}
+    </p>
     """
+    corpo = _envelope_email("#B5851A", "🔔 Nova solicitação de carreta", corpo_interno)
     return enviar_email(
         destinatario, f"Nova solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)} — {solicitacao.municipio_nome}", corpo,
         usuario=usuario, senha=senha, anexos=anexos,
