@@ -29,6 +29,7 @@ import distancia_municipios
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev")
 app.jinja_env.filters["data_brasil"] = carr._data_hora_brasil_str
+app.jinja_env.filters["so_data_brasil"] = carr._data_brasil_str
 
 
 @app.teardown_appcontext
@@ -1936,6 +1937,7 @@ def admin_carreta():
     db = SessionLocal()
     hoje = datetime.now().date()
     status = request.args.get("status", "")
+    busca = request.args.get("busca", "").strip()
     if "mes" in request.args:
         # Chave "mes" apareceu na URL de propósito (dropdown ou "Limpar
         # mês") — respeita o que a pessoa escolheu, mesmo que seja "vazio"
@@ -1948,20 +1950,24 @@ def admin_carreta():
 
     # Pendente é sempre "precisa de ação" — não faz sentido esconder atrás
     # de um filtro de mês (o evento pode ser daqui a 2 meses e mesmo assim
-    # precisar de decisão AGORA). Por isso, ao filtrar por Pendente, ignora
-    # o mês e mostra todas, de qualquer período.
-    ano_da_busca, mes_da_busca = (None, None) if status == "pendente" else (ano, mes)
+    # precisar de decisão AGORA). Buscando algo específico, também ignora o
+    # mês — faz mais sentido procurar em tudo, não só no mês em exibição.
+    ignora_mes = status == "pendente" or bool(busca)
+    ano_da_busca, mes_da_busca = (None, None) if ignora_mes else (ano, mes)
 
     return render_template(
         "admin_carreta.html",
         pagina_ativa="carreta",
-        solicitacoes=carr.listar_solicitacoes(db, status=status or None, ano=ano_da_busca, mes=mes_da_busca),
+        solicitacoes=carr.listar_solicitacoes(
+            db, status=status or None, ano=ano_da_busca, mes=mes_da_busca, busca=busca or None
+        ),
         status_label=carr.STATUS_LABEL,
         tipos_recurso=carr.TIPOS_RECURSO,
         filtro_status=status,
         filtro_ano=ano,
         filtro_mes=mes,
-        ignorando_mes_por_pendente=(status == "pendente"),
+        filtro_busca=busca,
+        ignorando_mes_por_pendente=ignora_mes,
     )
 
 

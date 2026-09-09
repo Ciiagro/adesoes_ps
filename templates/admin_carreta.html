@@ -7,10 +7,21 @@
 </div>
 
 <div class="secao-card" style="margin-bottom:16px;">
+  <form method="get" style="display:flex;gap:8px;margin-bottom:14px;">
+    {% if filtro_status %}<input type="hidden" name="status" value="{{ filtro_status }}">{% endif %}
+    {% if filtro_ano %}<input type="hidden" name="ano" value="{{ filtro_ano }}">{% endif %}
+    {% if filtro_mes %}<input type="hidden" name="mes" value="{{ filtro_mes }}">{% endif %}
+    <input type="text" name="busca" value="{{ filtro_busca or '' }}" placeholder="🔎 Buscar por município, evento, sindicato, responsável ou nº do ofício..." style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:9px;">
+    <button type="submit" class="btn">Buscar</button>
+    {% if filtro_busca %}
+    <a class="btn secundario" href="{{ url_for('admin_carreta', status=filtro_status or None, ano=filtro_ano, mes=filtro_mes) }}">Limpar busca</a>
+    {% endif %}
+  </form>
+
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-    <a class="btn {{ 'secundario' if filtro_status else '' }}" href="{{ url_for('admin_carreta', ano=filtro_ano, mes=filtro_mes) }}">Todas</a>
+    <a class="btn {{ 'secundario' if filtro_status else '' }}" href="{{ url_for('admin_carreta', ano=filtro_ano, mes=filtro_mes, busca=filtro_busca or None) }}">Todas</a>
     {% for chave, rotulo in status_label.items() %}
-    <a class="btn {{ 'secundario' if filtro_status != chave else '' }}" href="{{ url_for('admin_carreta', status=chave, ano=filtro_ano, mes=filtro_mes) }}">
+    <a class="btn {{ 'secundario' if filtro_status != chave else '' }}" href="{{ url_for('admin_carreta', status=chave, ano=filtro_ano, mes=filtro_mes, busca=filtro_busca or None) }}">
       {{ rotulo }}{% if chave == 'pendente' %} 🔔{% endif %}
     </a>
     {% endfor %}
@@ -18,13 +29,15 @@
 
   {% if ignorando_mes_por_pendente %}
   <p class="hint" style="background:#FBEED6;border:1px solid #EEDCB4;border-radius:9px;padding:9px 12px;margin-bottom:14px;">
-    ⚠️ Mostrando <b>todas as pendentes, de qualquer mês</b> — pendente sempre precisa de uma decisão,
-    então esse filtro ignora o seletor de mês abaixo (ele só vale pras outras situações).
+    ⚠️ Mostrando <b>de qualquer mês</b>
+    {%- if filtro_busca %} (busca livre ignora o filtro de mês, procura em tudo){% else %} (pendente sempre precisa de uma decisão, então ignora o filtro de mês){% endif -%}
+    — o seletor de mês abaixo fica sem efeito nesse momento.
   </p>
   {% endif %}
 
   <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);padding-top:14px;{% if ignorando_mes_por_pendente %}opacity:.5;{% endif %}">
     {% if filtro_status %}<input type="hidden" name="status" value="{{ filtro_status }}">{% endif %}
+    {% if filtro_busca %}<input type="hidden" name="busca" value="{{ filtro_busca }}">{% endif %}
     <span class="rot" style="margin-right:2px;">Mês:</span>
     <select name="mes" {% if ignorando_mes_por_pendente %}disabled{% endif %} style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;">
       <option value="">Todos os meses</option>
@@ -34,7 +47,7 @@
     </select>
     <input type="number" name="ano" value="{{ filtro_ano or '' }}" placeholder="Ano" {% if ignorando_mes_por_pendente %}disabled{% endif %} style="width:90px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;">
     <button type="submit" class="btn secundario" {% if ignorando_mes_por_pendente %}disabled{% endif %}>Filtrar</button>
-    <a class="btn secundario" href="{{ url_for('admin_carreta', status=filtro_status or None, mes='') }}">Ver todos os meses</a>
+    <a class="btn secundario" href="{{ url_for('admin_carreta', status=filtro_status or None, busca=filtro_busca or None, mes='') }}">Ver todos os meses</a>
   </form>
 </div>
 
@@ -54,7 +67,7 @@
       <td><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}" style="font-weight:600;">{{ s.municipio_nome }}</a></td>
       <td>{{ s.evento }}</td>
       <td>{{ s.data_inicio.strftime('%d/%m/%Y') }} a {{ s.data_fim.strftime('%d/%m/%Y') }}</td>
-      <td style="white-space:nowrap;color:var(--ink-faint);font-size:.85rem;">{{ s.criado_em|data_brasil }}</td>
+      <td style="white-space:nowrap;color:var(--ink-faint);font-size:.85rem;">{{ s.criado_em|so_data_brasil }}</td>
       <td>
         <span class="badge {% if s.status == 'aprovada' %}concluida{% elif s.status == 'realizada' %}realizada{% elif s.status == 'recusada' %}rascunho{% else %}aguardando{% endif %}">
           {{ status_label.get(s.status, s.status) }}

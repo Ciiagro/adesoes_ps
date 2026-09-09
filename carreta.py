@@ -8,6 +8,7 @@ from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 
 from flask import url_for
+from sqlalchemy import or_
 
 from email_utils import enviar_email
 from models import SolicitacaoCarreta, ArquivoCarreta, BloqueioCarreta
@@ -86,12 +87,13 @@ def atualizar_realizadas_automaticamente(db, hoje=None):
     return len(pendentes_de_atualizar)
 
 
-def listar_solicitacoes(db, status=None, tipo_recurso=None, ano=None, mes=None):
+def listar_solicitacoes(db, status=None, tipo_recurso=None, ano=None, mes=None, busca=None):
     """Lista de solicitações, mais recentes primeiro. Filtra por status,
-    tipo de recurso e/ou mês (ano+mes juntos) quando informado. O filtro de
-    mês considera qualquer solicitação cujo período TOQUE aquele mês (não
-    só as que começam nele) — então um evento que atravessa a virada do
-    mês aparece nos dois."""
+    tipo de recurso, mês (ano+mes juntos) e/ou busca livre (qualquer trecho
+    de município, evento, sindicato ou responsável) quando informado. O
+    filtro de mês considera qualquer solicitação cujo período TOQUE aquele
+    mês (não só as que começam nele) — então um evento que atravessa a
+    virada do mês aparece nos dois."""
     atualizar_realizadas_automaticamente(db)
     query = db.query(SolicitacaoCarreta).order_by(SolicitacaoCarreta.data_inicio.desc())
     if status:
@@ -103,6 +105,18 @@ def listar_solicitacoes(db, status=None, tipo_recurso=None, ano=None, mes=None):
         ultimo_dia = date(ano, mes, calendar.monthrange(ano, mes)[1])
         query = query.filter(SolicitacaoCarreta.data_inicio <= ultimo_dia)
         query = query.filter(SolicitacaoCarreta.data_fim >= primeiro_dia)
+    busca = _limpar(busca)
+    if busca:
+        termo = f"%{busca}%"
+        query = query.filter(
+            or_(
+                SolicitacaoCarreta.municipio_nome.ilike(termo),
+                SolicitacaoCarreta.evento.ilike(termo),
+                SolicitacaoCarreta.sindicato_nome.ilike(termo),
+                SolicitacaoCarreta.responsavel_nome.ilike(termo),
+                SolicitacaoCarreta.numero_oficio.ilike(termo),
+            )
+        )
     return query.all()
 
 
@@ -631,6 +645,16 @@ def _data_hora_brasil_str(valor):
     if valor.tzinfo is None:
         valor = valor.replace(tzinfo=ZoneInfo("UTC"))
     return valor.astimezone(FUSO_BRASIL).strftime("%d/%m/%Y às %H:%M")
+
+
+def _data_brasil_str(valor):
+    """Igual _data_hora_brasil_str, mas só a data (sem hora) — pra colunas
+    de listagem onde a hora exata não é necessária."""
+    if not valor:
+        return "—"
+    if valor.tzinfo is None:
+        valor = valor.replace(tzinfo=ZoneInfo("UTC"))
+    return valor.astimezone(FUSO_BRASIL).strftime("%d/%m/%Y")
 
 
 def _envelope_email(cor, titulo_faixa, corpo_interno):
