@@ -28,6 +28,7 @@ import distancia_municipios
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev")
+app.jinja_env.filters["data_brasil"] = carr._data_hora_brasil_str
 
 
 @app.teardown_appcontext

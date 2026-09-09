@@ -44,7 +44,7 @@
 <table>
   <thead>
     <tr>
-      <th>Programa</th><th>Município</th><th>Evento</th><th>Período</th><th>Situação</th><th></th>
+      <th>Programa</th><th>Município</th><th>Evento</th><th>Período</th><th>Solicitado em</th><th>Situação</th><th></th>
     </tr>
   </thead>
   <tbody>
@@ -54,6 +54,7 @@
       <td><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}" style="font-weight:600;">{{ s.municipio_nome }}</a></td>
       <td>{{ s.evento }}</td>
       <td>{{ s.data_inicio.strftime('%d/%m/%Y') }} a {{ s.data_fim.strftime('%d/%m/%Y') }}</td>
+      <td style="white-space:nowrap;color:var(--ink-faint);font-size:.85rem;">{{ s.criado_em|data_brasil }}</td>
       <td>
         <span class="badge {% if s.status == 'aprovada' %}concluida{% elif s.status == 'realizada' %}realizada{% elif s.status == 'recusada' %}rascunho{% else %}aguardando{% endif %}">
           {{ status_label.get(s.status, s.status) }}
