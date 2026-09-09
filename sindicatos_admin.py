@@ -1032,11 +1032,11 @@ _ficha_municipios_style = ParagraphStyle(
 _FICHA_COL1 = 55 * mm
 _FICHA_COL2 = 190 * mm
 
-# Larguras do "Relatório de Contatos" (4 colunas: Município/Presidente/
+# Larguras do "Relatório de Contatos" (3 colunas: Sindicato/Presidente/
 # Telefone/E-mail) — soma igual à largura total da Ficha de Distribuição
 # acima, só dividida diferente.
 _RELATORIO_LARGURA_TOTAL = _FICHA_COL1 + _FICHA_COL2
-_RELATORIO_COLS = [40 * mm, 65 * mm, 35 * mm, 105 * mm]
+_RELATORIO_COLS = [95 * mm, 35 * mm, 115 * mm]
 
 
 def _limpar_texto_vice(texto):
@@ -1170,11 +1170,10 @@ def gerar_ficha_distribuicao_pdf(db):
 
 
 def montar_estrutura_relatorio_contatos(db):
-    """Agrupa os municípios por Região FAEC, com os dados de contato de
-    cada um (presidente, telefone, e-mail) — pro 'Relatório de Contatos
-    dos Sindicatos por Região', no formato da planilha impressa que os
-    setores já usavam (uma linha por MUNICÍPIO, diferente da Ficha de
-    Distribuição, que agrupa por sindicato)."""
+    """Agrupa os municípios por Região FAEC -> Sindicato, com os dados de
+    contato de cada sindicato (presidente, telefone, e-mail) — pro
+    'Relatório de Contatos dos Sindicatos por Região': uma linha por
+    SINDICATO (não repete por município)."""
     municipios = (
         db.query(MunicipioSindicato)
         .options(joinedload(MunicipioSindicato.sindicato).defer(SindicatoRural.foto_presidente).defer(SindicatoRural.foto_presidente_tipo))
@@ -1185,19 +1184,24 @@ def montar_estrutura_relatorio_contatos(db):
     regioes = {}
     for m in municipios:
         nome_regiao = m.regiao_faec or "Região não definida"
-        regiao = regioes.setdefault(nome_regiao, {"vice_presidente": None, "telefone_vice": None, "municipios": []})
+        regiao = regioes.setdefault(nome_regiao, {"vice_presidente": None, "telefone_vice": None, "sindicatos": {}})
         if not regiao["vice_presidente"] and m.vice_presidente_texto:
             regiao["vice_presidente"] = _limpar_texto_vice(m.vice_presidente_texto)
         if not regiao["telefone_vice"] and m.telefone_vice_presidente:
             regiao["telefone_vice"] = m.telefone_vice_presidente
 
-        emails = [e for e in [m.email1, m.email2, m.email3, m.email4] if e]
-        regiao["municipios"].append({
-            "nome": m.nome,
-            "presidente": m.presidente_nome or "—",
-            "telefone": m.telefone1 or "—",
-            "email": " / ".join(emails) if emails else "—",
-        })
+        nome_sindicato = m.sindicato.nome if m.sindicato else "Sem sindicato definido"
+        info_sindicato = regiao["sindicatos"].setdefault(
+            nome_sindicato, {"presidente": None, "telefone": None, "email": None}
+        )
+        if not info_sindicato["presidente"] and m.presidente_nome:
+            info_sindicato["presidente"] = m.presidente_nome
+        if not info_sindicato["telefone"] and m.telefone1:
+            info_sindicato["telefone"] = m.telefone1
+        if not info_sindicato["email"]:
+            emails = [e for e in [m.email1, m.email2, m.email3, m.email4] if e]
+            if emails:
+                info_sindicato["email"] = " / ".join(emails)
 
     return regioes
 
@@ -1221,19 +1225,21 @@ def _relatorio_faixa_regiao(nome_regiao, vice_presidente, telefone_vice):
     return t
 
 
-def _relatorio_tabela_contatos(municipios_lista):
+def _relatorio_tabela_contatos(sindicatos_dict):
     dados = [[
-        Paragraph("MUNICÍPIO", _ficha_cabecalho_style),
-        Paragraph("PRESIDENTE", _ficha_cabecalho_style),
+        Paragraph("SINDICATO/PRESIDENTE", _ficha_cabecalho_style),
         Paragraph("TELEFONE", _ficha_cabecalho_style),
         Paragraph("E-MAIL", _ficha_cabecalho_style),
     ]]
-    for m in municipios_lista:
+    for nome_sindicato in sorted(sindicatos_dict.keys()):
+        info = sindicatos_dict[nome_sindicato]
+        rotulo = nome_sindicato
+        if info["presidente"]:
+            rotulo += f" ({info['presidente']})"
         dados.append([
-            Paragraph(m["nome"], _ficha_sindicato_style),
-            Paragraph(m["presidente"], _ficha_municipios_style),
-            Paragraph(m["telefone"], _ficha_municipios_style),
-            Paragraph(m["email"], _ficha_municipios_style),
+            Paragraph(rotulo, _ficha_sindicato_style),
+            Paragraph(info["telefone"] or "—", _ficha_municipios_style),
+            Paragraph(info["email"] or "—", _ficha_municipios_style),
         ])
 
     t = Table(dados, colWidths=_RELATORIO_COLS, repeatRows=1)
@@ -1251,10 +1257,9 @@ def _relatorio_tabela_contatos(municipios_lista):
 
 def gerar_relatorio_contatos_pdf(db):
     """Gera o "Relatório de Contatos dos Sindicatos por Região FAEC" em
-    PDF, a partir do estado ATUAL do banco — uma linha por MUNICÍPIO
+    PDF, a partir do estado ATUAL do banco — uma linha por SINDICATO
     (Presidente/Telefone/E-mail), agrupado por Região FAEC com o
-    Vice-Presidente Regional no topo. Mesmo layout da planilha impressa
-    que os setores já usavam. Retorna bytes prontos para download."""
+    Vice-Presidente Regional no topo. Retorna bytes prontos para download."""
     regioes = montar_estrutura_relatorio_contatos(db)
 
     story = []
@@ -1275,7 +1280,7 @@ def gerar_relatorio_contatos_pdf(db):
     for nome_regiao in sorted(regioes.keys()):
         info_regiao = regioes[nome_regiao]
         story.append(_relatorio_faixa_regiao(nome_regiao, info_regiao["vice_presidente"], info_regiao["telefone_vice"]))
-        story.append(_relatorio_tabela_contatos(info_regiao["municipios"]))
+        story.append(_relatorio_tabela_contatos(info_regiao["sindicatos"]))
         story.append(Spacer(1, 4 * mm))
 
     buffer = BytesIO()
