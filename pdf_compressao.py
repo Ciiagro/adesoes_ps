@@ -17,8 +17,6 @@ ou impressão) e recomprime como JPEG.
 Nunca arrisca o upload: se a compressão falhar por qualquer motivo, ou se
 o resultado não ficar menor que o original, devolve o arquivo original."""
 
-import pymupdf as fitz  # PyMuPDF; "fitz" é o nome antigo do pacote, descontinuado
-
 LIMIAR_PARA_COMPRIMIR_BYTES = 2 * 1024 * 1024  # só comprime PDFs acima de 2 MB
 DPI_SAIDA = 150
 QUALIDADE_JPEG = 60
@@ -34,6 +32,16 @@ def comprimir_pdf_se_necessario(conteudo: bytes) -> bytes:
         return conteudo
 
     try:
+        # Import tardio (só aqui dentro, não lá em cima no arquivo): o
+        # PyMuPDF é uma biblioteca pesada, e se ficasse importada no topo
+        # do módulo, ela carregaria em TODA requisição do site inteiro
+        # (porque carreta.py importa este arquivo, e app.py importa
+        # carreta.py) — mesmo em páginas que não têm nada a ver com PDF.
+        # Isso deixava o "cold start" do Vercel bem mais lento à toa.
+        # Importando só aqui, ela só é carregada quando alguém realmente
+        # sobe um PDF grande.
+        import pymupdf as fitz  # "fitz" é o nome antigo do pacote, descontinuado
+
         origem = fitz.open(stream=conteudo, filetype="pdf")
         destino = fitz.open()
         zoom = DPI_SAIDA / 72
