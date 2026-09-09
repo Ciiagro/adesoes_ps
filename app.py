@@ -1354,6 +1354,27 @@ def admin_sindicatos_ficha():
     )
 
 
+@app.route("/admin/sindicatos/relatorio-contatos")
+def admin_sindicatos_relatorio_contatos():
+    """Gera o "Relatório de Contatos dos Sindicatos por Região FAEC" em
+    PDF (uma linha por município, com presidente/telefone/e-mail),
+    a partir do estado ATUAL do banco — mesmo formato da planilha impressa
+    que os setores já usavam."""
+    resp = acesso_gestao_sindicatos_obrigatorio()
+    if resp:
+        return resp
+
+    db = SessionLocal()
+    conteudo = sind.gerar_relatorio_contatos_pdf(db)
+    nome_arquivo = f"Contatos_Sindicatos_Por_Regiao_{datetime.now():%Y-%m-%d}.pdf"
+
+    return Response(
+        conteudo,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{nome_arquivo}"'},
+    )
+
+
 @app.route("/admin/sindicatos/novo", methods=["GET", "POST"])
 def admin_sindicato_novo():
     """Cadastra um sindicato novo, já com presidente/contatos e os

@@ -79,6 +79,7 @@
   {% if pode_editar_sindicatos %}
   <a class="btn secundario" href="{{ url_for('admin_sindicatos_exportar', busca=filtro_busca, regiao_faec=filtro_regiao_faec, sindicato_id=filtro_sindicato_id) }}">⬇️ Gerar planilha para os setores</a>
   <a class="btn secundario" href="{{ url_for('admin_sindicatos_ficha') }}" target="_blank">📄 Gerar ficha de distribuição (PDF)</a>
+  <a class="btn secundario" href="{{ url_for('admin_sindicatos_relatorio_contatos') }}" target="_blank">📇 Relatório de contatos por região (PDF)</a>
   {% endif %}
 </form>
 
