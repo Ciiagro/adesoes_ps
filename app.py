@@ -1302,13 +1302,15 @@ def admin_sindicatos_mapa():
         return redirect(url_for("admin_login"))
 
     db = SessionLocal()
-    dados = sind.dados_mapa_sindicatos(db)
+    regiao_filtro = request.args.get("regiao", "").strip()
+    dados = sind.dados_mapa_sindicatos(db, regiao_filtro=regiao_filtro or None)
 
     return render_template(
         "admin_sindicatos_mapa.html",
         pagina_ativa="mapa_sindicatos",
         apenas_sindicatos=(gestao_sindicato_logado() and not admin_logado()),
         dados_mapa=dados,
+        regiao_filtro=regiao_filtro,
     )
 
 

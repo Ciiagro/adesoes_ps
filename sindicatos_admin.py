@@ -236,13 +236,16 @@ def salvar_edicao(db, municipio, form, alterado_por, observacao):
     return algo_mudou
 
 
-def dados_mapa_sindicatos(db):
+def dados_mapa_sindicatos(db, regiao_filtro=None):
     """Monta os dados pros dois mapas do Ceará (sindicatos georreferenciados
     e municípios coloridos por região FAEC):
     - `regioes`: nomes das regiões FAEC que existem hoje, cada uma já com
       uma cor fixa (mesma região = mesma cor nos dois mapas).
     - `sindicatos`: só os que têm latitude/longitude cadastradas, com a
-      região "herdada" do município mais completo vinculado a ele.
+      região "herdada" do município mais completo vinculado a ele — se
+      `regiao_filtro` for informado, só os sindicatos dessa região (o
+      mapa de contorno à direita continua mostrando todas, como
+      referência de onde essa região fica no estado).
     - `regiao_por_cod_ibge`: {cod_ibge: nome_da_regiao}, usado pra colorir
       o contorno de cada um dos 184 municípios no mapa de regiões."""
     paleta = [
@@ -258,13 +261,25 @@ def dados_mapa_sindicatos(db):
         str(m.cod_ibge): m.regiao_faec for m in todos_municipios if m.regiao_faec
     }
 
+    # Agrupa os municípios por sindicato UMA VEZ, em memória (reaproveitando
+    # os dados que já buscamos acima) — em vez de fazer uma consulta ao
+    # banco POR SINDICATO dentro do loop abaixo. Com 48+ sindicatos
+    # cadastrados, isso era 48+ idas e vindas ao banco só nessa tela,
+    # deixando o mapa bem lento pra carregar.
+    municipios_por_sindicato_id = {}
+    for m in todos_municipios:
+        if m.sindicato_id:
+            municipios_por_sindicato_id.setdefault(m.sindicato_id, []).append(m)
+
     sindicatos = []
     for sindicato in listar_sindicatos(db):
         if sindicato.latitude is None or sindicato.longitude is None:
             continue
-        municipios = municipios_do_sindicato(db, sindicato.id)
+        municipios = municipios_por_sindicato_id.get(sindicato.id, [])
         referencia = melhor_referencia(municipios)
         regiao = referencia.regiao_faec if referencia else None
+        if regiao_filtro and regiao != regiao_filtro:
+            continue
         sindicatos.append({
             "id": sindicato.id,
             "nome": sindicato.nome,

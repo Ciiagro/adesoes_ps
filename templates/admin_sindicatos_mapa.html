@@ -25,9 +25,25 @@
 <div class="page-head">
   <h1>Mapa dos Sindicatos</h1>
   <p class="sub">
-    {{ dados_mapa.sindicatos|length }} sindicato(s) georreferenciado(s) (com endereço/coordenadas cadastrados),
+    {{ dados_mapa.sindicatos|length }} sindicato(s) georreferenciado(s) (com endereço/coordenadas cadastrados){% if regiao_filtro %} na região <b>{{ regiao_filtro }}</b>{% endif %},
     coloridos por região FAEC — mesma cor nos dois mapas, pra dar pra comparar.
   </p>
+</div>
+
+<div class="secao-card" style="margin-bottom:16px;">
+  <form method="get" style="display:flex;gap:8px;align-items:center;">
+    <span class="rot">Filtrar por região:</span>
+    <select name="regiao" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;">
+      <option value="">Todas as regiões</option>
+      {% for r in dados_mapa.regioes %}
+      <option value="{{ r.nome }}" {% if regiao_filtro == r.nome %}selected{% endif %}>{{ r.nome }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn secundario">Filtrar</button>
+    {% if regiao_filtro %}
+    <a class="btn secundario" href="{{ url_for('admin_sindicatos_mapa') }}">Ver todas</a>
+    {% endif %}
+  </form>
 </div>
 
 {% if dados_mapa.regioes %}
