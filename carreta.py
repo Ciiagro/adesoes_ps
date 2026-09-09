@@ -48,22 +48,32 @@ def obter_sindicatos_e_municipios(db):
     """Pra alimentar o formulário público: a lista de sindicatos ativos
     (em ordem alfabética) e, pra cada um, a lista de municípios pelos quais
     ele responde (também em ordem alfabética) — usado pro campo de
-    Município se limitar às opções do sindicato escolhido."""
+    Município se limitar às opções do sindicato escolhido.
+
+    Faz só DUAS consultas ao banco (uma pros sindicatos, uma pra TODOS os
+    municípios de uma vez) e junta tudo em Python — evita repetir uma
+    consulta por sindicato (isso é o que tava deixando a tela lenta)."""
     sindicatos = (
         db.query(SindicatoRural)
         .filter(SindicatoRural.ativo.is_(True))
         .order_by(SindicatoRural.nome)
         .all()
     )
-    municipios_por_sindicato = {}
-    for sindicato in sindicatos:
-        nomes = (
-            db.query(MunicipioSindicato.nome)
-            .filter(MunicipioSindicato.sindicato_id == sindicato.id)
-            .order_by(MunicipioSindicato.nome)
-            .all()
-        )
-        municipios_por_sindicato[sindicato.nome] = [n[0] for n in nomes]
+
+    municipios_do_sindicato = {}
+    linhas = (
+        db.query(MunicipioSindicato.sindicato_id, MunicipioSindicato.nome)
+        .filter(MunicipioSindicato.sindicato_id.isnot(None))
+        .order_by(MunicipioSindicato.nome)
+        .all()
+    )
+    for sindicato_id, nome_municipio in linhas:
+        municipios_do_sindicato.setdefault(sindicato_id, []).append(nome_municipio)
+
+    municipios_por_sindicato = {
+        sindicato.nome: municipios_do_sindicato.get(sindicato.id, [])
+        for sindicato in sindicatos
+    }
     return [s.nome for s in sindicatos], municipios_por_sindicato
 
 
