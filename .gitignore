@@ -16,3 +16,7 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# Anotações pessoais (senhas, comandos, links) — nunca deve ir pro GitHub,
+# mesmo o repositório sendo privado.
+bloco.txt
