@@ -1374,6 +1374,25 @@ def admin_sindicatos_ficha():
     )
 
 
+@app.route("/admin/sindicatos/vice-presidencia")
+def admin_sindicatos_vice_presidencia():
+    """Mostra na tela os mesmos dados do "Relatório de Contatos dos
+    Sindicatos por Região FAEC" (vice-presidência regional + sindicatos
+    de cada região, com presidente/telefone/e-mail) — a versão em PDF
+    continua disponível a partir daqui, pra quem quiser baixar/imprimir."""
+    resp = acesso_gestao_sindicatos_obrigatorio()
+    if resp:
+        return resp
+
+    db = SessionLocal()
+    return render_template(
+        "admin_sindicatos_vice_presidencia.html",
+        pagina_ativa="sindicatos",
+        apenas_sindicatos=True,
+        regioes=sind.montar_estrutura_relatorio_contatos(db),
+    )
+
+
 @app.route("/admin/sindicatos/relatorio-contatos")
 def admin_sindicatos_relatorio_contatos():
     """Gera o "Relatório de Contatos dos Sindicatos por Região FAEC" em

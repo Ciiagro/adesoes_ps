@@ -1,0 +1,56 @@
+{% extends 'admin_base.html' %}
+{% block title %}Vice-Presidência e Sindicatos Rurais{% endblock %}
+{% block admin_content %}
+<a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
+<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+  <div>
+    <h1>Vice-Presidência e Sindicatos Rurais</h1>
+    <p class="sub">
+      Vice-presidente regional e sindicatos rurais de cada região FAEC, com os contatos atuais
+      (presidente, telefone, e-mail) — mesmo dado do relatório em PDF, só que pra consultar direto
+      na tela.
+    </p>
+  </div>
+  <a class="btn secundario" href="{{ url_for('admin_sindicatos_relatorio_contatos') }}" target="_blank">⬇️ Baixar em PDF</a>
+</div>
+
+{% if not regioes %}
+<div class="secao-card"><p class="vazio">Nenhum dado cadastrado ainda.</p></div>
+{% endif %}
+
+{% for nome_regiao in regioes.keys()|sort %}
+{% set info_regiao = regioes[nome_regiao] %}
+<div class="secao-card" style="margin-bottom:16px;padding:0;overflow:hidden;">
+  <div style="background:var(--verde-claro, #EFEBD8);padding:14px 18px;">
+    <h2 style="margin:0;">{{ nome_regiao }}</h2>
+    {% if info_regiao.vice_presidente %}
+    <p style="margin:4px 0 0;font-size:.9rem;">
+      <strong>VICE-PRESIDENTE REGIONAL</strong> — {{ info_regiao.vice_presidente }}
+      {% if info_regiao.telefone_vice %} · telefone {{ info_regiao.telefone_vice }}{% endif %}
+    </p>
+    {% endif %}
+  </div>
+
+  {% if not info_regiao.sindicatos %}
+  <p class="vazio" style="padding:14px 18px;">Nenhum sindicato cadastrado nessa região.</p>
+  {% else %}
+  <table style="margin:0;">
+    <thead>
+      <tr><th>Sindicato</th><th>Presidente</th><th>Telefone</th><th>E-mail</th></tr>
+    </thead>
+    <tbody>
+      {% for nome_sindicato in info_regiao.sindicatos.keys()|sort %}
+      {% set s = info_regiao.sindicatos[nome_sindicato] %}
+      <tr>
+        <td><strong>{{ nome_sindicato }}</strong></td>
+        <td>{{ s.presidente or '—' }}</td>
+        <td>{{ s.telefone or '—' }}</td>
+        <td>{{ s.email or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}
