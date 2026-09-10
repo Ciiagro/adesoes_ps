@@ -3,7 +3,9 @@
 <div class="page-head">
   <h1>Carreta do Agro / Carreta da Saúde — Solicitações</h1>
   <p class="sub">Pedidos recebidos pelo formulário público (ou cadastrados aqui direto), mais recentes primeiro.</p>
+  {% if pode_editar_carreta %}
   <a class="btn" href="{{ url_for('admin_carreta_nova') }}" style="margin-top:10px;">➕ Nova solicitação</a>
+  {% endif %}
 </div>
 
 <div class="secao-card" style="margin-bottom:16px;">

@@ -13,6 +13,7 @@
 
 <div class="secao-card" style="margin-bottom:16px;">
   <h2>Novo bloqueio</h2>
+  {% if pode_editar_carreta %}
   <form method="post">
     <div class="info-grid">
       <label>
@@ -43,6 +44,9 @@
     </div>
     <button type="submit" style="margin-top:14px;">🚫 Bloquear essas datas</button>
   </form>
+  {% else %}
+  <p class="vazio">Esse login é só de visualização — não é possível cadastrar bloqueios.</p>
+  {% endif %}
 </div>
 
 <div class="secao-card">
@@ -62,9 +66,11 @@
         <td>{{ b.motivo }}</td>
         <td>{{ b.criado_por or '—' }}</td>
         <td>
+          {% if pode_editar_carreta %}
           <form method="post" action="{{ url_for('admin_carreta_bloqueio_excluir', bloqueio_id=b.id) }}" onsubmit="return confirm('Remover esse bloqueio? A data volta a ficar disponível.');">
             <button type="submit" class="btn secundario" style="color:var(--danger);padding:5px 12px;font-size:.8rem;">Remover</button>
           </form>
+          {% endif %}
         </td>
       </tr>
       {% endfor %}

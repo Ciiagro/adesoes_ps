@@ -697,9 +697,22 @@ def carreta_admin_logado():
     return session.get("carreta_admin_ok", False)
 
 
+def carreta_leitura_logado():
+    return session.get("carreta_leitura_ok", False)
+
+
 def pode_ver_carreta():
     """Admin (visão geral) OU a pessoa responsável pela Carreta do Agro
-    (login próprio, senha separada)."""
+    (login próprio, pode editar) OU um acesso só-leitura (visualiza tudo —
+    solicitações, calendário, mapa, bloqueios — mas não pode criar, editar,
+    aprovar, cancelar nem excluir nada)."""
+    return admin_logado() or carreta_admin_logado() or carreta_leitura_logado()
+
+
+def pode_editar_carreta():
+    """Só quem pode de fato mexer nos dados da Carreta (criar solicitação,
+    aprovar/cancelar, editar, excluir, cadastrar bloqueio). Deliberadamente
+    NÃO inclui o acesso só-leitura — é a diferença entre "ver" e "mexer"."""
     return admin_logado() or carreta_admin_logado()
 
 
@@ -759,6 +772,7 @@ def admin_login():
         session.pop("admin_ok", None)
         session.pop("gestao_sindicato_ok", None)
         session.pop("carreta_admin_ok", None)
+        session.pop("carreta_leitura_ok", None)
 
         if senha and senha == os.environ.get("ADMIN_PASSWORD"):
             session["admin_ok"] = True
@@ -772,6 +786,9 @@ def admin_login():
         if senha and senha == os.environ.get("CARRETA_PASSWORD"):
             session["carreta_admin_ok"] = True
             return redirect(url_for("admin_carreta"))
+        if senha and senha == os.environ.get("CARRETA_LEITURA_PASSWORD"):
+            session["carreta_leitura_ok"] = True
+            return redirect(url_for("admin_carreta"))
         flash("Senha incorreta.")
     return render_template("admin_login.html")
 
@@ -781,6 +798,7 @@ def admin_logout():
     session.pop("admin_ok", None)
     session.pop("gestao_sindicato_ok", None)
     session.pop("carreta_admin_ok", None)
+    session.pop("carreta_leitura_ok", None)
     session.pop("admin_programa", None)
     session.pop("admin_ano", None)
     return redirect(url_for("index"))
@@ -1881,8 +1899,9 @@ def _injetar_contexto_menu():
         pendentes = carr.contar_pendentes(db)
     return {
         "apenas_sindicatos": gestao_sindicato_logado() and not admin_logado(),
-        "apenas_carreta": carreta_admin_logado() and not admin_logado(),
+        "apenas_carreta": (carreta_admin_logado() or carreta_leitura_logado()) and not admin_logado(),
         "carreta_pendentes_count": pendentes,
+        "pode_editar_carreta": pode_editar_carreta(),
     }
 
 
@@ -2036,7 +2055,7 @@ def admin_carreta_nova():
     """Cadastro de uma solicitação direto pelo admin (não precisa vir do
     formulário público — por exemplo, um pedido que chegou por telefone ou
     já aconteceu e está sendo registrado depois)."""
-    if not pode_ver_carreta():
+    if not pode_editar_carreta():
         return redirect(url_for("admin_login"))
 
     db = SessionLocal()
@@ -2305,7 +2324,7 @@ def admin_carreta_mapa():
 @app.route("/admin/carreta/<int:solicitacao_id>/status", methods=["POST"])
 def admin_carreta_status(solicitacao_id):
     """Aprova ou recusa uma solicitação."""
-    if not pode_ver_carreta():
+    if not pode_editar_carreta():
         return redirect(url_for("admin_login"))
 
     db = SessionLocal()
@@ -2335,7 +2354,7 @@ def admin_carreta_editar(solicitacao_id):
     """Edita os dados de uma solicitação já cadastrada (programa,
     município, evento, datas, ofício, responsável...) — pra corrigir um
     cadastro feito errado, sem precisar excluir e criar de novo."""
-    if not pode_ver_carreta():
+    if not pode_editar_carreta():
         return redirect(url_for("admin_login"))
 
     db = SessionLocal()
@@ -2366,7 +2385,7 @@ def admin_carreta_editar(solicitacao_id):
 @app.route("/admin/carreta/<int:solicitacao_id>/excluir", methods=["POST"])
 def admin_carreta_excluir(solicitacao_id):
     """Remove uma solicitação cadastrada por engano."""
-    if not pode_ver_carreta():
+    if not pode_editar_carreta():
         return redirect(url_for("admin_login"))
 
     db = SessionLocal()
@@ -2392,6 +2411,9 @@ def admin_carreta_bloqueios():
     db = SessionLocal()
 
     if request.method == "POST":
+        if not pode_editar_carreta():
+            flash("Esse login é só de visualização — não é possível cadastrar bloqueios.")
+            return redirect(url_for("admin_carreta_bloqueios"))
         try:
             carr.criar_bloqueio(db, request.form, criado_por=request.form.get("criado_por", ""))
             flash("Bloqueio cadastrado.")
@@ -2410,7 +2432,7 @@ def admin_carreta_bloqueios():
 @app.route("/admin/carreta/bloqueios/<int:bloqueio_id>/excluir", methods=["POST"])
 def admin_carreta_bloqueio_excluir(bloqueio_id):
     """Remove um bloqueio — a data volta a ficar disponível pra pedido novo."""
-    if not pode_ver_carreta():
+    if not pode_editar_carreta():
         return redirect(url_for("admin_login"))
 
     db = SessionLocal()

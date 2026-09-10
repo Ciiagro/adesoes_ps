@@ -26,7 +26,9 @@
     <h1>{{ solicitacao.evento }}</h1>
     <p class="sub">{{ solicitacao.municipio_nome }} — {{ solicitacao.data_inicio.strftime('%d/%m/%Y') }} a {{ solicitacao.data_fim.strftime('%d/%m/%Y') }}</p>
   </div>
+  {% if pode_editar_carreta %}
   <a class="btn secundario" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">✏️ Editar</a>
+  {% endif %}
 </div>
 
 {% if solicitacao.status == 'pendente' %}
@@ -129,6 +131,7 @@
 
 <div class="secao-card">
   <h2>Alterar situação</h2>
+  {% if pode_editar_carreta %}
   <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}" id="form-alterar-status">
     <label style="display:block;max-width:340px;margin-bottom:14px;">
       <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
@@ -151,8 +154,12 @@
     Solicitações aprovadas viram "Realizada" sozinhas assim que a data final passa — só use o botão
     acima se precisar marcar como concluída ANTES disso (evento que terminou mais cedo, por exemplo).
   </p>
+  {% else %}
+  <p class="vazio">Esse login é só de visualização — não é possível alterar a situação.</p>
+  {% endif %}
 </div>
 
+{% if pode_editar_carreta %}
 <script>
 // Só exige o motivo do cancelamento quando o botão clicado for "Cancelar"
 // — aprovar/marcar como realizada/voltar pra pendente não precisam disso.
@@ -179,11 +186,14 @@
   });
 })();
 </script>
+{% endif %}
 
 
+{% if pode_editar_carreta %}
 <form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=solicitacao.id) }}" style="margin-top:16px;" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
   <button type="submit" class="btn secundario" style="color:var(--danger);">🗑️ Remover esta solicitação</button>
 </form>
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}

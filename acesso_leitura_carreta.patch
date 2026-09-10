@@ -1,0 +1,236 @@
+diff --git a/.env.example b/.env.example
+index 942a53d..ce40420 100644
+--- a/.env.example
++++ b/.env.example
+@@ -25,6 +25,13 @@ GESTAO_SINDICATO_PASSWORD=escolha-uma-terceira-senha
+ # ⚠️ Também precisa ser DIFERENTE de todas as outras senhas acima.
+ CARRETA_PASSWORD=escolha-uma-quarta-senha
+ 
++# (Opcional) Senha de acesso SÓ-VISUALIZAÇÃO ao módulo "Carreta do Agro" —
++# vê solicitações, calendário, mapa e bloqueios, mas não pode criar, editar,
++# aprovar, cancelar, excluir nem cadastrar bloqueio. Útil pra alguém que só
++# precisa acompanhar, sem correr o risco de mexer em algo por engano.
++# ⚠️ Também precisa ser DIFERENTE de todas as outras senhas.
++CARRETA_LEITURA_PASSWORD=escolha-uma-quinta-senha
++
+ # (Opcional) E-mail para avisos automáticos e para o fluxo de assinaturas
+ # (rascunho salvo, link de assinatura para prefeito/secretário/coordenador).
+ # Se usar Gmail, gere uma "senha de app" de 16 letras em
+diff --git a/app.py b/app.py
+index d9ea7dd..d434b6f 100644
+--- a/app.py
++++ b/app.py
+@@ -697,9 +697,22 @@ def carreta_admin_logado():
+     return session.get("carreta_admin_ok", False)
+ 
+ 
++def carreta_leitura_logado():
++    return session.get("carreta_leitura_ok", False)
++
++
+ def pode_ver_carreta():
+     """Admin (visão geral) OU a pessoa responsável pela Carreta do Agro
+-    (login próprio, senha separada)."""
++    (login próprio, pode editar) OU um acesso só-leitura (visualiza tudo —
++    solicitações, calendário, mapa, bloqueios — mas não pode criar, editar,
++    aprovar, cancelar nem excluir nada)."""
++    return admin_logado() or carreta_admin_logado() or carreta_leitura_logado()
++
++
++def pode_editar_carreta():
++    """Só quem pode de fato mexer nos dados da Carreta (criar solicitação,
++    aprovar/cancelar, editar, excluir, cadastrar bloqueio). Deliberadamente
++    NÃO inclui o acesso só-leitura — é a diferença entre "ver" e "mexer"."""
+     return admin_logado() or carreta_admin_logado()
+ 
+ 
+@@ -759,6 +772,7 @@ def admin_login():
+         session.pop("admin_ok", None)
+         session.pop("gestao_sindicato_ok", None)
+         session.pop("carreta_admin_ok", None)
++        session.pop("carreta_leitura_ok", None)
+ 
+         if senha and senha == os.environ.get("ADMIN_PASSWORD"):
+             session["admin_ok"] = True
+@@ -772,6 +786,9 @@ def admin_login():
+         if senha and senha == os.environ.get("CARRETA_PASSWORD"):
+             session["carreta_admin_ok"] = True
+             return redirect(url_for("admin_carreta"))
++        if senha and senha == os.environ.get("CARRETA_LEITURA_PASSWORD"):
++            session["carreta_leitura_ok"] = True
++            return redirect(url_for("admin_carreta"))
+         flash("Senha incorreta.")
+     return render_template("admin_login.html")
+ 
+@@ -781,6 +798,7 @@ def admin_logout():
+     session.pop("admin_ok", None)
+     session.pop("gestao_sindicato_ok", None)
+     session.pop("carreta_admin_ok", None)
++    session.pop("carreta_leitura_ok", None)
+     session.pop("admin_programa", None)
+     session.pop("admin_ano", None)
+     return redirect(url_for("index"))
+@@ -1881,8 +1899,9 @@ def _injetar_contexto_menu():
+         pendentes = carr.contar_pendentes(db)
+     return {
+         "apenas_sindicatos": gestao_sindicato_logado() and not admin_logado(),
+-        "apenas_carreta": carreta_admin_logado() and not admin_logado(),
++        "apenas_carreta": (carreta_admin_logado() or carreta_leitura_logado()) and not admin_logado(),
+         "carreta_pendentes_count": pendentes,
++        "pode_editar_carreta": pode_editar_carreta(),
+     }
+ 
+ 
+@@ -2036,7 +2055,7 @@ def admin_carreta_nova():
+     """Cadastro de uma solicitação direto pelo admin (não precisa vir do
+     formulário público — por exemplo, um pedido que chegou por telefone ou
+     já aconteceu e está sendo registrado depois)."""
+-    if not pode_ver_carreta():
++    if not pode_editar_carreta():
+         return redirect(url_for("admin_login"))
+ 
+     db = SessionLocal()
+@@ -2305,7 +2324,7 @@ def admin_carreta_mapa():
+ @app.route("/admin/carreta/<int:solicitacao_id>/status", methods=["POST"])
+ def admin_carreta_status(solicitacao_id):
+     """Aprova ou recusa uma solicitação."""
+-    if not pode_ver_carreta():
++    if not pode_editar_carreta():
+         return redirect(url_for("admin_login"))
+ 
+     db = SessionLocal()
+@@ -2335,7 +2354,7 @@ def admin_carreta_editar(solicitacao_id):
+     """Edita os dados de uma solicitação já cadastrada (programa,
+     município, evento, datas, ofício, responsável...) — pra corrigir um
+     cadastro feito errado, sem precisar excluir e criar de novo."""
+-    if not pode_ver_carreta():
++    if not pode_editar_carreta():
+         return redirect(url_for("admin_login"))
+ 
+     db = SessionLocal()
+@@ -2366,7 +2385,7 @@ def admin_carreta_editar(solicitacao_id):
+ @app.route("/admin/carreta/<int:solicitacao_id>/excluir", methods=["POST"])
+ def admin_carreta_excluir(solicitacao_id):
+     """Remove uma solicitação cadastrada por engano."""
+-    if not pode_ver_carreta():
++    if not pode_editar_carreta():
+         return redirect(url_for("admin_login"))
+ 
+     db = SessionLocal()
+@@ -2392,6 +2411,9 @@ def admin_carreta_bloqueios():
+     db = SessionLocal()
+ 
+     if request.method == "POST":
++        if not pode_editar_carreta():
++            flash("Esse login é só de visualização — não é possível cadastrar bloqueios.")
++            return redirect(url_for("admin_carreta_bloqueios"))
+         try:
+             carr.criar_bloqueio(db, request.form, criado_por=request.form.get("criado_por", ""))
+             flash("Bloqueio cadastrado.")
+@@ -2410,7 +2432,7 @@ def admin_carreta_bloqueios():
+ @app.route("/admin/carreta/bloqueios/<int:bloqueio_id>/excluir", methods=["POST"])
+ def admin_carreta_bloqueio_excluir(bloqueio_id):
+     """Remove um bloqueio — a data volta a ficar disponível pra pedido novo."""
+-    if not pode_ver_carreta():
++    if not pode_editar_carreta():
+         return redirect(url_for("admin_login"))
+ 
+     db = SessionLocal()
+diff --git a/templates/admin_carreta.html b/templates/admin_carreta.html
+index 2dc9099..c932f1e 100644
+--- a/templates/admin_carreta.html
++++ b/templates/admin_carreta.html
+@@ -3,7 +3,9 @@
+ <div class="page-head">
+   <h1>Carreta do Agro / Carreta da Saúde — Solicitações</h1>
+   <p class="sub">Pedidos recebidos pelo formulário público (ou cadastrados aqui direto), mais recentes primeiro.</p>
++  {% if pode_editar_carreta %}
+   <a class="btn" href="{{ url_for('admin_carreta_nova') }}" style="margin-top:10px;">➕ Nova solicitação</a>
++  {% endif %}
+ </div>
+ 
+ <div class="secao-card" style="margin-bottom:16px;">
+diff --git a/templates/admin_carreta_bloqueios.html b/templates/admin_carreta_bloqueios.html
+index caea2d3..8468468 100644
+--- a/templates/admin_carreta_bloqueios.html
++++ b/templates/admin_carreta_bloqueios.html
+@@ -13,6 +13,7 @@
+ 
+ <div class="secao-card" style="margin-bottom:16px;">
+   <h2>Novo bloqueio</h2>
++  {% if pode_editar_carreta %}
+   <form method="post">
+     <div class="info-grid">
+       <label>
+@@ -43,6 +44,9 @@
+     </div>
+     <button type="submit" style="margin-top:14px;">🚫 Bloquear essas datas</button>
+   </form>
++  {% else %}
++  <p class="vazio">Esse login é só de visualização — não é possível cadastrar bloqueios.</p>
++  {% endif %}
+ </div>
+ 
+ <div class="secao-card">
+@@ -62,9 +66,11 @@
+         <td>{{ b.motivo }}</td>
+         <td>{{ b.criado_por or '—' }}</td>
+         <td>
++          {% if pode_editar_carreta %}
+           <form method="post" action="{{ url_for('admin_carreta_bloqueio_excluir', bloqueio_id=b.id) }}" onsubmit="return confirm('Remover esse bloqueio? A data volta a ficar disponível.');">
+             <button type="submit" class="btn secundario" style="color:var(--danger);padding:5px 12px;font-size:.8rem;">Remover</button>
+           </form>
++          {% endif %}
+         </td>
+       </tr>
+       {% endfor %}
+diff --git a/templates/admin_carreta_detalhe.html b/templates/admin_carreta_detalhe.html
+index 9482927..3e40d54 100644
+--- a/templates/admin_carreta_detalhe.html
++++ b/templates/admin_carreta_detalhe.html
+@@ -26,7 +26,9 @@
+     <h1>{{ solicitacao.evento }}</h1>
+     <p class="sub">{{ solicitacao.municipio_nome }} — {{ solicitacao.data_inicio.strftime('%d/%m/%Y') }} a {{ solicitacao.data_fim.strftime('%d/%m/%Y') }}</p>
+   </div>
++  {% if pode_editar_carreta %}
+   <a class="btn secundario" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">✏️ Editar</a>
++  {% endif %}
+ </div>
+ 
+ {% if solicitacao.status == 'pendente' %}
+@@ -129,6 +131,7 @@
+ 
+ <div class="secao-card">
+   <h2>Alterar situação</h2>
++  {% if pode_editar_carreta %}
+   <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}" id="form-alterar-status">
+     <label style="display:block;max-width:340px;margin-bottom:14px;">
+       <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
+@@ -151,8 +154,12 @@
+     Solicitações aprovadas viram "Realizada" sozinhas assim que a data final passa — só use o botão
+     acima se precisar marcar como concluída ANTES disso (evento que terminou mais cedo, por exemplo).
+   </p>
++  {% else %}
++  <p class="vazio">Esse login é só de visualização — não é possível alterar a situação.</p>
++  {% endif %}
+ </div>
+ 
++{% if pode_editar_carreta %}
+ <script>
+ // Só exige o motivo do cancelamento quando o botão clicado for "Cancelar"
+ // — aprovar/marcar como realizada/voltar pra pendente não precisam disso.
+@@ -179,11 +186,14 @@
+   });
+ })();
+ </script>
++{% endif %}
+ 
+ 
++{% if pode_editar_carreta %}
+ <form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=solicitacao.id) }}" style="margin-top:16px;" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
+   <button type="submit" class="btn secundario" style="color:var(--danger);">🗑️ Remover esta solicitação</button>
+ </form>
++{% endif %}
+ {% endblock %}
+ 
+ {% block extra_scripts %}
