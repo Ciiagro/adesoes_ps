@@ -1706,6 +1706,7 @@ def admin_sindicato_grupo_editar(sindicato_id):
                 gestao_inicio=request.form.get("gestao_inicio", ""),
                 gestao_fim=request.form.get("gestao_fim", ""),
                 regiao_faec=request.form.get("regiao_faec", ""),
+                remover_foto=request.form.get("remover_foto_presidente") == "1",
             )
         except ValueError as erro:
             flash(str(erro))

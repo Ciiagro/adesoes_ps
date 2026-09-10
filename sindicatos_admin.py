@@ -766,15 +766,18 @@ def _texto_para_data(valor):
 
 
 def atualizar_endereco_geo_foto_sindicato(db, sindicato, endereco, latitude, longitude, arquivo_foto,
-                                           gestao_inicio=None, gestao_fim=None, regiao_faec=None):
+                                           gestao_inicio=None, gestao_fim=None, regiao_faec=None,
+                                           remover_foto=False):
     """Atualiza endereço, coordenadas (georreferência), início/fim da gestão
     do presidente atual, a região FAEC do próprio sindicato e, se enviada,
     a foto do presidente de um sindicato.
     A foto vai pro Supabase Storage (não mais bytea na tabela — isso é o que
     estava inflando o egress em toda listagem que faz joinedload no
     sindicato). `arquivo_foto` é o FileStorage do Flask
-    (request.files.get(...)) ou None. Levanta ValueError se o arquivo não for
-    uma imagem válida ou se o Storage não estiver configurado."""
+    (request.files.get(...)) ou None. Se `remover_foto` for True e nenhum
+    arquivo novo tiver sido enviado, apaga a foto atual (sem colocar outra
+    no lugar). Levanta ValueError se o arquivo não for uma imagem válida ou
+    se o Storage não estiver configurado."""
 
     sindicato.endereco = _limpar(endereco)
     sindicato.regiao_faec = _limpar(regiao_faec)
@@ -807,6 +810,19 @@ def atualizar_endereco_geo_foto_sindicato(db, sindicato, endereco, latitude, lon
 
         if url_antiga:
             supabase_storage.excluir_arquivo_por_url(url_antiga)
+
+    elif remover_foto:
+        # Só remove se NÃO veio um arquivo novo junto (arquivo novo sempre
+        # tem prioridade sobre o checkbox de remover).
+        url_antiga = sindicato.foto_presidente_url
+        sindicato.foto_presidente_url = None
+        sindicato.foto_presidente = None
+        sindicato.foto_presidente_tipo = None
+        if url_antiga:
+            try:
+                supabase_storage.excluir_arquivo_por_url(url_antiga)
+            except supabase_storage.SupabaseStorageError:
+                pass  # a foto já era pra sumir do cadastro mesmo se sobrar arquivo órfão no Storage
 
     db.commit()
 

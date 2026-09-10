@@ -162,6 +162,10 @@
         <span class="rot" style="display:block;margin-bottom:5px;">Foto do presidente</span>
         {% if sindicato.foto_presidente_url or sindicato.foto_presidente %}
         <img src="{{ url_for('admin_sindicato_foto', sindicato_id=sindicato.id) }}" alt="Foto do presidente" style="display:block;max-width:140px;border-radius:9px;border:1px solid var(--line);margin-bottom:8px;">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:10px;">
+          <input type="checkbox" name="remover_foto_presidente" value="1" style="width:auto;">
+          Remover a foto atual (sem colocar outra no lugar)
+        </label>
         {% endif %}
         <input type="file" name="foto_presidente" accept="image/jpeg,image/png,image/webp">
         <span style="display:block;font-size:.8rem;color:var(--ink-faint);margin-top:4px;">JPG, PNG ou WEBP, até 5 MB. Enviar um arquivo novo substitui a foto atual.</span>

@@ -1,0 +1,73 @@
+diff --git a/app.py b/app.py
+index d95d7cc..261ea2d 100644
+--- a/app.py
++++ b/app.py
+@@ -1706,6 +1706,7 @@ def admin_sindicato_grupo_editar(sindicato_id):
+                 gestao_inicio=request.form.get("gestao_inicio", ""),
+                 gestao_fim=request.form.get("gestao_fim", ""),
+                 regiao_faec=request.form.get("regiao_faec", ""),
++                remover_foto=request.form.get("remover_foto_presidente") == "1",
+             )
+         except ValueError as erro:
+             flash(str(erro))
+diff --git a/sindicatos_admin.py b/sindicatos_admin.py
+index 2aadd84..a0d217d 100644
+--- a/sindicatos_admin.py
++++ b/sindicatos_admin.py
+@@ -766,15 +766,18 @@ def _texto_para_data(valor):
+ 
+ 
+ def atualizar_endereco_geo_foto_sindicato(db, sindicato, endereco, latitude, longitude, arquivo_foto,
+-                                           gestao_inicio=None, gestao_fim=None, regiao_faec=None):
++                                           gestao_inicio=None, gestao_fim=None, regiao_faec=None,
++                                           remover_foto=False):
+     """Atualiza endereço, coordenadas (georreferência), início/fim da gestão
+     do presidente atual, a região FAEC do próprio sindicato e, se enviada,
+     a foto do presidente de um sindicato.
+     A foto vai pro Supabase Storage (não mais bytea na tabela — isso é o que
+     estava inflando o egress em toda listagem que faz joinedload no
+     sindicato). `arquivo_foto` é o FileStorage do Flask
+-    (request.files.get(...)) ou None. Levanta ValueError se o arquivo não for
+-    uma imagem válida ou se o Storage não estiver configurado."""
++    (request.files.get(...)) ou None. Se `remover_foto` for True e nenhum
++    arquivo novo tiver sido enviado, apaga a foto atual (sem colocar outra
++    no lugar). Levanta ValueError se o arquivo não for uma imagem válida ou
++    se o Storage não estiver configurado."""
+ 
+     sindicato.endereco = _limpar(endereco)
+     sindicato.regiao_faec = _limpar(regiao_faec)
+@@ -808,6 +811,19 @@ def atualizar_endereco_geo_foto_sindicato(db, sindicato, endereco, latitude, lon
+         if url_antiga:
+             supabase_storage.excluir_arquivo_por_url(url_antiga)
+ 
++    elif remover_foto:
++        # Só remove se NÃO veio um arquivo novo junto (arquivo novo sempre
++        # tem prioridade sobre o checkbox de remover).
++        url_antiga = sindicato.foto_presidente_url
++        sindicato.foto_presidente_url = None
++        sindicato.foto_presidente = None
++        sindicato.foto_presidente_tipo = None
++        if url_antiga:
++            try:
++                supabase_storage.excluir_arquivo_por_url(url_antiga)
++            except supabase_storage.SupabaseStorageError:
++                pass  # a foto já era pra sumir do cadastro mesmo se sobrar arquivo órfão no Storage
++
+     db.commit()
+ 
+ 
+diff --git a/templates/admin_sindicato_grupo_editar.html b/templates/admin_sindicato_grupo_editar.html
+index 446633b..bbf21ba 100644
+--- a/templates/admin_sindicato_grupo_editar.html
++++ b/templates/admin_sindicato_grupo_editar.html
+@@ -162,6 +162,10 @@
+         <span class="rot" style="display:block;margin-bottom:5px;">Foto do presidente</span>
+         {% if sindicato.foto_presidente_url or sindicato.foto_presidente %}
+         <img src="{{ url_for('admin_sindicato_foto', sindicato_id=sindicato.id) }}" alt="Foto do presidente" style="display:block;max-width:140px;border-radius:9px;border:1px solid var(--line);margin-bottom:8px;">
++        <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:10px;">
++          <input type="checkbox" name="remover_foto_presidente" value="1" style="width:auto;">
++          Remover a foto atual (sem colocar outra no lugar)
++        </label>
+         {% endif %}
+         <input type="file" name="foto_presidente" accept="image/jpeg,image/png,image/webp">
+         <span style="display:block;font-size:.8rem;color:var(--ink-faint);margin-top:4px;">JPG, PNG ou WEBP, até 5 MB. Enviar um arquivo novo substitui a foto atual.</span>
