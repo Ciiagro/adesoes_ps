@@ -95,11 +95,11 @@
 
   <fieldset>
     <legend>📄 Ofício</legend>
-    <label>Número do ofício
-      <input type="text" name="numero_oficio" value="{{ request.form.get('numero_oficio', '') }}" placeholder="Ex.: 021/2026">
+    <label>Número do ofício <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="text" name="numero_oficio" value="{{ request.form.get('numero_oficio', '') }}" placeholder="Ex.: 021/2026" required>
     </label>
-    <label>Data do ofício
-      <input type="date" name="data_oficio" value="{{ request.form.get('data_oficio', '') }}">
+    <label>Data do ofício <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+      <input type="date" name="data_oficio" value="{{ request.form.get('data_oficio', '') }}" required>
     </label>
     <label>Anexar ofício(s) em PDF <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
       <input type="file" name="oficios" id="input-oficios" accept="application/pdf,.pdf" multiple required>

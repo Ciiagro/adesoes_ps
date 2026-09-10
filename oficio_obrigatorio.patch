@@ -1,0 +1,40 @@
+diff --git a/app.py b/app.py
+index 4c2a7a1..6e3decc 100644
+--- a/app.py
++++ b/app.py
+@@ -1919,6 +1919,15 @@ def carreta_form():
+         )
+ 
+     if request.method == "POST":
++        # Número e data do ofício viraram obrigatórios aqui no formulário
++        # público — só nesse formulário, sem mexer na regra do cadastro
++        # pelo admin.
++        if not (request.form.get("numero_oficio") or "").strip():
++            flash("Informe o número do ofício.")
++            return _renderizar_formulario()
++        if not (request.form.get("data_oficio") or "").strip():
++            flash("Informe a data do ofício.")
++            return _renderizar_formulario()
+         # O sindicato solicitante virou obrigatório aqui no formulário
+         # público (a pessoa escolhe o sindicato de uma lista, e o município
+         # abaixo é filtrado por ele) — só nesse formulário público, sem
+diff --git a/templates/carreta_form.html b/templates/carreta_form.html
+index 2783e40..062760e 100644
+--- a/templates/carreta_form.html
++++ b/templates/carreta_form.html
+@@ -95,11 +95,11 @@
+ 
+   <fieldset>
+     <legend>📄 Ofício</legend>
+-    <label>Número do ofício
+-      <input type="text" name="numero_oficio" value="{{ request.form.get('numero_oficio', '') }}" placeholder="Ex.: 021/2026">
++    <label>Número do ofício <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
++      <input type="text" name="numero_oficio" value="{{ request.form.get('numero_oficio', '') }}" placeholder="Ex.: 021/2026" required>
+     </label>
+-    <label>Data do ofício
+-      <input type="date" name="data_oficio" value="{{ request.form.get('data_oficio', '') }}">
++    <label>Data do ofício <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
++      <input type="date" name="data_oficio" value="{{ request.form.get('data_oficio', '') }}" required>
+     </label>
+     <label>Anexar ofício(s) em PDF <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+       <input type="file" name="oficios" id="input-oficios" accept="application/pdf,.pdf" multiple required>

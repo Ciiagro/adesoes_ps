@@ -1919,6 +1919,15 @@ def carreta_form():
         )
 
     if request.method == "POST":
+        # Número e data do ofício viraram obrigatórios aqui no formulário
+        # público — só nesse formulário, sem mexer na regra do cadastro
+        # pelo admin.
+        if not (request.form.get("numero_oficio") or "").strip():
+            flash("Informe o número do ofício.")
+            return _renderizar_formulario()
+        if not (request.form.get("data_oficio") or "").strip():
+            flash("Informe a data do ofício.")
+            return _renderizar_formulario()
         # O sindicato solicitante virou obrigatório aqui no formulário
         # público (a pessoa escolhe o sindicato de uma lista, e o município
         # abaixo é filtrado por ele) — só nesse formulário público, sem
