@@ -1,0 +1,12 @@
+diff --git a/.gitignore b/.gitignore
+index 1a2c9d6..8f3e421 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -13,3 +13,7 @@
+ .vscode/
+ .idea/
+ .DS_Store
++
++# Anotações pessoais (senhas, comandos, links) — nunca deve ir pro GitHub,
++# mesmo o repositório sendo privado.
++bloco.txt

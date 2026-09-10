@@ -46,14 +46,15 @@
         {% if dia %}
         {% set ocupado = calendario.get(dia) %}
         {% set bloqueio_dia = bloqueados.get(dia) %}
+        {% set eh_so_realizada = ocupado and not (ocupado|rejectattr('status', 'equalto', 'realizada')|list) %}
         {% if bloqueio_dia %}
         <td style="padding:8px 4px;border-radius:6px;background:#D9CFAE;color:#5C4A1E;font-weight:700;"
             title="Indisponível: {{ bloqueio_dia|map(attribute='motivo')|join(', ') }}">
           {{ dia.day }}
         </td>
         {% else %}
-        <td style="padding:8px 4px;border-radius:6px;{% if ocupado %}background:#F9E7E0;color:#A6412B;font-weight:700;{% endif %}"
-            title="{% if ocupado %}{{ ocupado|map(attribute='evento')|join(', ') }}{% endif %}">
+        <td style="padding:8px 4px;border-radius:6px;{% if eh_so_realizada %}background:#EDEAE0;color:#8A8168;{% elif ocupado %}background:#F9E7E0;color:#A6412B;font-weight:700;{% endif %}"
+            title="{% if ocupado %}{{ ocupado|map(attribute='evento')|join(', ') }}{% if eh_so_realizada %} (já aconteceu){% endif %}{% endif %}">
           {{ dia.day }}
         </td>
         {% endif %}
@@ -65,7 +66,7 @@
       {% endfor %}
     </tbody>
   </table>
-  <p class="hint" style="margin-top:10px;">🟥 Dias já com pedido pendente ou aprovado. 🟤 Dias indisponíveis (feriado, manutenção, etc). Passe o mouse pra ver o motivo.</p>
+  <p class="hint" style="margin-top:10px;">🟥 Dias já com pedido pendente ou aprovado. ⬜ Dias com evento já realizado. 🟤 Dias indisponíveis (feriado, manutenção, etc). Passe o mouse pra ver o motivo.</p>
 </div>
 
 <form method="post" enctype="multipart/form-data" id="form-carreta">
