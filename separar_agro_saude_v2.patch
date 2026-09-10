@@ -1,0 +1,50 @@
+diff --git a/app.py b/app.py
+index dcd006e..d9ea7dd 100644
+--- a/app.py
++++ b/app.py
+@@ -1911,7 +1911,7 @@ def carreta_form():
+             municipios_por_sindicato=municipios_por_sindicato,
+             tipos_recurso=carr.TIPOS_RECURSO,
+             calendario=carr.dados_calendario(db, ano, mes),
+-            bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
++            bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes, tipo_recurso="carreta_agro"),
+             semanas=carr.matriz_semanas(ano, mes),
+             ano=ano, mes=mes,
+             mes_anterior=mes_anterior, ano_anterior=ano_anterior,
+@@ -2070,7 +2070,7 @@ def admin_carreta_nova():
+         tipos_recurso=carr.TIPOS_RECURSO,
+         status_label=carr.STATUS_LABEL,
+         calendario=carr.dados_calendario(db, ano, mes, tipo_recurso=tipo),
+-        bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
++        bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes, tipo_recurso=tipo),
+         semanas=carr.matriz_semanas(ano, mes),
+         ano=ano, mes=mes, tipo=tipo,
+     )
+diff --git a/carreta.py b/carreta.py
+index 09db695..79084b3 100644
+--- a/carreta.py
++++ b/carreta.py
+@@ -668,15 +668,20 @@ def dados_calendario(db, ano, mes, tipo_recurso=None):
+     return dias
+ 
+ 
+-def dias_bloqueados_do_mes(db, ano, mes):
++def dias_bloqueados_do_mes(db, ano, mes, tipo_recurso=None):
+     """Monta um dict {dia: [BloqueioCarreta, ...]} com os bloqueios que
+     cobrem esse mês — separado de `dados_calendario` (que é sobre
+     solicitações) porque um BloqueioCarreta não tem os mesmos campos
+     (evento, município...) que uma solicitação; misturar os dois na mesma
+-    lista quebraria os templates que esperam um ou outro."""
++    lista quebraria os templates que esperam um ou outro.
++
++    `tipo_recurso`, se informado, só traz os bloqueios que valem pra
++    aquele programa (gerais + específicos dele) — é o que o formulário
++    público usa, já que ele só é pra Carreta do Agro. Sem informar, traz
++    TODOS os bloqueios (visão combinada do admin)."""
+     primeiro_dia = date(ano, mes, 1)
+     ultimo_dia = date(ano, mes, calendar.monthrange(ano, mes)[1])
+-    bloqueios = verificar_bloqueio(db, primeiro_dia, ultimo_dia)
++    bloqueios = verificar_bloqueio(db, primeiro_dia, ultimo_dia, tipo_recurso=tipo_recurso)
+ 
+     dias = {}
+     for bloqueio in bloqueios:

@@ -668,15 +668,20 @@ def dados_calendario(db, ano, mes, tipo_recurso=None):
     return dias
 
 
-def dias_bloqueados_do_mes(db, ano, mes):
+def dias_bloqueados_do_mes(db, ano, mes, tipo_recurso=None):
     """Monta um dict {dia: [BloqueioCarreta, ...]} com os bloqueios que
     cobrem esse mês — separado de `dados_calendario` (que é sobre
     solicitações) porque um BloqueioCarreta não tem os mesmos campos
     (evento, município...) que uma solicitação; misturar os dois na mesma
-    lista quebraria os templates que esperam um ou outro."""
+    lista quebraria os templates que esperam um ou outro.
+
+    `tipo_recurso`, se informado, só traz os bloqueios que valem pra
+    aquele programa (gerais + específicos dele) — é o que o formulário
+    público usa, já que ele só é pra Carreta do Agro. Sem informar, traz
+    TODOS os bloqueios (visão combinada do admin)."""
     primeiro_dia = date(ano, mes, 1)
     ultimo_dia = date(ano, mes, calendar.monthrange(ano, mes)[1])
-    bloqueios = verificar_bloqueio(db, primeiro_dia, ultimo_dia)
+    bloqueios = verificar_bloqueio(db, primeiro_dia, ultimo_dia, tipo_recurso=tipo_recurso)
 
     dias = {}
     for bloqueio in bloqueios:

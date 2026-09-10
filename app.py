@@ -1911,7 +1911,7 @@ def carreta_form():
             municipios_por_sindicato=municipios_por_sindicato,
             tipos_recurso=carr.TIPOS_RECURSO,
             calendario=carr.dados_calendario(db, ano, mes),
-            bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
+            bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes, tipo_recurso="carreta_agro"),
             semanas=carr.matriz_semanas(ano, mes),
             ano=ano, mes=mes,
             mes_anterior=mes_anterior, ano_anterior=ano_anterior,
@@ -2070,7 +2070,7 @@ def admin_carreta_nova():
         tipos_recurso=carr.TIPOS_RECURSO,
         status_label=carr.STATUS_LABEL,
         calendario=carr.dados_calendario(db, ano, mes, tipo_recurso=tipo),
-        bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
+        bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes, tipo_recurso=tipo),
         semanas=carr.matriz_semanas(ano, mes),
         ano=ano, mes=mes, tipo=tipo,
     )
