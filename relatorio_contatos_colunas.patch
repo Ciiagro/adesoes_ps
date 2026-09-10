@@ -1,0 +1,35 @@
+diff --git a/sindicatos_admin.py b/sindicatos_admin.py
+index 28c182e..1b03d3f 100644
+--- a/sindicatos_admin.py
++++ b/sindicatos_admin.py
+@@ -1036,7 +1036,7 @@ _FICHA_COL2 = 190 * mm
+ # Telefone/E-mail) — soma igual à largura total da Ficha de Distribuição
+ # acima, só dividida diferente.
+ _RELATORIO_LARGURA_TOTAL = _FICHA_COL1 + _FICHA_COL2
+-_RELATORIO_COLS = [95 * mm, 35 * mm, 115 * mm]
++_RELATORIO_COLS = [55 * mm, 60 * mm, 35 * mm, 95 * mm]
+ 
+ 
+ def _limpar_texto_vice(texto):
+@@ -1227,17 +1227,16 @@ def _relatorio_faixa_regiao(nome_regiao, vice_presidente, telefone_vice):
+ 
+ def _relatorio_tabela_contatos(sindicatos_dict):
+     dados = [[
+-        Paragraph("SINDICATO/PRESIDENTE", _ficha_cabecalho_style),
++        Paragraph("SINDICATO", _ficha_cabecalho_style),
++        Paragraph("PRESIDENTE", _ficha_cabecalho_style),
+         Paragraph("TELEFONE", _ficha_cabecalho_style),
+         Paragraph("E-MAIL", _ficha_cabecalho_style),
+     ]]
+     for nome_sindicato in sorted(sindicatos_dict.keys()):
+         info = sindicatos_dict[nome_sindicato]
+-        rotulo = nome_sindicato
+-        if info["presidente"]:
+-            rotulo += f" ({info['presidente']})"
+         dados.append([
+-            Paragraph(rotulo, _ficha_sindicato_style),
++            Paragraph(nome_sindicato, _ficha_sindicato_style),
++            Paragraph(info["presidente"] or "—", _ficha_municipios_style),
+             Paragraph(info["telefone"] or "—", _ficha_municipios_style),
+             Paragraph(info["email"] or "—", _ficha_municipios_style),
+         ])
