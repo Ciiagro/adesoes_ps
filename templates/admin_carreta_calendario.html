@@ -34,8 +34,8 @@
         <td style="vertical-align:top;height:110px;max-width:150px;{% if bloqueio_dia %}background:#E3DCC8;{% elif ocupado %}background:#F9E7E0;{% endif %}">
           <div style="font-weight:700;">{{ dia.day }}</div>
           {% for b in bloqueio_dia or [] %}
-          <div title="{{ b.motivo }}" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#D9CFAE;color:#5C4A1E;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            🚫 {{ b.motivo }}
+          <div title="{{ b.motivo }} ({{ tipos_recurso.get(b.tipo_recurso, 'Ambas as carretas') }})" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#D9CFAE;color:#5C4A1E;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            🚫 {{ b.motivo }}{% if b.tipo_recurso %} ({{ 'Agro' if b.tipo_recurso == 'carreta_agro' else 'Saúde' }}){% endif %}
           </div>
           {% endfor %}
           {% for s in ocupado or [] %}

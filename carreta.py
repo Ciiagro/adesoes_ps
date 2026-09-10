@@ -346,7 +346,7 @@ def atualizar_solicitacao(db, solicitacao, form, arquivos_upload=None, arquivos_
         raise ValueError("Informe as datas de início e fim do evento.")
     if data_fim < data_inicio:
         raise ValueError("A data final não pode ser antes da data inicial.")
-    bloqueios = verificar_bloqueio(db, data_inicio, data_fim)
+    bloqueios = verificar_bloqueio(db, data_inicio, data_fim, tipo_recurso=tipo_recurso)
     if bloqueios:
         motivos = "; ".join(
             f"{b.motivo} ({b.data_inicio.strftime('%d/%m')} a {b.data_fim.strftime('%d/%m')})" for b in bloqueios
@@ -408,18 +408,26 @@ def verificar_conflito(db, data_inicio, data_fim, excluir_id=None):
     return query.order_by(SolicitacaoCarreta.data_inicio).all()
 
 
-def verificar_bloqueio(db, data_inicio, data_fim):
+def verificar_bloqueio(db, data_inicio, data_fim, tipo_recurso=None):
     """Bloqueios de data (feriado, manutenção, motorista de férias...)
     CADASTRADOS PELO ADMIN — nunca criados automaticamente pelo sistema —
-    que cobrem algum dia dentro do período pedido. Usado tanto pra travar
-    pedido novo (público ou pelo admin) quanto pra mostrar no calendário."""
-    return (
+    que cobrem algum dia dentro do período pedido.
+
+    Se `tipo_recurso` for informado, só devolve os bloqueios que valem pra
+    aquele programa: os gerais (tipo_recurso NULL, valem pros dois) e os
+    específicos daquele programa. Sem informar `tipo_recurso`, devolve
+    TODOS os bloqueios do período (é o que a visão geral do admin usa,
+    pra mostrar tudo de uma vez)."""
+    query = (
         db.query(BloqueioCarreta)
         .filter(BloqueioCarreta.data_inicio <= data_fim)
         .filter(BloqueioCarreta.data_fim >= data_inicio)
-        .order_by(BloqueioCarreta.data_inicio)
-        .all()
     )
+    if tipo_recurso:
+        query = query.filter(
+            or_(BloqueioCarreta.tipo_recurso.is_(None), BloqueioCarreta.tipo_recurso == tipo_recurso)
+        )
+    return query.order_by(BloqueioCarreta.data_inicio).all()
 
 
 def criar_bloqueio(db, form, criado_por=None):
@@ -430,6 +438,7 @@ def criar_bloqueio(db, form, criado_por=None):
     data_inicio = _texto_para_data(form.get("data_inicio"))
     data_fim = _texto_para_data(form.get("data_fim"))
     motivo = _limpar(form.get("motivo"))
+    tipo_recurso = _limpar(form.get("tipo_recurso")) or None  # vazio/"" vira None = vale pros dois
 
     if not data_inicio or not data_fim:
         raise ValueError("Informe as datas de início e fim do bloqueio.")
@@ -437,9 +446,11 @@ def criar_bloqueio(db, form, criado_por=None):
         raise ValueError("A data final não pode ser antes da data inicial.")
     if not motivo:
         raise ValueError("Informe o motivo do bloqueio.")
+    if tipo_recurso and tipo_recurso not in TIPOS_RECURSO:
+        raise ValueError("Programa inválido.")
 
     bloqueio = BloqueioCarreta(
-        data_inicio=data_inicio, data_fim=data_fim, motivo=motivo,
+        data_inicio=data_inicio, data_fim=data_fim, motivo=motivo, tipo_recurso=tipo_recurso,
         criado_por=_limpar(criado_por) or "não informado",
     )
     db.add(bloqueio)
@@ -527,7 +538,7 @@ def criar_solicitacao(db, form, arquivos_upload, arquivos_termo=None):
         raise ValueError("Informe as datas de início e fim do evento.")
     if data_fim < data_inicio:
         raise ValueError("A data final não pode ser antes da data inicial.")
-    bloqueios = verificar_bloqueio(db, data_inicio, data_fim)
+    bloqueios = verificar_bloqueio(db, data_inicio, data_fim, tipo_recurso=tipo_recurso)
     if bloqueios:
         motivos = "; ".join(
             f"{b.motivo} ({b.data_inicio.strftime('%d/%m')} a {b.data_fim.strftime('%d/%m')})" for b in bloqueios

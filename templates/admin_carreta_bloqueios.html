@@ -3,10 +3,11 @@
 <div class="page-head">
   <h1>Bloqueio de Datas</h1>
   <p class="sub">
-    Datas em que a carreta NÃO pode ser usada por nenhum dos dois programas (feriado, manutenção do
-    veículo, motorista de férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir a
-    carreta nessas datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua:
-    o sistema nunca bloqueia data nenhuma sozinho.
+    Datas em que a carreta NÃO pode ser usada (feriado, manutenção do veículo, motorista de
+    férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir aquela carreta nessas
+    datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua: o sistema
+    nunca bloqueia data nenhuma sozinho. Diga se o bloqueio vale só pra uma das carretas (ex.: ela
+    quebrou e foi pra oficina) ou pras duas juntas (ex.: o motorista está de férias).
   </p>
 </div>
 
@@ -21,6 +22,15 @@
       <label>
         <span class="rot" style="display:block;margin-bottom:5px;">Data de fim *</span>
         <input type="date" name="data_fim" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      </label>
+      <label style="grid-column:1/-1;">
+        <span class="rot" style="display:block;margin-bottom:5px;">Vale pra qual carreta? *</span>
+        <select name="tipo_recurso" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+          <option value="">Ambas (Agro + Saúde)</option>
+          {% for chave, rotulo in tipos_recurso.items() %}
+          <option value="{{ chave }}">Só {{ rotulo }}</option>
+          {% endfor %}
+        </select>
       </label>
       <label style="grid-column:1/-1;">
         <span class="rot" style="display:block;margin-bottom:5px;">Motivo *</span>
@@ -42,12 +52,13 @@
   {% else %}
   <table>
     <thead>
-      <tr><th>Período</th><th>Motivo</th><th>Cadastrado por</th><th></th></tr>
+      <tr><th>Período</th><th>Carreta</th><th>Motivo</th><th>Cadastrado por</th><th></th></tr>
     </thead>
     <tbody>
       {% for b in bloqueios %}
       <tr>
         <td>{{ b.data_inicio.strftime('%d/%m/%Y') }} a {{ b.data_fim.strftime('%d/%m/%Y') }}</td>
+        <td>{{ tipos_recurso.get(b.tipo_recurso, 'Ambas') }}</td>
         <td>{{ b.motivo }}</td>
         <td>{{ b.criado_por or '—' }}</td>
         <td>

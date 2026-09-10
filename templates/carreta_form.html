@@ -17,7 +17,7 @@
   </div>
 </div>
 
-<h1>Solicitar a Carreta (Agro ou Saúde)</h1>
+<h1>Solicitar a Carreta do Agro</h1>
 <p>
   Preencha os dados abaixo pra pedir a carreta pra um evento no seu município.
   Confira antes no calendário se a data já não está comprometida.
@@ -72,14 +72,7 @@
   <fieldset>
     <legend>📍 Local e evento</legend>
 
-    <label>Qual carreta você está solicitando? <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
-      <select name="tipo_recurso" required>
-        <option value="">Selecione...</option>
-        {% for chave, rotulo in tipos_recurso.items() %}
-        <option value="{{ chave }}" {% if request.form.get('tipo_recurso') == chave %}selected{% endif %}>{{ rotulo }}</option>
-        {% endfor %}
-      </select>
-    </label>
+    <input type="hidden" name="tipo_recurso" value="carreta_agro">
 
     <label>Sindicato solicitante <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
       <select name="sindicato_nome" id="sindicato_nome" required>

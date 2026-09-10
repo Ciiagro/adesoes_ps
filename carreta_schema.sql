@@ -57,9 +57,16 @@ CREATE TABLE IF NOT EXISTS carreta.bloqueios (
     data_inicio DATE NOT NULL,
     data_fim DATE NOT NULL,
     motivo VARCHAR(200) NOT NULL,
+    tipo_recurso VARCHAR(30),
     criado_por VARCHAR(150),
     criado_em TIMESTAMP DEFAULT now()
 );
+
+-- tipo_recurso: "carreta_agro", "carreta_saude", ou NULL (vale pros dois
+-- programas juntos). Se a tabela já existia antes desse campo, garante
+-- que a coluna nova seja criada (bloqueios antigos ficam NULL = valem
+-- pros dois, mantendo o comportamento de antes):
+ALTER TABLE carreta.bloqueios ADD COLUMN IF NOT EXISTS tipo_recurso VARCHAR(30);
 
 CREATE INDEX IF NOT EXISTS ix_carreta_solicitacoes_datas ON carreta.solicitacoes(data_inicio, data_fim);
 CREATE INDEX IF NOT EXISTS ix_carreta_solicitacoes_status ON carreta.solicitacoes(status);

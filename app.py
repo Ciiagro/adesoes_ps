@@ -1919,20 +1919,27 @@ def carreta_form():
         )
 
     if request.method == "POST":
+        # Esse formulário público só é pra Carreta do Agro — a Saúde passou
+        # a ser cadastrada só pelo admin (ver admin_carreta_nova). Fixa o
+        # valor aqui no servidor (não só no campo escondido do HTML) pra
+        # ninguém conseguir mandar "carreta_saude" manipulando o POST.
+        form = request.form.copy()
+        form["tipo_recurso"] = "carreta_agro"
+
         # Número e data do ofício viraram obrigatórios aqui no formulário
         # público — só nesse formulário, sem mexer na regra do cadastro
         # pelo admin.
-        if not (request.form.get("numero_oficio") or "").strip():
+        if not (form.get("numero_oficio") or "").strip():
             flash("Informe o número do ofício.")
             return _renderizar_formulario()
-        if not (request.form.get("data_oficio") or "").strip():
+        if not (form.get("data_oficio") or "").strip():
             flash("Informe a data do ofício.")
             return _renderizar_formulario()
         # O sindicato solicitante virou obrigatório aqui no formulário
         # público (a pessoa escolhe o sindicato de uma lista, e o município
         # abaixo é filtrado por ele) — só nesse formulário público, sem
         # mexer na regra do cadastro pelo admin.
-        if not (request.form.get("sindicato_nome") or "").strip():
+        if not (form.get("sindicato_nome") or "").strip():
             flash("Informe o sindicato solicitante.")
             return _renderizar_formulario()
         # O Termo de Ciência do Manual da Carreta também virou obrigatório
@@ -1946,7 +1953,7 @@ def carreta_form():
             return _renderizar_formulario()
         try:
             solicitacao = carr.criar_solicitacao(
-                db, request.form, request.files.getlist("oficios"), arquivo_termo
+                db, form, request.files.getlist("oficios"), arquivo_termo
             )
         except ValueError as erro:
             flash(str(erro))
@@ -2396,6 +2403,7 @@ def admin_carreta_bloqueios():
         "admin_carreta_bloqueios.html",
         pagina_ativa="carreta_bloqueios",
         bloqueios=carr.listar_bloqueios(db),
+        tipos_recurso=carr.TIPOS_RECURSO,
     )
 
 

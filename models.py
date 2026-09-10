@@ -378,12 +378,17 @@ class ArquivoCarreta(Base):
 
 
 class BloqueioCarreta(Base):
-    """Um período em que a carreta NÃO pode ser usada por nenhum dos dois
-    programas (feriado, manutenção do veículo, motorista de férias/licença,
-    etc) — cadastrado pelo admin, não por quem preenche o formulário
-    público. Bloqueia a data pra pedido novo (público ou pelo admin),
-    igual uma solicitação aprovada bloquearia, mas sem estar amarrado a
-    nenhum evento/município específico."""
+    """Um período em que a carreta NÃO pode ser usada — feriado, manutenção
+    do veículo, motorista de férias/licença, etc — cadastrado pelo admin,
+    não por quem preenche o formulário público. Bloqueia a data pra pedido
+    novo (público ou pelo admin), igual uma solicitação aprovada
+    bloquearia, mas sem estar amarrado a nenhum evento/município
+    específico.
+
+    `tipo_recurso`: "carreta_agro", "carreta_saude", ou None/vazio pra
+    valer pros dois programas juntos (ex: motorista de férias afeta as
+    duas, já que é o mesmo motorista; mas a carreta da Saúde quebrada na
+    oficina só afeta ela, não a do Agro)."""
 
     __tablename__ = "bloqueios"
     __table_args__ = {"schema": "carreta"}
@@ -392,5 +397,6 @@ class BloqueioCarreta(Base):
     data_inicio = Column(Date, nullable=False)
     data_fim = Column(Date, nullable=False)
     motivo = Column(String(200), nullable=False)
+    tipo_recurso = Column(String(30))
     criado_por = Column(String(150))
     criado_em = Column(DateTime, server_default=func.now())

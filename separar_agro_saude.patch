@@ -1,0 +1,293 @@
+diff --git a/app.py b/app.py
+index ebd30ab..dcd006e 100644
+--- a/app.py
++++ b/app.py
+@@ -1919,20 +1919,27 @@ def carreta_form():
+         )
+ 
+     if request.method == "POST":
++        # Esse formulário público só é pra Carreta do Agro — a Saúde passou
++        # a ser cadastrada só pelo admin (ver admin_carreta_nova). Fixa o
++        # valor aqui no servidor (não só no campo escondido do HTML) pra
++        # ninguém conseguir mandar "carreta_saude" manipulando o POST.
++        form = request.form.copy()
++        form["tipo_recurso"] = "carreta_agro"
++
+         # Número e data do ofício viraram obrigatórios aqui no formulário
+         # público — só nesse formulário, sem mexer na regra do cadastro
+         # pelo admin.
+-        if not (request.form.get("numero_oficio") or "").strip():
++        if not (form.get("numero_oficio") or "").strip():
+             flash("Informe o número do ofício.")
+             return _renderizar_formulario()
+-        if not (request.form.get("data_oficio") or "").strip():
++        if not (form.get("data_oficio") or "").strip():
+             flash("Informe a data do ofício.")
+             return _renderizar_formulario()
+         # O sindicato solicitante virou obrigatório aqui no formulário
+         # público (a pessoa escolhe o sindicato de uma lista, e o município
+         # abaixo é filtrado por ele) — só nesse formulário público, sem
+         # mexer na regra do cadastro pelo admin.
+-        if not (request.form.get("sindicato_nome") or "").strip():
++        if not (form.get("sindicato_nome") or "").strip():
+             flash("Informe o sindicato solicitante.")
+             return _renderizar_formulario()
+         # O Termo de Ciência do Manual da Carreta também virou obrigatório
+@@ -1946,7 +1953,7 @@ def carreta_form():
+             return _renderizar_formulario()
+         try:
+             solicitacao = carr.criar_solicitacao(
+-                db, request.form, request.files.getlist("oficios"), arquivo_termo
++                db, form, request.files.getlist("oficios"), arquivo_termo
+             )
+         except ValueError as erro:
+             flash(str(erro))
+@@ -2396,6 +2403,7 @@ def admin_carreta_bloqueios():
+         "admin_carreta_bloqueios.html",
+         pagina_ativa="carreta_bloqueios",
+         bloqueios=carr.listar_bloqueios(db),
++        tipos_recurso=carr.TIPOS_RECURSO,
+     )
+ 
+ 
+diff --git a/carreta.py b/carreta.py
+index 2a36ef4..09db695 100644
+--- a/carreta.py
++++ b/carreta.py
+@@ -346,7 +346,7 @@ def atualizar_solicitacao(db, solicitacao, form, arquivos_upload=None, arquivos_
+         raise ValueError("Informe as datas de início e fim do evento.")
+     if data_fim < data_inicio:
+         raise ValueError("A data final não pode ser antes da data inicial.")
+-    bloqueios = verificar_bloqueio(db, data_inicio, data_fim)
++    bloqueios = verificar_bloqueio(db, data_inicio, data_fim, tipo_recurso=tipo_recurso)
+     if bloqueios:
+         motivos = "; ".join(
+             f"{b.motivo} ({b.data_inicio.strftime('%d/%m')} a {b.data_fim.strftime('%d/%m')})" for b in bloqueios
+@@ -408,18 +408,26 @@ def verificar_conflito(db, data_inicio, data_fim, excluir_id=None):
+     return query.order_by(SolicitacaoCarreta.data_inicio).all()
+ 
+ 
+-def verificar_bloqueio(db, data_inicio, data_fim):
++def verificar_bloqueio(db, data_inicio, data_fim, tipo_recurso=None):
+     """Bloqueios de data (feriado, manutenção, motorista de férias...)
+     CADASTRADOS PELO ADMIN — nunca criados automaticamente pelo sistema —
+-    que cobrem algum dia dentro do período pedido. Usado tanto pra travar
+-    pedido novo (público ou pelo admin) quanto pra mostrar no calendário."""
+-    return (
++    que cobrem algum dia dentro do período pedido.
++
++    Se `tipo_recurso` for informado, só devolve os bloqueios que valem pra
++    aquele programa: os gerais (tipo_recurso NULL, valem pros dois) e os
++    específicos daquele programa. Sem informar `tipo_recurso`, devolve
++    TODOS os bloqueios do período (é o que a visão geral do admin usa,
++    pra mostrar tudo de uma vez)."""
++    query = (
+         db.query(BloqueioCarreta)
+         .filter(BloqueioCarreta.data_inicio <= data_fim)
+         .filter(BloqueioCarreta.data_fim >= data_inicio)
+-        .order_by(BloqueioCarreta.data_inicio)
+-        .all()
+     )
++    if tipo_recurso:
++        query = query.filter(
++            or_(BloqueioCarreta.tipo_recurso.is_(None), BloqueioCarreta.tipo_recurso == tipo_recurso)
++        )
++    return query.order_by(BloqueioCarreta.data_inicio).all()
+ 
+ 
+ def criar_bloqueio(db, form, criado_por=None):
+@@ -430,6 +438,7 @@ def criar_bloqueio(db, form, criado_por=None):
+     data_inicio = _texto_para_data(form.get("data_inicio"))
+     data_fim = _texto_para_data(form.get("data_fim"))
+     motivo = _limpar(form.get("motivo"))
++    tipo_recurso = _limpar(form.get("tipo_recurso")) or None  # vazio/"" vira None = vale pros dois
+ 
+     if not data_inicio or not data_fim:
+         raise ValueError("Informe as datas de início e fim do bloqueio.")
+@@ -437,9 +446,11 @@ def criar_bloqueio(db, form, criado_por=None):
+         raise ValueError("A data final não pode ser antes da data inicial.")
+     if not motivo:
+         raise ValueError("Informe o motivo do bloqueio.")
++    if tipo_recurso and tipo_recurso not in TIPOS_RECURSO:
++        raise ValueError("Programa inválido.")
+ 
+     bloqueio = BloqueioCarreta(
+-        data_inicio=data_inicio, data_fim=data_fim, motivo=motivo,
++        data_inicio=data_inicio, data_fim=data_fim, motivo=motivo, tipo_recurso=tipo_recurso,
+         criado_por=_limpar(criado_por) or "não informado",
+     )
+     db.add(bloqueio)
+@@ -527,7 +538,7 @@ def criar_solicitacao(db, form, arquivos_upload, arquivos_termo=None):
+         raise ValueError("Informe as datas de início e fim do evento.")
+     if data_fim < data_inicio:
+         raise ValueError("A data final não pode ser antes da data inicial.")
+-    bloqueios = verificar_bloqueio(db, data_inicio, data_fim)
++    bloqueios = verificar_bloqueio(db, data_inicio, data_fim, tipo_recurso=tipo_recurso)
+     if bloqueios:
+         motivos = "; ".join(
+             f"{b.motivo} ({b.data_inicio.strftime('%d/%m')} a {b.data_fim.strftime('%d/%m')})" for b in bloqueios
+diff --git a/carreta_schema.sql b/carreta_schema.sql
+index ef0e8b9..6fc4ecf 100644
+--- a/carreta_schema.sql
++++ b/carreta_schema.sql
+@@ -57,10 +57,17 @@ CREATE TABLE IF NOT EXISTS carreta.bloqueios (
+     data_inicio DATE NOT NULL,
+     data_fim DATE NOT NULL,
+     motivo VARCHAR(200) NOT NULL,
++    tipo_recurso VARCHAR(30),
+     criado_por VARCHAR(150),
+     criado_em TIMESTAMP DEFAULT now()
+ );
+ 
++-- tipo_recurso: "carreta_agro", "carreta_saude", ou NULL (vale pros dois
++-- programas juntos). Se a tabela já existia antes desse campo, garante
++-- que a coluna nova seja criada (bloqueios antigos ficam NULL = valem
++-- pros dois, mantendo o comportamento de antes):
++ALTER TABLE carreta.bloqueios ADD COLUMN IF NOT EXISTS tipo_recurso VARCHAR(30);
++
+ CREATE INDEX IF NOT EXISTS ix_carreta_solicitacoes_datas ON carreta.solicitacoes(data_inicio, data_fim);
+ CREATE INDEX IF NOT EXISTS ix_carreta_solicitacoes_status ON carreta.solicitacoes(status);
+ CREATE INDEX IF NOT EXISTS ix_carreta_arquivos_solicitacao ON carreta.arquivos(solicitacao_id);
+diff --git a/models.py b/models.py
+index e59287a..d059943 100644
+--- a/models.py
++++ b/models.py
+@@ -378,12 +378,17 @@ class ArquivoCarreta(Base):
+ 
+ 
+ class BloqueioCarreta(Base):
+-    """Um período em que a carreta NÃO pode ser usada por nenhum dos dois
+-    programas (feriado, manutenção do veículo, motorista de férias/licença,
+-    etc) — cadastrado pelo admin, não por quem preenche o formulário
+-    público. Bloqueia a data pra pedido novo (público ou pelo admin),
+-    igual uma solicitação aprovada bloquearia, mas sem estar amarrado a
+-    nenhum evento/município específico."""
++    """Um período em que a carreta NÃO pode ser usada — feriado, manutenção
++    do veículo, motorista de férias/licença, etc — cadastrado pelo admin,
++    não por quem preenche o formulário público. Bloqueia a data pra pedido
++    novo (público ou pelo admin), igual uma solicitação aprovada
++    bloquearia, mas sem estar amarrado a nenhum evento/município
++    específico.
++
++    `tipo_recurso`: "carreta_agro", "carreta_saude", ou None/vazio pra
++    valer pros dois programas juntos (ex: motorista de férias afeta as
++    duas, já que é o mesmo motorista; mas a carreta da Saúde quebrada na
++    oficina só afeta ela, não a do Agro)."""
+ 
+     __tablename__ = "bloqueios"
+     __table_args__ = {"schema": "carreta"}
+@@ -392,5 +397,6 @@ class BloqueioCarreta(Base):
+     data_inicio = Column(Date, nullable=False)
+     data_fim = Column(Date, nullable=False)
+     motivo = Column(String(200), nullable=False)
++    tipo_recurso = Column(String(30))
+     criado_por = Column(String(150))
+     criado_em = Column(DateTime, server_default=func.now())
+diff --git a/templates/admin_carreta_bloqueios.html b/templates/admin_carreta_bloqueios.html
+index a0541c2..caea2d3 100644
+--- a/templates/admin_carreta_bloqueios.html
++++ b/templates/admin_carreta_bloqueios.html
+@@ -3,10 +3,11 @@
+ <div class="page-head">
+   <h1>Bloqueio de Datas</h1>
+   <p class="sub">
+-    Datas em que a carreta NÃO pode ser usada por nenhum dos dois programas (feriado, manutenção do
+-    veículo, motorista de férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir a
+-    carreta nessas datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua:
+-    o sistema nunca bloqueia data nenhuma sozinho.
++    Datas em que a carreta NÃO pode ser usada (feriado, manutenção do veículo, motorista de
++    férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir aquela carreta nessas
++    datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua: o sistema
++    nunca bloqueia data nenhuma sozinho. Diga se o bloqueio vale só pra uma das carretas (ex.: ela
++    quebrou e foi pra oficina) ou pras duas juntas (ex.: o motorista está de férias).
+   </p>
+ </div>
+ 
+@@ -22,6 +23,15 @@
+         <span class="rot" style="display:block;margin-bottom:5px;">Data de fim *</span>
+         <input type="date" name="data_fim" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+       </label>
++      <label style="grid-column:1/-1;">
++        <span class="rot" style="display:block;margin-bottom:5px;">Vale pra qual carreta? *</span>
++        <select name="tipo_recurso" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
++          <option value="">Ambas (Agro + Saúde)</option>
++          {% for chave, rotulo in tipos_recurso.items() %}
++          <option value="{{ chave }}">Só {{ rotulo }}</option>
++          {% endfor %}
++        </select>
++      </label>
+       <label style="grid-column:1/-1;">
+         <span class="rot" style="display:block;margin-bottom:5px;">Motivo *</span>
+         <input type="text" name="motivo" required placeholder="Ex.: Manutenção do veículo, Feriado, Motorista de férias..." style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+@@ -42,12 +52,13 @@
+   {% else %}
+   <table>
+     <thead>
+-      <tr><th>Período</th><th>Motivo</th><th>Cadastrado por</th><th></th></tr>
++      <tr><th>Período</th><th>Carreta</th><th>Motivo</th><th>Cadastrado por</th><th></th></tr>
+     </thead>
+     <tbody>
+       {% for b in bloqueios %}
+       <tr>
+         <td>{{ b.data_inicio.strftime('%d/%m/%Y') }} a {{ b.data_fim.strftime('%d/%m/%Y') }}</td>
++        <td>{{ tipos_recurso.get(b.tipo_recurso, 'Ambas') }}</td>
+         <td>{{ b.motivo }}</td>
+         <td>{{ b.criado_por or '—' }}</td>
+         <td>
+diff --git a/templates/admin_carreta_calendario.html b/templates/admin_carreta_calendario.html
+index 2ddf091..4cfeb78 100644
+--- a/templates/admin_carreta_calendario.html
++++ b/templates/admin_carreta_calendario.html
+@@ -34,8 +34,8 @@
+         <td style="vertical-align:top;height:110px;max-width:150px;{% if bloqueio_dia %}background:#E3DCC8;{% elif ocupado %}background:#F9E7E0;{% endif %}">
+           <div style="font-weight:700;">{{ dia.day }}</div>
+           {% for b in bloqueio_dia or [] %}
+-          <div title="{{ b.motivo }}" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#D9CFAE;color:#5C4A1E;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+-            🚫 {{ b.motivo }}
++          <div title="{{ b.motivo }} ({{ tipos_recurso.get(b.tipo_recurso, 'Ambas as carretas') }})" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#D9CFAE;color:#5C4A1E;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
++            🚫 {{ b.motivo }}{% if b.tipo_recurso %} ({{ 'Agro' if b.tipo_recurso == 'carreta_agro' else 'Saúde' }}){% endif %}
+           </div>
+           {% endfor %}
+           {% for s in ocupado or [] %}
+diff --git a/templates/carreta_form.html b/templates/carreta_form.html
+index a8db7b1..8591a65 100644
+--- a/templates/carreta_form.html
++++ b/templates/carreta_form.html
+@@ -17,7 +17,7 @@
+   </div>
+ </div>
+ 
+-<h1>Solicitar a Carreta (Agro ou Saúde)</h1>
++<h1>Solicitar a Carreta do Agro</h1>
+ <p>
+   Preencha os dados abaixo pra pedir a carreta pra um evento no seu município.
+   Confira antes no calendário se a data já não está comprometida.
+@@ -72,14 +72,7 @@
+   <fieldset>
+     <legend>📍 Local e evento</legend>
+ 
+-    <label>Qual carreta você está solicitando? <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+-      <select name="tipo_recurso" required>
+-        <option value="">Selecione...</option>
+-        {% for chave, rotulo in tipos_recurso.items() %}
+-        <option value="{{ chave }}" {% if request.form.get('tipo_recurso') == chave %}selected{% endif %}>{{ rotulo }}</option>
+-        {% endfor %}
+-      </select>
+-    </label>
++    <input type="hidden" name="tipo_recurso" value="carreta_agro">
+ 
+     <label>Sindicato solicitante <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+       <select name="sindicato_nome" id="sindicato_nome" required>
+diff --git a/templates/index.html b/templates/index.html
+index 51381e9..8375a46 100644
+--- a/templates/index.html
++++ b/templates/index.html
+@@ -31,7 +31,7 @@
+       <circle cx="6" cy="19.5" r="1.7"/>
+       <circle cx="18" cy="19.5" r="1.7"/>
+     </svg>
+-    <h2>Carreta (Agro ou Saúde)</h2>
++    <h2>Carreta do Agro</h2>
+     <p>Solicitar a carreta pra um evento no seu município.</p>
+   </a>
+ </div>
