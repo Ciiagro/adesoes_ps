@@ -1,0 +1,39 @@
+diff --git a/templates/carreta_form.html b/templates/carreta_form.html
+index 062760e..a8db7b1 100644
+--- a/templates/carreta_form.html
++++ b/templates/carreta_form.html
+@@ -1,5 +1,22 @@
+ {% extends 'base.html' %}
+ {% block content %}
++
++<div id="popup-documentos-necessarios" style="position:fixed;inset:0;z-index:1000;background:rgba(30,26,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;">
++  <div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.25);">
++    <h2 style="margin-top:0;">📋 Antes de começar</h2>
++    <p>Pra pedir a carreta, você já precisa ter em mãos, prontos e assinados:</p>
++    <ul style="line-height:1.7;padding-left:20px;">
++      <li><strong>O ofício</strong> assinado, em PDF.</li>
++      <li><strong>O Manual da Carreta</strong> — baixado, lido e assinado por quem vai se responsabilizar pelo evento (Termo de Ciência), em PDF.</li>
++    </ul>
++    <p class="hint" style="margin-bottom:16px;">Sem os dois documentos assinados, o pedido não é aceito no envio.</p>
++    <p style="margin-bottom:16px;">
++      <a href="{{ url_for('static', filename='documentos/manual_da_carreta.pdf') }}" target="_blank" class="prox" style="display:block;text-align:center;text-decoration:none;">⬇️ Baixar Manual da Carreta agora</a>
++    </p>
++    <button type="button" id="btn-fechar-popup-documentos" class="prox" style="width:100%;">Entendi, já tenho os dois documentos</button>
++  </div>
++</div>
++
+ <h1>Solicitar a Carreta (Agro ou Saúde)</h1>
+ <p>
+   Preencha os dados abaixo pra pedir a carreta pra um evento no seu município.
+@@ -184,6 +201,11 @@ sindicatoSelect.addEventListener('change', function () {
+   }
+ })();
+ 
++// --- Popup de aviso (ofício + Manual da Carreta assinados) ---
++document.getElementById('btn-fechar-popup-documentos').addEventListener('click', function () {
++  document.getElementById('popup-documentos-necessarios').style.display = 'none';
++});
++
+ // --- Limite de tamanho dos PDFs anexados (ofício e termo de compromisso):
+ // avisa e bloqueia o envio antes de a pessoa esperar o upload inteiro pra
+ // só então descobrir que passou do limite ---
