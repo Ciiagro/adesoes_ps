@@ -2227,9 +2227,11 @@ def _ponto_carreta(solicitacao):
 
 @app.route("/admin/carreta/mapa")
 def admin_carreta_mapa():
-    """Mapa do Ceará mostrando o trajeto da carreta num mês específico —
-    o que já aconteceu, o que está rolando (se o mês em exibição incluir
-    hoje) e o que ainda vai acontecer, com navegação mês a mês."""
+    """Mapa do Ceará — na verdade DOIS mapas, um por carreta (Agro e
+    Saúde), porque são duas carretas físicas de verdade (só dividem o
+    mesmo cavalo mecânico/motorista) — cada uma mostra separadamente o que
+    já aconteceu, o que está rolando (se o mês em exibição incluir hoje) e
+    o que ainda vai acontecer, com navegação mês a mês."""
     if not pode_ver_carreta():
         return redirect(url_for("admin_login"))
 
@@ -2241,33 +2243,51 @@ def admin_carreta_mapa():
     mes_proximo, ano_proximo = (1, ano + 1) if mes == 12 else (mes + 1, ano)
     eh_mes_atual = (ano, mes) == (hoje.year, hoje.month)
 
-    situacao = carr.trajeto_do_mes(db, ano, mes, hoje=hoje)
+    def montar_programa(tipo_recurso):
+        situacao = carr.trajeto_do_mes(db, ano, mes, hoje=hoje, tipo_recurso=tipo_recurso)
 
-    # Independente do mês em exibição: onde a carreta está agora, ou (se não
-    # tiver nada rolando hoje) qual foi o último compromisso concluído — pra
-    # sempre dar pra responder "onde ela está/esteve por último", mesmo
-    # navegando pra um mês sem nenhum compromisso.
-    situacao_global = carr.situacao_atual(db, hoje=hoje, limite_anteriores=1)
-    ultima_solicitacao = situacao_global["atual"] or (
-        situacao_global["anteriores"][0] if situacao_global["anteriores"] else None
-    )
-    ultima_eh_atual = bool(situacao_global["atual"])
+        # Independente do mês em exibição: onde essa carreta está agora, ou
+        # (se não tiver nada rolando hoje) qual foi o último compromisso
+        # concluído — pra sempre dar pra responder "onde ela está/esteve
+        # por último", mesmo navegando pra um mês sem nenhum compromisso.
+        situacao_global = carr.situacao_atual(db, hoje=hoje, limite_anteriores=1, tipo_recurso=tipo_recurso)
+        ultima_solicitacao = situacao_global["atual"] or (
+            situacao_global["anteriores"][0] if situacao_global["anteriores"] else None
+        )
+        ultima_eh_atual = bool(situacao_global["atual"])
+        ultima_posicao = _ponto_carreta(ultima_solicitacao) if ultima_solicitacao else None
 
-    atual = _ponto_carreta(situacao["atual"]) if situacao["atual"] else None
-    proximas = [p for p in (_ponto_carreta(s) for s in situacao["proximas"]) if p]
-    anteriores = [p for p in (_ponto_carreta(s) for s in situacao["anteriores"]) if p]
-    ultima_posicao = _ponto_carreta(ultima_solicitacao) if ultima_solicitacao else None
+        return {
+            "atual": _ponto_carreta(situacao["atual"]) if situacao["atual"] else None,
+            "proximas": [p for p in (_ponto_carreta(s) for s in situacao["proximas"]) if p],
+            "anteriores": [p for p in (_ponto_carreta(s) for s in situacao["anteriores"]) if p],
+            "tem_atual_sem_coordenada": bool(situacao["atual"] and not _ponto_carreta(situacao["atual"])),
+            "ultima_posicao": ultima_posicao,
+            "ultima_eh_atual": ultima_eh_atual,
+            "tem_ultima_sem_coordenada": bool(ultima_solicitacao and not ultima_posicao),
+        }
+
+    agro = montar_programa("carreta_agro")
+    saude = montar_programa("carreta_saude")
+
+    # Distância entre onde as duas carretas estão AGORA (ou, se alguma
+    # estiver parada, onde foi a última posição conhecida dela) — é o dado
+    # que ajuda a decidir se dá tempo do cavalo/motorista ir de uma pra
+    # outra, já que só tem 1 cavalo pras 2 carretas.
+    distancia_entre_carretas_km = None
+    if agro["ultima_posicao"] and saude["ultima_posicao"]:
+        distancia_entre_carretas_km = distancia_municipios.distancia_km(
+            agro["ultima_posicao"]["municipio_nome"], saude["ultima_posicao"]["municipio_nome"]
+        )
+        if distancia_entre_carretas_km is not None:
+            distancia_entre_carretas_km = round(distancia_entre_carretas_km)
 
     return render_template(
         "admin_carreta_mapa.html",
         pagina_ativa="carreta_mapa",
-        atual=atual,
-        proximas=proximas,
-        anteriores=anteriores,
-        tem_atual_sem_coordenada=bool(situacao["atual"] and not atual),
-        ultima_posicao=ultima_posicao,
-        ultima_eh_atual=ultima_eh_atual,
-        tem_ultima_sem_coordenada=bool(ultima_solicitacao and not ultima_posicao),
+        agro=agro,
+        saude=saude,
+        distancia_entre_carretas_km=distancia_entre_carretas_km,
         ano=ano, mes=mes,
         mes_anterior=mes_anterior, ano_anterior=ano_anterior,
         mes_proximo=mes_proximo, ano_proximo=ano_proximo,

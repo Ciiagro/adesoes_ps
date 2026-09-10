@@ -201,11 +201,15 @@ def contar_pendentes(db):
     return db.query(SolicitacaoCarreta).filter(SolicitacaoCarreta.status == "pendente").count()
 
 
-def situacao_atual(db, hoje=None, limite_anteriores=15):
+def situacao_atual(db, hoje=None, limite_anteriores=15, tipo_recurso=None):
     """Onde a carreta está AGORA, pra onde vai depois, e onde já esteve —
     pro mapa. Considera solicitações APROVADAS ou já marcadas REALIZADAS —
-    pendente é só pedido, ainda não é compromisso confirmado. Os dois
-    programas contam juntos (mesmo motorista/veículo).
+    pendente é só pedido, ainda não é compromisso confirmado.
+
+    `tipo_recurso`, se informado ("carreta_agro" ou "carreta_saude"), filtra
+    só as solicitações daquele programa — usado pra montar um mapa por
+    carreta (são DUAS carretas físicas, mesmo dividindo cavalo/motorista).
+    Sem esse filtro, os dois programas contam juntos, como antes.
 
     Devolve um dicionário:
       - "anteriores": últimas solicitações que já terminaram, mais recente
@@ -222,9 +226,14 @@ def situacao_atual(db, hoje=None, limite_anteriores=15):
     hoje = hoje or date.today()
     atualizar_realizadas_automaticamente(db, hoje=hoje)
 
+    query_base = db.query(SolicitacaoCarreta).filter(
+        SolicitacaoCarreta.status.in_(["aprovada", "realizada"])
+    )
+    if tipo_recurso:
+        query_base = query_base.filter(SolicitacaoCarreta.tipo_recurso == tipo_recurso)
+
     aprovadas = (
-        db.query(SolicitacaoCarreta)
-        .filter(SolicitacaoCarreta.status.in_(["aprovada", "realizada"]))
+        query_base
         .filter(SolicitacaoCarreta.data_fim >= hoje)
         .order_by(SolicitacaoCarreta.data_inicio)
         .all()
@@ -239,9 +248,14 @@ def situacao_atual(db, hoje=None, limite_anteriores=15):
         elif solicitacao.data_inicio > hoje:
             proximas.append(solicitacao)
 
+    query_anteriores = db.query(SolicitacaoCarreta).filter(
+        SolicitacaoCarreta.status.in_(["aprovada", "realizada"])
+    )
+    if tipo_recurso:
+        query_anteriores = query_anteriores.filter(SolicitacaoCarreta.tipo_recurso == tipo_recurso)
+
     anteriores = (
-        db.query(SolicitacaoCarreta)
-        .filter(SolicitacaoCarreta.status.in_(["aprovada", "realizada"]))
+        query_anteriores
         .filter(SolicitacaoCarreta.data_fim < hoje)
         .order_by(SolicitacaoCarreta.data_fim.desc())
         .limit(limite_anteriores)
@@ -251,7 +265,7 @@ def situacao_atual(db, hoje=None, limite_anteriores=15):
     return {"anteriores": anteriores, "atual": atual, "proximas": proximas}
 
 
-def trajeto_do_mes(db, ano, mes, hoje=None):
+def trajeto_do_mes(db, ano, mes, hoje=None, tipo_recurso=None):
     """Igual a `situacao_atual`, mas olhando só pra um mês específico — pra
     navegação mês a mês no mapa (← mês anterior / próximo mês →), em vez de
     sempre 'últimos 15 + todo o futuro'. Considera qualquer solicitação
@@ -260,16 +274,22 @@ def trajeto_do_mes(db, ano, mes, hoje=None):
     ainda vai acontecer, comparando com a data de hoje de verdade (não com
     o mês em exibição) — então se você olhar o mês atual, o "agora" aparece
     normalmente; olhando um mês passado ou futuro, tudo cai em "anteriores"
-    ou "proximas"."""
+    ou "proximas". `tipo_recurso`, se informado, filtra só um dos dois
+    programas — mesma lógica de `situacao_atual`."""
     hoje = hoje or date.today()
     atualizar_realizadas_automaticamente(db, hoje=hoje)
 
     primeiro_dia = date(ano, mes, 1)
     ultimo_dia = date(ano, mes, calendar.monthrange(ano, mes)[1])
 
+    query = db.query(SolicitacaoCarreta).filter(
+        SolicitacaoCarreta.status.in_(["aprovada", "realizada"])
+    )
+    if tipo_recurso:
+        query = query.filter(SolicitacaoCarreta.tipo_recurso == tipo_recurso)
+
     do_mes = (
-        db.query(SolicitacaoCarreta)
-        .filter(SolicitacaoCarreta.status.in_(["aprovada", "realizada"]))
+        query
         .filter(SolicitacaoCarreta.data_inicio <= ultimo_dia)
         .filter(SolicitacaoCarreta.data_fim >= primeiro_dia)
         .order_by(SolicitacaoCarreta.data_inicio)

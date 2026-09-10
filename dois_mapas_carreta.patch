@@ -1,0 +1,545 @@
+diff --git a/app.py b/app.py
+index 6e3decc..ebd30ab 100644
+--- a/app.py
++++ b/app.py
+@@ -2227,9 +2227,11 @@ def _ponto_carreta(solicitacao):
+ 
+ @app.route("/admin/carreta/mapa")
+ def admin_carreta_mapa():
+-    """Mapa do Ceará mostrando o trajeto da carreta num mês específico —
+-    o que já aconteceu, o que está rolando (se o mês em exibição incluir
+-    hoje) e o que ainda vai acontecer, com navegação mês a mês."""
++    """Mapa do Ceará — na verdade DOIS mapas, um por carreta (Agro e
++    Saúde), porque são duas carretas físicas de verdade (só dividem o
++    mesmo cavalo mecânico/motorista) — cada uma mostra separadamente o que
++    já aconteceu, o que está rolando (se o mês em exibição incluir hoje) e
++    o que ainda vai acontecer, com navegação mês a mês."""
+     if not pode_ver_carreta():
+         return redirect(url_for("admin_login"))
+ 
+@@ -2241,33 +2243,51 @@ def admin_carreta_mapa():
+     mes_proximo, ano_proximo = (1, ano + 1) if mes == 12 else (mes + 1, ano)
+     eh_mes_atual = (ano, mes) == (hoje.year, hoje.month)
+ 
+-    situacao = carr.trajeto_do_mes(db, ano, mes, hoje=hoje)
++    def montar_programa(tipo_recurso):
++        situacao = carr.trajeto_do_mes(db, ano, mes, hoje=hoje, tipo_recurso=tipo_recurso)
+ 
+-    # Independente do mês em exibição: onde a carreta está agora, ou (se não
+-    # tiver nada rolando hoje) qual foi o último compromisso concluído — pra
+-    # sempre dar pra responder "onde ela está/esteve por último", mesmo
+-    # navegando pra um mês sem nenhum compromisso.
+-    situacao_global = carr.situacao_atual(db, hoje=hoje, limite_anteriores=1)
+-    ultima_solicitacao = situacao_global["atual"] or (
+-        situacao_global["anteriores"][0] if situacao_global["anteriores"] else None
+-    )
+-    ultima_eh_atual = bool(situacao_global["atual"])
+-
+-    atual = _ponto_carreta(situacao["atual"]) if situacao["atual"] else None
+-    proximas = [p for p in (_ponto_carreta(s) for s in situacao["proximas"]) if p]
+-    anteriores = [p for p in (_ponto_carreta(s) for s in situacao["anteriores"]) if p]
+-    ultima_posicao = _ponto_carreta(ultima_solicitacao) if ultima_solicitacao else None
++        # Independente do mês em exibição: onde essa carreta está agora, ou
++        # (se não tiver nada rolando hoje) qual foi o último compromisso
++        # concluído — pra sempre dar pra responder "onde ela está/esteve
++        # por último", mesmo navegando pra um mês sem nenhum compromisso.
++        situacao_global = carr.situacao_atual(db, hoje=hoje, limite_anteriores=1, tipo_recurso=tipo_recurso)
++        ultima_solicitacao = situacao_global["atual"] or (
++            situacao_global["anteriores"][0] if situacao_global["anteriores"] else None
++        )
++        ultima_eh_atual = bool(situacao_global["atual"])
++        ultima_posicao = _ponto_carreta(ultima_solicitacao) if ultima_solicitacao else None
++
++        return {
++            "atual": _ponto_carreta(situacao["atual"]) if situacao["atual"] else None,
++            "proximas": [p for p in (_ponto_carreta(s) for s in situacao["proximas"]) if p],
++            "anteriores": [p for p in (_ponto_carreta(s) for s in situacao["anteriores"]) if p],
++            "tem_atual_sem_coordenada": bool(situacao["atual"] and not _ponto_carreta(situacao["atual"])),
++            "ultima_posicao": ultima_posicao,
++            "ultima_eh_atual": ultima_eh_atual,
++            "tem_ultima_sem_coordenada": bool(ultima_solicitacao and not ultima_posicao),
++        }
++
++    agro = montar_programa("carreta_agro")
++    saude = montar_programa("carreta_saude")
++
++    # Distância entre onde as duas carretas estão AGORA (ou, se alguma
++    # estiver parada, onde foi a última posição conhecida dela) — é o dado
++    # que ajuda a decidir se dá tempo do cavalo/motorista ir de uma pra
++    # outra, já que só tem 1 cavalo pras 2 carretas.
++    distancia_entre_carretas_km = None
++    if agro["ultima_posicao"] and saude["ultima_posicao"]:
++        distancia_entre_carretas_km = distancia_municipios.distancia_km(
++            agro["ultima_posicao"]["municipio_nome"], saude["ultima_posicao"]["municipio_nome"]
++        )
++        if distancia_entre_carretas_km is not None:
++            distancia_entre_carretas_km = round(distancia_entre_carretas_km)
+ 
+     return render_template(
+         "admin_carreta_mapa.html",
+         pagina_ativa="carreta_mapa",
+-        atual=atual,
+-        proximas=proximas,
+-        anteriores=anteriores,
+-        tem_atual_sem_coordenada=bool(situacao["atual"] and not atual),
+-        ultima_posicao=ultima_posicao,
+-        ultima_eh_atual=ultima_eh_atual,
+-        tem_ultima_sem_coordenada=bool(ultima_solicitacao and not ultima_posicao),
++        agro=agro,
++        saude=saude,
++        distancia_entre_carretas_km=distancia_entre_carretas_km,
+         ano=ano, mes=mes,
+         mes_anterior=mes_anterior, ano_anterior=ano_anterior,
+         mes_proximo=mes_proximo, ano_proximo=ano_proximo,
+diff --git a/carreta.py b/carreta.py
+index 07e5eff..2a36ef4 100644
+--- a/carreta.py
++++ b/carreta.py
+@@ -201,11 +201,15 @@ def contar_pendentes(db):
+     return db.query(SolicitacaoCarreta).filter(SolicitacaoCarreta.status == "pendente").count()
+ 
+ 
+-def situacao_atual(db, hoje=None, limite_anteriores=15):
++def situacao_atual(db, hoje=None, limite_anteriores=15, tipo_recurso=None):
+     """Onde a carreta está AGORA, pra onde vai depois, e onde já esteve —
+     pro mapa. Considera solicitações APROVADAS ou já marcadas REALIZADAS —
+-    pendente é só pedido, ainda não é compromisso confirmado. Os dois
+-    programas contam juntos (mesmo motorista/veículo).
++    pendente é só pedido, ainda não é compromisso confirmado.
++
++    `tipo_recurso`, se informado ("carreta_agro" ou "carreta_saude"), filtra
++    só as solicitações daquele programa — usado pra montar um mapa por
++    carreta (são DUAS carretas físicas, mesmo dividindo cavalo/motorista).
++    Sem esse filtro, os dois programas contam juntos, como antes.
+ 
+     Devolve um dicionário:
+       - "anteriores": últimas solicitações que já terminaram, mais recente
+@@ -222,9 +226,14 @@ def situacao_atual(db, hoje=None, limite_anteriores=15):
+     hoje = hoje or date.today()
+     atualizar_realizadas_automaticamente(db, hoje=hoje)
+ 
++    query_base = db.query(SolicitacaoCarreta).filter(
++        SolicitacaoCarreta.status.in_(["aprovada", "realizada"])
++    )
++    if tipo_recurso:
++        query_base = query_base.filter(SolicitacaoCarreta.tipo_recurso == tipo_recurso)
++
+     aprovadas = (
+-        db.query(SolicitacaoCarreta)
+-        .filter(SolicitacaoCarreta.status.in_(["aprovada", "realizada"]))
++        query_base
+         .filter(SolicitacaoCarreta.data_fim >= hoje)
+         .order_by(SolicitacaoCarreta.data_inicio)
+         .all()
+@@ -239,9 +248,14 @@ def situacao_atual(db, hoje=None, limite_anteriores=15):
+         elif solicitacao.data_inicio > hoje:
+             proximas.append(solicitacao)
+ 
++    query_anteriores = db.query(SolicitacaoCarreta).filter(
++        SolicitacaoCarreta.status.in_(["aprovada", "realizada"])
++    )
++    if tipo_recurso:
++        query_anteriores = query_anteriores.filter(SolicitacaoCarreta.tipo_recurso == tipo_recurso)
++
+     anteriores = (
+-        db.query(SolicitacaoCarreta)
+-        .filter(SolicitacaoCarreta.status.in_(["aprovada", "realizada"]))
++        query_anteriores
+         .filter(SolicitacaoCarreta.data_fim < hoje)
+         .order_by(SolicitacaoCarreta.data_fim.desc())
+         .limit(limite_anteriores)
+@@ -251,7 +265,7 @@ def situacao_atual(db, hoje=None, limite_anteriores=15):
+     return {"anteriores": anteriores, "atual": atual, "proximas": proximas}
+ 
+ 
+-def trajeto_do_mes(db, ano, mes, hoje=None):
++def trajeto_do_mes(db, ano, mes, hoje=None, tipo_recurso=None):
+     """Igual a `situacao_atual`, mas olhando só pra um mês específico — pra
+     navegação mês a mês no mapa (← mês anterior / próximo mês →), em vez de
+     sempre 'últimos 15 + todo o futuro'. Considera qualquer solicitação
+@@ -260,16 +274,22 @@ def trajeto_do_mes(db, ano, mes, hoje=None):
+     ainda vai acontecer, comparando com a data de hoje de verdade (não com
+     o mês em exibição) — então se você olhar o mês atual, o "agora" aparece
+     normalmente; olhando um mês passado ou futuro, tudo cai em "anteriores"
+-    ou "proximas"."""
++    ou "proximas". `tipo_recurso`, se informado, filtra só um dos dois
++    programas — mesma lógica de `situacao_atual`."""
+     hoje = hoje or date.today()
+     atualizar_realizadas_automaticamente(db, hoje=hoje)
+ 
+     primeiro_dia = date(ano, mes, 1)
+     ultimo_dia = date(ano, mes, calendar.monthrange(ano, mes)[1])
+ 
++    query = db.query(SolicitacaoCarreta).filter(
++        SolicitacaoCarreta.status.in_(["aprovada", "realizada"])
++    )
++    if tipo_recurso:
++        query = query.filter(SolicitacaoCarreta.tipo_recurso == tipo_recurso)
++
+     do_mes = (
+-        db.query(SolicitacaoCarreta)
+-        .filter(SolicitacaoCarreta.status.in_(["aprovada", "realizada"]))
++        query
+         .filter(SolicitacaoCarreta.data_inicio <= ultimo_dia)
+         .filter(SolicitacaoCarreta.data_fim >= primeiro_dia)
+         .order_by(SolicitacaoCarreta.data_inicio)
+diff --git a/templates/admin_carreta_mapa.html b/templates/admin_carreta_mapa.html
+index 3c9b2c0..1d37b4f 100644
+--- a/templates/admin_carreta_mapa.html
++++ b/templates/admin_carreta_mapa.html
+@@ -5,20 +5,20 @@
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+ <style>
+-  #mapa-carreta {
+-    height: 560px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
++  .mapa-carreta-programa {
++    height: 420px; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+   }
+   .leaflet-popup-content { font-family: 'Inter', system-ui, sans-serif; }
+   .leaflet-popup-content b { font-family: 'Fraunces', Georgia, serif; }
+   .pin-carreta { background: transparent !important; border: none !important; }
+   .legenda-mapa-carreta {
+-    background: rgba(255,255,255,.95); padding: 9px 12px; border-radius: 10px;
+-    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: .8rem; color: var(--ink-soft);
+-    line-height: 1.6;
++    background: rgba(255,255,255,.95); padding: 8px 11px; border-radius: 10px;
++    box-shadow: 0 2px 10px rgba(0,0,0,.18); font-size: .72rem; color: var(--ink-soft);
++    line-height: 1.5;
+   }
+-  .legenda-mapa-carreta .item { display:flex; align-items:center; gap:7px; white-space:nowrap; }
++  .legenda-mapa-carreta .item { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+   .legenda-mapa-carreta .bolinha {
+-    width:11px; height:11px; border-radius:50%; flex-shrink:0; border:2px solid #fff;
++    width:10px; height:10px; border-radius:50%; flex-shrink:0; border:2px solid #fff;
+     box-shadow: 0 0 0 1px rgba(0,0,0,.15);
+   }
+   .cartao-atual {
+@@ -27,39 +27,30 @@
+   }
+   .cartao-atual .emoji { font-size:1.8rem; }
+   .cartao-atual .disponivel { color:var(--ink-soft); }
++  .colunas-programas { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
++  @media (max-width: 900px) { .colunas-programas { grid-template-columns:1fr; } }
++  .titulo-programa { display:flex; align-items:center; gap:8px; margin:0 0 10px; }
++  .titulo-programa .bolinha { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+ </style>
+ {% endblock %}
+ 
+ {% block admin_content %}
+ <div class="page-head">
+   <h1>Mapa da Carreta</h1>
+-  <p class="sub">Onde a carreta está hoje, os próximos compromissos aprovados e por onde já passou — Carreta do Agro e Carreta da Saúde juntas, porque é o mesmo motorista/veículo.</p>
++  <p class="sub">Duas carretas físicas — Agro e Saúde — cada uma com seu próprio trajeto. Elas dividem o mesmo cavalo mecânico e motorista, então vale sempre olhar a distância entre as duas antes de aprovar datas próximas em municípios diferentes.</p>
+ </div>
+ 
+-{% if ultima_posicao %}
+-<div class="cartao-atual">
+-  <span class="emoji">{{ '🚛' if ultima_eh_atual else '📍' }}</span>
++{% if distancia_entre_carretas_km is not none %}
++<div class="cartao-atual" style="{% if distancia_entre_carretas_km >= 100 %}border-color:#D9A441;background:#FBF3E3;{% endif %}">
++  <span class="emoji">🐎</span>
+   <div>
+-    <div>
+-      <strong>{{ 'Agora em' if ultima_eh_atual else 'Última posição conhecida:' }} {{ ultima_posicao.municipio_nome }}</strong>
+-      — {{ ultima_posicao.tipo_recurso }}
+-    </div>
++    <strong>Distância entre as duas carretas agora: {{ distancia_entre_carretas_km }} km</strong>
+     <div style="color:var(--ink-faint);font-size:.85rem;">
+-      {{ ultima_posicao.evento }} · {{ ultima_posicao.data_inicio }} a {{ ultima_posicao.data_fim }}
+-      {% if not ultima_eh_atual %}(sem compromisso rolando hoje){% endif %}
++      {{ agro.ultima_posicao.municipio_nome if agro.ultima_posicao else '?' }} (Agro) ↔ {{ saude.ultima_posicao.municipio_nome if saude.ultima_posicao else '?' }} (Saúde)
++      — em linha reta, não é distância de estrada real.
+     </div>
+   </div>
+ </div>
+-{% elif tem_ultima_sem_coordenada %}
+-<div class="cartao-atual">
+-  <span class="emoji">🚛</span>
+-  <div>Tem um compromisso aprovado, mas não achei o município no mapa (nome pode estar diferente da lista oficial). Confere em <a href="{{ url_for('admin_carreta') }}">Solicitações</a>.</div>
+-</div>
+-{% else %}
+-<div class="cartao-atual">
+-  <span class="emoji">🅿️</span>
+-  <div class="disponivel">Nenhum compromisso aprovado registrado ainda — a carreta está disponível.</div>
+-</div>
+ {% endif %}
+ 
+ <div class="secao-card" style="margin-bottom:16px;">
+@@ -70,81 +61,111 @@
+   </div>
+ </div>
+ 
+-{% if not eh_mes_atual and not anteriores and not proximas %}
+-<div class="cartao-atual">
+-  <span class="emoji">🗓️</span>
+-  <div class="disponivel">Nenhum compromisso aprovado nesse mês.</div>
+-</div>
+-{% endif %}
++<div class="colunas-programas">
+ 
+-<div id="mapa-carreta"></div>
+-
+-{% if anteriores %}
+-<p style="margin-top:16px;font-weight:600;">Já aconteceram (mais recentes primeiro)</p>
+-<ul>
+-  {% for p in anteriores %}
+-  <li>
+-    <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.tipo_recurso }}, {{ p.data_inicio }} a {{ p.data_fim }})</a>
+-  </li>
+-  {% endfor %}
+-</ul>
+-{% endif %}
++  {# ---------- CARRETA DO AGRO ---------- #}
++  <div>
++    <h3 class="titulo-programa"><span class="bolinha" style="background:#3E8E52;"></span> Carreta do Agro</h3>
++
++    {% if agro.ultima_posicao %}
++    <div class="cartao-atual">
++      <span class="emoji">{{ '🚛' if agro.ultima_eh_atual else '📍' }}</span>
++      <div>
++        <div><strong>{{ 'Agora em' if agro.ultima_eh_atual else 'Última posição conhecida:' }} {{ agro.ultima_posicao.municipio_nome }}</strong></div>
++        <div style="color:var(--ink-faint);font-size:.85rem;">
++          {{ agro.ultima_posicao.evento }} · {{ agro.ultima_posicao.data_inicio }} a {{ agro.ultima_posicao.data_fim }}
++          {% if not agro.ultima_eh_atual %}(sem compromisso rolando hoje){% endif %}
++        </div>
++      </div>
++    </div>
++    {% elif agro.tem_ultima_sem_coordenada %}
++    <div class="cartao-atual"><span class="emoji">🚛</span><div>Tem um compromisso aprovado, mas não achei o município no mapa. Confere em <a href="{{ url_for('admin_carreta') }}">Solicitações</a>.</div></div>
++    {% else %}
++    <div class="cartao-atual"><span class="emoji">🅿️</span><div class="disponivel">Nenhum compromisso aprovado registrado ainda — disponível.</div></div>
++    {% endif %}
++
++    {% if not eh_mes_atual and not agro.anteriores and not agro.proximas %}
++    <div class="cartao-atual"><span class="emoji">🗓️</span><div class="disponivel">Nenhum compromisso aprovado nesse mês.</div></div>
++    {% endif %}
++
++    <div id="mapa-agro" class="mapa-carreta-programa"></div>
++
++    {% if agro.anteriores %}
++    <p style="margin-top:16px;font-weight:600;">Já aconteceram (mais recentes primeiro)</p>
++    <ul>
++      {% for p in agro.anteriores %}
++      <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
++      {% endfor %}
++    </ul>
++    {% endif %}
++
++    {% if agro.proximas %}
++    <p style="margin-top:16px;font-weight:600;">Próximos compromissos aprovados</p>
++    <ul>
++      {% for p in agro.proximas %}
++      <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
++      {% endfor %}
++    </ul>
++    {% endif %}
++  </div>
+ 
+-{% if proximas %}
+-<p style="margin-top:16px;font-weight:600;">Próximos compromissos aprovados</p>
+-<ul>
+-  {% for p in proximas %}
+-  <li>
+-    <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.tipo_recurso }}, {{ p.data_inicio }} a {{ p.data_fim }})</a>
+-  </li>
+-  {% endfor %}
+-</ul>
+-{% endif %}
++  {# ---------- CARRETA DA SAÚDE ---------- #}
++  <div>
++    <h3 class="titulo-programa"><span class="bolinha" style="background:#2E5FA3;"></span> Carreta da Saúde</h3>
++
++    {% if saude.ultima_posicao %}
++    <div class="cartao-atual">
++      <span class="emoji">{{ '🚛' if saude.ultima_eh_atual else '📍' }}</span>
++      <div>
++        <div><strong>{{ 'Agora em' if saude.ultima_eh_atual else 'Última posição conhecida:' }} {{ saude.ultima_posicao.municipio_nome }}</strong></div>
++        <div style="color:var(--ink-faint);font-size:.85rem;">
++          {{ saude.ultima_posicao.evento }} · {{ saude.ultima_posicao.data_inicio }} a {{ saude.ultima_posicao.data_fim }}
++          {% if not saude.ultima_eh_atual %}(sem compromisso rolando hoje){% endif %}
++        </div>
++      </div>
++    </div>
++    {% elif saude.tem_ultima_sem_coordenada %}
++    <div class="cartao-atual"><span class="emoji">🚛</span><div>Tem um compromisso aprovado, mas não achei o município no mapa. Confere em <a href="{{ url_for('admin_carreta') }}">Solicitações</a>.</div></div>
++    {% else %}
++    <div class="cartao-atual"><span class="emoji">🅿️</span><div class="disponivel">Nenhum compromisso aprovado registrado ainda — disponível.</div></div>
++    {% endif %}
++
++    {% if not eh_mes_atual and not saude.anteriores and not saude.proximas %}
++    <div class="cartao-atual"><span class="emoji">🗓️</span><div class="disponivel">Nenhum compromisso aprovado nesse mês.</div></div>
++    {% endif %}
++
++    <div id="mapa-saude" class="mapa-carreta-programa"></div>
++
++    {% if saude.anteriores %}
++    <p style="margin-top:16px;font-weight:600;">Já aconteceram (mais recentes primeiro)</p>
++    <ul>
++      {% for p in saude.anteriores %}
++      <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
++      {% endfor %}
++    </ul>
++    {% endif %}
++
++    {% if saude.proximas %}
++    <p style="margin-top:16px;font-weight:600;">Próximos compromissos aprovados</p>
++    <ul>
++      {% for p in saude.proximas %}
++      <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
++      {% endfor %}
++    </ul>
++    {% endif %}
++  </div>
++
++</div>
+ {% endblock %}
+ 
+ {% block extra_scripts %}
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ <script>
+-  const atual = {{ atual|tojson }};
+-  const proximas = {{ proximas|tojson }};
+-  const anteriores = {{ anteriores|tojson }};
+   const CENTRO_CEARA = [-5.2, -39.3];
+-
+-  const mapa = L.map('mapa-carreta').setView(CENTRO_CEARA, 7);
+-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+-    maxZoom: 19
+-  }).addTo(mapa);
+-
+-  const legenda = L.control({ position: 'bottomleft' });
+-  legenda.onAdd = function () {
+-    const div = L.DomUtil.create('div', 'legenda-mapa-carreta');
+-    div.innerHTML = `
+-      <div class="item"><span class="bolinha" style="background:#3E8E52;"></span> Carreta do Agro</div>
+-      <div class="item"><span class="bolinha" style="background:#2E5FA3;"></span> Carreta da Saúde</div>
+-      <div style="margin-top:6px;border-top:1px solid rgba(0,0,0,.08);padding-top:6px;">
+-        <div class="item"><span class="bolinha" style="background:#999;opacity:.45;"></span> Apagado = já aconteceu</div>
+-        <div class="item"><span class="bolinha" style="background:#999;box-shadow:0 0 0 3px rgba(0,0,0,.18);"></span> Com aro = acontecendo agora</div>
+-      </div>
+-      <div style="margin-top:4px;font-size:.72rem;opacity:.8;">Números = ordem do trajeto</div>
+-    `;
+-    return div;
+-  };
+-  legenda.addTo(mapa);
+-
+-  fetch("{{ url_for('static', filename='ceara_municipios.geojson') }}")
+-    .then(r => r.json())
+-    .then(geojson => {
+-      L.geoJSON(geojson, {
+-        style: { fillColor: '#E7E1CD', fillOpacity: 0.35, color: '#fff', weight: 1 },
+-      }).addTo(mapa);
+-    });
+-
+-  // Cor = programa, sempre (regra única, sem exceção). O momento no tempo
+-  // (já aconteceu / agora / próximo) é indicado por opacidade e tamanho,
+-  // nunca por cor — pra não confundir com a cor do programa.
+-  const COR_PROGRAMA = { carreta_agro: '#3E8E52', carreta_saude: '#2E5FA3' };
++  const ROTULOS = { anterior: 'Já aconteceu', atual: '🚛 Está aqui agora', proxima: 'Próximo compromisso' };
++  const TAMANHOS = { anterior: 24, atual: 34, proxima: 28 };
++  const OPACIDADES = { anterior: 0.45, atual: 1, proxima: 1 };
+ 
+   function iconePin(cor, tamanho, numero, opacidade, comAro) {
+     const aroSvg = comAro
+@@ -166,40 +187,68 @@
+     });
+   }
+ 
+-  // Monta a sequência inteira do trajeto, em ordem cronológica, pra numerar
+-  // os pinos de forma corrida (1, 2, 3...) do mais antigo pro mais futuro —
+-  // assim dá pra ver de onde a carreta veio e pra onde vai, na ordem certa.
+-  const sequenciaCompleta = [
+-    ...[...anteriores].reverse().map(p => ({ ...p, papel: 'anterior' })),
+-    ...(atual ? [{ ...atual, papel: 'atual' }] : []),
+-    ...proximas.map(p => ({ ...p, papel: 'proxima' })),
+-  ];
+-
+-  const ROTULOS = { anterior: 'Já aconteceu', atual: '🚛 Está aqui agora', proxima: 'Próximo compromisso' };
+-  const TAMANHOS = { anterior: 24, atual: 34, proxima: 28 };
+-  const OPACIDADES = { anterior: 0.45, atual: 1, proxima: 1 };
+-
+-  const pontosRota = [];
+-  const grupo = L.featureGroup();
++  // Monta um mapa Leaflet independente numa div, com o trajeto só daquele
++  // programa (uma carreta = um trajeto = uma linha, sem misturar com a
++  // outra carreta).
++  function montarMapaPrograma(divId, atual, proximas, anteriores, cor) {
++    const mapa = L.map(divId).setView(CENTRO_CEARA, 7);
++    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
++      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
++      maxZoom: 19
++    }).addTo(mapa);
++
++    const legenda = L.control({ position: 'bottomleft' });
++    legenda.onAdd = function () {
++      const div = L.DomUtil.create('div', 'legenda-mapa-carreta');
++      div.innerHTML = `
++        <div class="item"><span class="bolinha" style="background:${cor};opacity:.45;"></span> Já aconteceu</div>
++        <div class="item"><span class="bolinha" style="background:${cor};box-shadow:0 0 0 3px rgba(0,0,0,.18);"></span> Acontecendo agora</div>
++        <div style="margin-top:4px;font-size:.68rem;opacity:.8;">Números = ordem do trajeto</div>
++      `;
++      return div;
++    };
++    legenda.addTo(mapa);
++
++    fetch("{{ url_for('static', filename='ceara_municipios.geojson') }}")
++      .then(r => r.json())
++      .then(geojson => {
++        L.geoJSON(geojson, {
++          style: { fillColor: '#E7E1CD', fillOpacity: 0.35, color: '#fff', weight: 1 },
++        }).addTo(mapa);
++      });
++
++    const sequenciaCompleta = [
++      ...[...anteriores].reverse().map(p => ({ ...p, papel: 'anterior' })),
++      ...(atual ? [{ ...atual, papel: 'atual' }] : []),
++      ...proximas.map(p => ({ ...p, papel: 'proxima' })),
++    ];
++
++    const pontosRota = [];
++    const grupo = L.featureGroup();
++
++    sequenciaCompleta.forEach((p, i) => {
++      const numero = i + 1;
++      const icone = iconePin(cor, TAMANHOS[p.papel], numero, OPACIDADES[p.papel], p.papel === 'atual');
++      L.marker([p.lat, p.lng], { icon: icone })
++        .bindPopup(`<b>${numero}º — ${ROTULOS[p.papel]}</b><br>${p.municipio_nome}<br>${p.evento}<br>${p.data_inicio} a ${p.data_fim}`)
++        .addTo(grupo);
++      pontosRota.push([p.lat, p.lng]);
++    });
+ 
+-  sequenciaCompleta.forEach((p, i) => {
+-    const numero = i + 1;
+-    const cor = COR_PROGRAMA[p.tipo_recurso_chave] || '#8A8A8A';
+-    const icone = iconePin(cor, TAMANHOS[p.papel], numero, OPACIDADES[p.papel], p.papel === 'atual');
+-    L.marker([p.lat, p.lng], { icon: icone })
+-      .bindPopup(`<b>${numero}º — ${ROTULOS[p.papel]}</b><br>${p.municipio_nome} — ${p.tipo_recurso}<br>${p.evento}<br>${p.data_inicio} a ${p.data_fim}`)
+-      .addTo(grupo);
+-    pontosRota.push([p.lat, p.lng]);
+-  });
++    grupo.addTo(mapa);
+ 
+-  grupo.addTo(mapa);
++    if (pontosRota.length > 1) {
++      L.polyline(pontosRota, { color: cor, weight: 2, dashArray: '6 6', opacity: 0.6 }).addTo(mapa);
++    }
+ 
+-  if (pontosRota.length > 1) {
+-    L.polyline(pontosRota, { color: '#8A6D4F', weight: 2, dashArray: '6 6', opacity: 0.6 }).addTo(mapa);
++    if (pontosRota.length > 0) {
++      mapa.fitBounds(L.featureGroup(grupo.getLayers()).getBounds(), { padding: [30, 30], maxZoom: 10 });
++    } else {
++      mapa.setView(CENTRO_CEARA, 7);
++    }
+   }
+ 
+-  if (pontosRota.length > 0) {
+-    mapa.fitBounds(L.featureGroup(grupo.getLayers()).getBounds(), { padding: [40, 40], maxZoom: 10 });
+-  }
++  montarMapaPrograma('mapa-agro', {{ agro.atual|tojson }}, {{ agro.proximas|tojson }}, {{ agro.anteriores|tojson }}, '#3E8E52');
++  montarMapaPrograma('mapa-saude', {{ saude.atual|tojson }}, {{ saude.proximas|tojson }}, {{ saude.anteriores|tojson }}, '#2E5FA3');
+ </script>
+ {% endblock %}
