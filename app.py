@@ -1428,6 +1428,7 @@ def admin_sindicato_novo():
     return render_template(
         "admin_sindicato_novo.html", pagina_ativa="sindicatos", apenas_sindicatos=True,
         municipios=sind.listar_municipios_para_selecao(db),
+        regioes_faec=sind.listar_regioes_faec(db),
     )
 
 
@@ -1704,6 +1705,7 @@ def admin_sindicato_grupo_editar(sindicato_id):
                 request.files.get("foto_presidente"),
                 gestao_inicio=request.form.get("gestao_inicio", ""),
                 gestao_fim=request.form.get("gestao_fim", ""),
+                regiao_faec=request.form.get("regiao_faec", ""),
             )
         except ValueError as erro:
             flash(str(erro))
@@ -1732,6 +1734,7 @@ def admin_sindicato_grupo_editar(sindicato_id):
         municipios=municipios,
         municipios_disponiveis=municipios_disponiveis,
         referencia=referencia,
+        regioes_faec=sind.listar_regioes_faec(db),
         apenas_sindicatos=True,
     )
 

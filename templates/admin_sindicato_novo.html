@@ -26,6 +26,20 @@
       <span class="rot" style="display:block;margin-bottom:5px;">Secretário(a) do Sindicato</span>
       <input type="text" name="secretario_nome" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
     </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Região FAEC do sindicato</span>
+      <input type="text" name="regiao_faec" list="lista-regioes-faec" placeholder="Ex.: Região Norte" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      <datalist id="lista-regioes-faec">
+        {% for r in regioes_faec %}
+        <option value="{{ r }}">
+        {% endfor %}
+      </datalist>
+      <span style="display:block;font-size:.78rem;color:var(--ink-faint);margin-top:4px;">
+        Se você já for escolher municípios abaixo, pode deixar em branco — a região já vem deles.
+        Só preencha se estiver cadastrando o sindicato SEM nenhum município por enquanto (senão ele
+        não aparece nos relatórios agrupados por região).
+      </span>
+    </label>
   </div>
 
   <h2 style="margin-top:24px;">Contato do Sindicato</h2>

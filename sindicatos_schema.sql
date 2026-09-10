@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS sindicatos.sindicatos (
     nome VARCHAR(150) UNIQUE NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     endereco VARCHAR(300),
+    regiao_faec VARCHAR(100),
     latitude NUMERIC(10, 7),
     longitude NUMERIC(10, 7),
     foto_presidente BYTEA,
@@ -20,6 +21,11 @@ CREATE TABLE IF NOT EXISTS sindicatos.sindicatos (
     gestao_inicio DATE,
     gestao_fim DATE
 );
+
+-- regiao_faec: região do PRÓPRIO sindicato (independente dos municípios
+-- vinculados) — garante que ele apareça nos relatórios por região mesmo
+-- sem nenhum município. Se a tabela já existia antes desse campo:
+ALTER TABLE sindicatos.sindicatos ADD COLUMN IF NOT EXISTS regiao_faec VARCHAR(100);
 
 -- Um registro por município do Ceará, com o sindicato responsável atual
 -- e os contatos (presidente, vice/diretor regional, telefones, e-mails).

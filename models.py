@@ -190,6 +190,14 @@ class SindicatoRural(Base):
     nome = Column(String(150), unique=True, nullable=False)
     ativo = Column(Boolean, nullable=False, default=True, server_default="true")
     endereco = Column(String(300))
+    # regiao_faec: região do PRÓPRIO sindicato, independente dos municípios
+    # vinculados a ele. Normalmente a região "correta" já vem dos municípios
+    # (cada um guarda a sua), mas um sindicato pode ficar temporariamente SEM
+    # nenhum município (ex: todos foram reatribuídos a outro sindicato) e
+    # mesmo assim continuar pertencendo a uma região — esse campo é o que
+    # garante que ele não "suma" dos relatórios agrupados por região nesse
+    # caso (ver `montar_estrutura_relatorio_contatos`).
+    regiao_faec = Column(String(100))
     latitude = Column(Numeric(10, 7))
     longitude = Column(Numeric(10, 7))
     # foto_presidente / foto_presidente_tipo: campos ANTIGOS, guardavam a foto

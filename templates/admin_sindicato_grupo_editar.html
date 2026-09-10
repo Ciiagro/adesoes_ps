@@ -48,6 +48,20 @@
       <input type="date" name="gestao_fim" value="{{ sindicato.gestao_fim or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
       <span style="display:block;font-size:.78rem;color:var(--ink-faint);margin-top:4px;">Deixe em branco se ainda está no cargo.</span>
     </label>
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Região FAEC do sindicato</span>
+      <input type="text" name="regiao_faec" value="{{ sindicato.regiao_faec or '' }}" list="lista-regioes-faec" placeholder="Ex.: Região Norte" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      <datalist id="lista-regioes-faec">
+        {% for r in regioes_faec %}
+        <option value="{{ r }}">
+        {% endfor %}
+      </datalist>
+      <span style="display:block;font-size:.78rem;color:var(--ink-faint);margin-top:4px;">
+        Normalmente a região já vem dos municípios vinculados — preencha isso aqui só se o
+        sindicato não tiver nenhum município no momento (senão ele some dos relatórios por
+        região, mesmo continuando cadastrado).
+      </span>
+    </label>
   </div>
 
   <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:16px;">

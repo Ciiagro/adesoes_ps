@@ -766,9 +766,10 @@ def _texto_para_data(valor):
 
 
 def atualizar_endereco_geo_foto_sindicato(db, sindicato, endereco, latitude, longitude, arquivo_foto,
-                                           gestao_inicio=None, gestao_fim=None):
+                                           gestao_inicio=None, gestao_fim=None, regiao_faec=None):
     """Atualiza endereço, coordenadas (georreferência), início/fim da gestão
-    do presidente atual e, se enviada, a foto do presidente de um sindicato.
+    do presidente atual, a região FAEC do próprio sindicato e, se enviada,
+    a foto do presidente de um sindicato.
     A foto vai pro Supabase Storage (não mais bytea na tabela — isso é o que
     estava inflando o egress em toda listagem que faz joinedload no
     sindicato). `arquivo_foto` é o FileStorage do Flask
@@ -776,6 +777,7 @@ def atualizar_endereco_geo_foto_sindicato(db, sindicato, endereco, latitude, lon
     uma imagem válida ou se o Storage não estiver configurado."""
 
     sindicato.endereco = _limpar(endereco)
+    sindicato.regiao_faec = _limpar(regiao_faec)
     sindicato.latitude = _texto_para_float(latitude)
     sindicato.longitude = _texto_para_float(longitude)
     sindicato.gestao_inicio = _texto_para_data(gestao_inicio)
@@ -836,16 +838,19 @@ def sindicatos_com_gestao_vencendo(db, ate=None):
     return resultado
 
 
-def criar_sindicato(db, nome):
+def criar_sindicato(db, nome, regiao_faec=None):
     """Cadastra um sindicato novo, sem vincular nenhum município ainda.
-    Levanta ValueError se já existir um sindicato com esse nome."""
+    `regiao_faec` é opcional — só é realmente necessário se o sindicato não
+    for receber nenhum município junto (senão a região dele já vem dos
+    municípios vinculados). Levanta ValueError se já existir um sindicato
+    com esse nome."""
     nome = _limpar(nome)
     if not nome:
         raise ValueError("Informe um nome para o sindicato.")
     existente = db.query(SindicatoRural).filter(SindicatoRural.nome.ilike(nome)).first()
     if existente:
         raise ValueError(f'Já existe um sindicato chamado "{existente.nome}".')
-    sindicato = SindicatoRural(nome=nome, ativo=True)
+    sindicato = SindicatoRural(nome=nome, ativo=True, regiao_faec=_limpar(regiao_faec))
     db.add(sindicato)
     db.commit()
     return sindicato
@@ -866,7 +871,7 @@ def criar_sindicato_com_municipios(db, nome, form, cod_ibges_selecionados, alter
     """Cadastra o sindicato E já atribui os municípios escolhidos a ele,
     aplicando os mesmos dados de contato do formulário a cada um. Levanta
     ValueError se já existir um sindicato com esse nome."""
-    sindicato = criar_sindicato(db, nome)
+    sindicato = criar_sindicato(db, nome, regiao_faec=form.get("regiao_faec"))
 
     alterado_por = _limpar(alterado_por) or "não informado"
     observacao = _limpar(observacao) or f'Cadastro do sindicato "{sindicato.nome}"'
@@ -1173,7 +1178,15 @@ def montar_estrutura_relatorio_contatos(db):
     """Agrupa os municípios por Região FAEC -> Sindicato, com os dados de
     contato de cada sindicato (presidente, telefone, e-mail) — pro
     'Relatório de Contatos dos Sindicatos por Região': uma linha por
-    SINDICATO (não repete por município)."""
+    SINDICATO (não repete por município).
+
+    Também inclui sindicatos ATIVOS que não têm NENHUM município vinculado
+    no momento (ex: todos foram reatribuídos a outro sindicato) — eles
+    entram na região salva no cadastro do próprio sindicato
+    (`SindicatoRural.regiao_faec`), já que sem município o sistema não tem
+    de onde mais tirar essa informação. Sem uma região definida ali, esse
+    sindicato "órfão" fica de fora do relatório (não tem como saber onde
+    encaixar ele)."""
     municipios = (
         db.query(MunicipioSindicato)
         .options(joinedload(MunicipioSindicato.sindicato).defer(SindicatoRural.foto_presidente).defer(SindicatoRural.foto_presidente_tipo))
@@ -1182,6 +1195,7 @@ def montar_estrutura_relatorio_contatos(db):
     )
 
     regioes = {}
+    sindicatos_com_municipio_ids = set()
     for m in municipios:
         nome_regiao = m.regiao_faec or "Região não definida"
         regiao = regioes.setdefault(nome_regiao, {"vice_presidente": None, "telefone_vice": None, "sindicatos": {}})
@@ -1191,6 +1205,8 @@ def montar_estrutura_relatorio_contatos(db):
             regiao["telefone_vice"] = m.telefone_vice_presidente
 
         nome_sindicato = m.sindicato.nome if m.sindicato else "Sem sindicato definido"
+        if m.sindicato:
+            sindicatos_com_municipio_ids.add(m.sindicato.id)
         info_sindicato = regiao["sindicatos"].setdefault(
             nome_sindicato, {"presidente": None, "telefone": None, "email": None}
         )
@@ -1202,6 +1218,17 @@ def montar_estrutura_relatorio_contatos(db):
             emails = [e for e in [m.email1, m.email2, m.email3, m.email4] if e]
             if emails:
                 info_sindicato["email"] = " / ".join(emails)
+
+    # Sindicatos ativos sem NENHUM município vinculado — entram na região
+    # salva no cadastro deles (sem contato, já que isso vive no município).
+    query_orfaos = db.query(SindicatoRural).filter(SindicatoRural.ativo.is_(True))
+    if sindicatos_com_municipio_ids:
+        query_orfaos = query_orfaos.filter(~SindicatoRural.id.in_(sindicatos_com_municipio_ids))
+    for sindicato in query_orfaos.all():
+        if not sindicato.regiao_faec:
+            continue  # sem região cadastrada, não tem onde encaixar no relatório
+        regiao = regioes.setdefault(sindicato.regiao_faec, {"vice_presidente": None, "telefone_vice": None, "sindicatos": {}})
+        regiao["sindicatos"].setdefault(sindicato.nome, {"presidente": None, "telefone": None, "email": None})
 
     return regioes
 
