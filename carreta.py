@@ -579,6 +579,9 @@ def criar_solicitacao(db, form, arquivos_upload, arquivos_termo=None):
 def atualizar_status(db, solicitacao, status, motivo_recusa=None, alterado_por=None):
     if status not in STATUS_LABEL:
         raise ValueError("Situação inválida.")
+    motivo_recusa = _limpar(motivo_recusa)
+    if status == "recusada" and not motivo_recusa:
+        raise ValueError("Informe o motivo do cancelamento/recusa.")
     solicitacao.status = status
     solicitacao.motivo_recusa = _titulo(motivo_recusa) if status == "recusada" else None
     solicitacao.atualizado_em = datetime.utcnow()
@@ -862,7 +865,10 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
 
     corpo_interno = f"""
     <p>Chegou uma nova solicitação, aguardando análise:</p>
-    {_tabela_detalhes_email(solicitacao, [("Responsável", solicitacao.responsavel_nome or "não informado")])}
+    {_tabela_detalhes_email(solicitacao, [
+        ("Responsável", solicitacao.responsavel_nome or "não informado"),
+        ("E-mail do responsável", solicitacao.responsavel_email or "não informado"),
+    ])}
     {f'<p style="margin-top:18px;"><a href="{link}" style="display:inline-block;background:#B5851A;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;">Ver e aprovar essa solicitação →</a></p>' if link else ''}
     <p style="margin-top:16px;color:#8A8168;font-size:.85rem;">
       {'📎 Os documentos anexados (ofício e termo de compromisso) também estão neste e-mail.' if anexos else 'Nenhum documento foi anexado a esse pedido.'}
@@ -871,5 +877,5 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
     corpo = _envelope_email("#B5851A", "🔔 Nova solicitação de carreta", corpo_interno)
     return enviar_email(
         destinatario, f"Nova solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)} — {solicitacao.municipio_nome}", corpo,
-        usuario=usuario, senha=senha, anexos=anexos,
+        usuario=usuario, senha=senha, anexos=anexos, responder_para=solicitacao.responsavel_email,
     )

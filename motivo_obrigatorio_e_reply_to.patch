@@ -1,0 +1,127 @@
+diff --git a/carreta.py b/carreta.py
+index 79084b3..e7ad6fd 100644
+--- a/carreta.py
++++ b/carreta.py
+@@ -579,6 +579,9 @@ def criar_solicitacao(db, form, arquivos_upload, arquivos_termo=None):
+ def atualizar_status(db, solicitacao, status, motivo_recusa=None, alterado_por=None):
+     if status not in STATUS_LABEL:
+         raise ValueError("Situação inválida.")
++    motivo_recusa = _limpar(motivo_recusa)
++    if status == "recusada" and not motivo_recusa:
++        raise ValueError("Informe o motivo do cancelamento/recusa.")
+     solicitacao.status = status
+     solicitacao.motivo_recusa = _titulo(motivo_recusa) if status == "recusada" else None
+     solicitacao.atualizado_em = datetime.utcnow()
+@@ -862,7 +865,10 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
+ 
+     corpo_interno = f"""
+     <p>Chegou uma nova solicitação, aguardando análise:</p>
+-    {_tabela_detalhes_email(solicitacao, [("Responsável", solicitacao.responsavel_nome or "não informado")])}
++    {_tabela_detalhes_email(solicitacao, [
++        ("Responsável", solicitacao.responsavel_nome or "não informado"),
++        ("E-mail do responsável", solicitacao.responsavel_email or "não informado"),
++    ])}
+     {f'<p style="margin-top:18px;"><a href="{link}" style="display:inline-block;background:#B5851A;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700;">Ver e aprovar essa solicitação →</a></p>' if link else ''}
+     <p style="margin-top:16px;color:#8A8168;font-size:.85rem;">
+       {'📎 Os documentos anexados (ofício e termo de compromisso) também estão neste e-mail.' if anexos else 'Nenhum documento foi anexado a esse pedido.'}
+@@ -871,5 +877,5 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
+     corpo = _envelope_email("#B5851A", "🔔 Nova solicitação de carreta", corpo_interno)
+     return enviar_email(
+         destinatario, f"Nova solicitação de {TIPOS_RECURSO.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso)} — {solicitacao.municipio_nome}", corpo,
+-        usuario=usuario, senha=senha, anexos=anexos,
++        usuario=usuario, senha=senha, anexos=anexos, responder_para=solicitacao.responsavel_email,
+     )
+diff --git a/email_utils.py b/email_utils.py
+index 57584bb..0b17b59 100644
+--- a/email_utils.py
++++ b/email_utils.py
+@@ -4,7 +4,7 @@ import ssl
+ from email.message import EmailMessage
+ 
+ 
+-def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, servidor=None, porta=None, anexos=None):
++def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, servidor=None, porta=None, anexos=None, responder_para=None):
+     """Envia um e-mail simples em HTML. Retorna True se enviou, False se falhou
+     (por exemplo, se as credenciais não estiverem configuradas). Nunca
+     levanta exceção — quem chamar deve sempre ter um plano B (mostrar o
+@@ -15,7 +15,13 @@ def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, se
+     exemplo, um módulo que precisa mandar e-mail de um endereço próprio.
+ 
+     `anexos`, se informado, é uma lista de dicts {"nome", "conteudo" (bytes),
+-    "tipo_mime"} — cada um vira um arquivo anexado ao e-mail."""
++    "tipo_mime"} — cada um vira um arquivo anexado ao e-mail.
++
++    `responder_para`, se informado, define o cabeçalho Reply-To — pra quem
++    clicar em "Responder" no e-mail, a resposta vá pro solicitante de
++    verdade, e não pra própria caixa que enviou o aviso (o "De:" sempre
++    continua sendo a conta configurada em MAIL_USERNAME/USUARIO — não dá,
++    nem seria seguro, mandar "como se fosse" outra pessoa)."""
+     usuario = usuario or os.environ.get("MAIL_USERNAME")
+     senha = senha or os.environ.get("MAIL_PASSWORD")
+     servidor = servidor or os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+@@ -35,6 +41,8 @@ def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, se
+     msg["Subject"] = assunto
+     msg["From"] = usuario
+     msg["To"] = destinatario
++    if responder_para:
++        msg["Reply-To"] = responder_para
+     msg.set_content("Este e-mail contém conteúdo em HTML. Abra em um cliente compatível.")
+     msg.add_alternative(corpo_html, subtype="html")
+ 
+diff --git a/templates/admin_carreta_detalhe.html b/templates/admin_carreta_detalhe.html
+index d425988..9482927 100644
+--- a/templates/admin_carreta_detalhe.html
++++ b/templates/admin_carreta_detalhe.html
+@@ -129,14 +129,14 @@
+ 
+ <div class="secao-card">
+   <h2>Alterar situação</h2>
+-  <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}">
++  <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}" id="form-alterar-status">
+     <label style="display:block;max-width:340px;margin-bottom:14px;">
+       <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
+       <input type="text" name="alterado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+     </label>
+     <label style="display:block;max-width:500px;margin-bottom:14px;">
+-      <span class="rot" style="display:block;margin-bottom:5px;">Motivo do cancelamento (só se for cancelar)</span>
+-      <input type="text" name="motivo_recusa" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
++      <span class="rot" style="display:block;margin-bottom:5px;">Motivo do cancelamento <span id="motivo-recusa-obrigatorio" style="display:none;color:var(--danger);font-weight:700;">* obrigatório</span></span>
++      <input type="text" name="motivo_recusa" id="input-motivo-recusa" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+     </label>
+     <div style="display:flex;gap:10px;flex-wrap:wrap;">
+       <button type="submit" name="status" value="aprovada">✅ Aprovar</button>
+@@ -153,6 +153,34 @@
+   </p>
+ </div>
+ 
++<script>
++// Só exige o motivo do cancelamento quando o botão clicado for "Cancelar"
++// — aprovar/marcar como realizada/voltar pra pendente não precisam disso.
++(function () {
++  const form = document.getElementById('form-alterar-status');
++  const inputMotivo = document.getElementById('input-motivo-recusa');
++  const avisoObrigatorio = document.getElementById('motivo-recusa-obrigatorio');
++  let statusClicado = null;
++
++  form.querySelectorAll('button[name="status"]').forEach(function (botao) {
++    botao.addEventListener('click', function () {
++      statusClicado = botao.value;
++    });
++  });
++
++  form.addEventListener('submit', function (evento) {
++    if (statusClicado === 'recusada' && !inputMotivo.value.trim()) {
++      avisoObrigatorio.style.display = 'inline';
++      inputMotivo.focus();
++      evento.preventDefault();
++    } else {
++      avisoObrigatorio.style.display = 'none';
++    }
++  });
++})();
++</script>
++
++
+ <form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=solicitacao.id) }}" style="margin-top:16px;" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
+   <button type="submit" class="btn secundario" style="color:var(--danger);">🗑️ Remover esta solicitação</button>
+ </form>

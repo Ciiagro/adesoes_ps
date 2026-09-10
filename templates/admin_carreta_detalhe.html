@@ -129,14 +129,14 @@
 
 <div class="secao-card">
   <h2>Alterar situação</h2>
-  <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}">
+  <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}" id="form-alterar-status">
     <label style="display:block;max-width:340px;margin-bottom:14px;">
       <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
       <input type="text" name="alterado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
     </label>
     <label style="display:block;max-width:500px;margin-bottom:14px;">
-      <span class="rot" style="display:block;margin-bottom:5px;">Motivo do cancelamento (só se for cancelar)</span>
-      <input type="text" name="motivo_recusa" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Motivo do cancelamento <span id="motivo-recusa-obrigatorio" style="display:none;color:var(--danger);font-weight:700;">* obrigatório</span></span>
+      <input type="text" name="motivo_recusa" id="input-motivo-recusa" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
     </label>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button type="submit" name="status" value="aprovada">✅ Aprovar</button>
@@ -152,6 +152,34 @@
     acima se precisar marcar como concluída ANTES disso (evento que terminou mais cedo, por exemplo).
   </p>
 </div>
+
+<script>
+// Só exige o motivo do cancelamento quando o botão clicado for "Cancelar"
+// — aprovar/marcar como realizada/voltar pra pendente não precisam disso.
+(function () {
+  const form = document.getElementById('form-alterar-status');
+  const inputMotivo = document.getElementById('input-motivo-recusa');
+  const avisoObrigatorio = document.getElementById('motivo-recusa-obrigatorio');
+  let statusClicado = null;
+
+  form.querySelectorAll('button[name="status"]').forEach(function (botao) {
+    botao.addEventListener('click', function () {
+      statusClicado = botao.value;
+    });
+  });
+
+  form.addEventListener('submit', function (evento) {
+    if (statusClicado === 'recusada' && !inputMotivo.value.trim()) {
+      avisoObrigatorio.style.display = 'inline';
+      inputMotivo.focus();
+      evento.preventDefault();
+    } else {
+      avisoObrigatorio.style.display = 'none';
+    }
+  });
+})();
+</script>
+
 
 <form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=solicitacao.id) }}" style="margin-top:16px;" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
   <button type="submit" class="btn secundario" style="color:var(--danger);">🗑️ Remover esta solicitação</button>

@@ -4,7 +4,7 @@ import ssl
 from email.message import EmailMessage
 
 
-def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, servidor=None, porta=None, anexos=None):
+def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, servidor=None, porta=None, anexos=None, responder_para=None):
     """Envia um e-mail simples em HTML. Retorna True se enviou, False se falhou
     (por exemplo, se as credenciais não estiverem configuradas). Nunca
     levanta exceção — quem chamar deve sempre ter um plano B (mostrar o
@@ -15,7 +15,13 @@ def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, se
     exemplo, um módulo que precisa mandar e-mail de um endereço próprio.
 
     `anexos`, se informado, é uma lista de dicts {"nome", "conteudo" (bytes),
-    "tipo_mime"} — cada um vira um arquivo anexado ao e-mail."""
+    "tipo_mime"} — cada um vira um arquivo anexado ao e-mail.
+
+    `responder_para`, se informado, define o cabeçalho Reply-To — pra quem
+    clicar em "Responder" no e-mail, a resposta vá pro solicitante de
+    verdade, e não pra própria caixa que enviou o aviso (o "De:" sempre
+    continua sendo a conta configurada em MAIL_USERNAME/USUARIO — não dá,
+    nem seria seguro, mandar "como se fosse" outra pessoa)."""
     usuario = usuario or os.environ.get("MAIL_USERNAME")
     senha = senha or os.environ.get("MAIL_PASSWORD")
     servidor = servidor or os.environ.get("MAIL_SERVER", "smtp.gmail.com")
@@ -35,6 +41,8 @@ def enviar_email(destinatario, assunto, corpo_html, usuario=None, senha=None, se
     msg["Subject"] = assunto
     msg["From"] = usuario
     msg["To"] = destinatario
+    if responder_para:
+        msg["Reply-To"] = responder_para
     msg.set_content("Este e-mail contém conteúdo em HTML. Abra em um cliente compatível.")
     msg.add_alternative(corpo_html, subtype="html")
 
