@@ -1,0 +1,102 @@
+diff --git a/carreta.py b/carreta.py
+index e7ad6fd..ec19e45 100644
+--- a/carreta.py
++++ b/carreta.py
+@@ -53,7 +53,15 @@ def _processar_anexos(db, solicitacao_id, arquivos, categoria):
+     Storage cada arquivo da lista, registrando um ArquivoCarreta pra cada
+     um com a `categoria` informada (ofício ou termo de compromisso
+     assinado). Compartilhada entre `criar_solicitacao` e
+-    `atualizar_solicitacao` pra não duplicar a mesma validação duas vezes."""
++    `atualizar_solicitacao` pra não duplicar a mesma validação duas vezes.
++
++    Devolve uma lista com os arquivos já processados (nome, conteúdo já
++    comprimido, tipo) — pra quem chamar poder reaproveitar esses bytes na
++    hora de mandar o e-mail de notificação, em vez de baixar tudo de novo
++    do Storage logo em seguida (isso é o que deixava o envio do formulário
++    bem mais lento: subia o arquivo, e alguns segundos depois baixava ele
++    de volta pra anexar no e-mail)."""
++    processados = []
+     for arquivo in arquivos or []:
+         if not arquivo or not arquivo.filename:
+             continue
+@@ -76,6 +84,9 @@ def _processar_anexos(db, solicitacao_id, arquivos, categoria):
+             tipo_mime=tipo,
+             categoria=categoria,
+         ))
++        processados.append({"nome": arquivo.filename, "conteudo": conteudo, "tipo_mime": tipo})
++
++    return processados
+ 
+ 
+ def _limpar(valor):
+@@ -569,8 +580,14 @@ def criar_solicitacao(db, form, arquivos_upload, arquivos_termo=None):
+     db.add(solicitacao)
+     db.flush()
+ 
+-    _processar_anexos(db, solicitacao.id, arquivos_upload, CATEGORIA_OFICIO)
+-    _processar_anexos(db, solicitacao.id, arquivos_termo, CATEGORIA_TERMO_COMPROMISSO)
++    anexos_processados = _processar_anexos(db, solicitacao.id, arquivos_upload, CATEGORIA_OFICIO)
++    anexos_processados += _processar_anexos(db, solicitacao.id, arquivos_termo, CATEGORIA_TERMO_COMPROMISSO)
++    # Guarda os bytes já processados (comprimidos) só na memória desse
++    # objeto Python — não é um campo do banco. Serve pra quem for mandar o
++    # e-mail de notificação logo em seguida (mesma requisição) reaproveitar
++    # esses bytes, em vez de baixar os arquivos de volta do Storage — é
++    # isso que deixava o envio do formulário bem mais lento.
++    solicitacao._anexos_recem_processados = anexos_processados
+ 
+     db.commit()
+     return solicitacao
+@@ -850,18 +867,28 @@ def enviar_notificacao_nova_solicitacao(solicitacao, destinatario):
+         # dá pra montar link externo — o e-mail ainda sai, só sem o link.
+         link = None
+ 
+-    anexos = []
+-    for arquivo in solicitacao.arquivos:
+-        conteudo = None
+-        if arquivo.storage_path:
+-            try:
+-                conteudo = supabase_storage.baixar_bytes_privado(arquivo.storage_path)
+-            except Exception as erro:  # noqa: BLE001 — não vale travar o e-mail por causa de 1 anexo
+-                print(f"[carreta] aviso: não consegui anexar '{arquivo.nome_arquivo}' no e-mail: {erro}")
+-        elif arquivo.conteudo:
+-            conteudo = arquivo.conteudo
+-        if conteudo:
+-            anexos.append({"nome": arquivo.nome_arquivo, "conteudo": conteudo, "tipo_mime": "application/pdf"})
++    # Se essa solicitação acabou de ser criada NESSA MESMA requisição, os
++    # bytes dos arquivos (já comprimidos) continuam disponíveis aqui —
++    # evita baixar tudo de volta do Storage só pra anexar no e-mail (o
++    # arquivo acabou de ser enviado pra lá segundos atrás). Só cai pro
++    # download do Storage se esse atalho não estiver disponível (por
++    # exemplo, reenviando esse e-mail depois, numa requisição diferente).
++    anexos_prontos = getattr(solicitacao, "_anexos_recem_processados", None)
++    if anexos_prontos is not None:
++        anexos = anexos_prontos
++    else:
++        anexos = []
++        for arquivo in solicitacao.arquivos:
++            conteudo = None
++            if arquivo.storage_path:
++                try:
++                    conteudo = supabase_storage.baixar_bytes_privado(arquivo.storage_path)
++                except Exception as erro:  # noqa: BLE001 — não vale travar o e-mail por causa de 1 anexo
++                    print(f"[carreta] aviso: não consegui anexar '{arquivo.nome_arquivo}' no e-mail: {erro}")
++            elif arquivo.conteudo:
++                conteudo = arquivo.conteudo
++            if conteudo:
++                anexos.append({"nome": arquivo.nome_arquivo, "conteudo": conteudo, "tipo_mime": "application/pdf"})
+ 
+     corpo_interno = f"""
+     <p>Chegou uma nova solicitação, aguardando análise:</p>
+diff --git a/templates/carreta_form.html b/templates/carreta_form.html
+index 8591a65..69fcd1d 100644
+--- a/templates/carreta_form.html
++++ b/templates/carreta_form.html
+@@ -148,7 +148,7 @@
+     </label>
+     <p class="hint">É pra esse e-mail que mandamos a confirmação do pedido e o aviso de aprovação/recusa.</p>
+     <label>Observações (opcional)
+-      <textarea name="observacoes" rows="3">{{ request.form.get('observacoes', '') }}</textarea>
++      <textarea name="observacoes" rows="6" placeholder="Alguma informação extra que ajude a gente a entender o pedido...">{{ request.form.get('observacoes', '') }}</textarea>
+     </label>
+   </fieldset>
+ 

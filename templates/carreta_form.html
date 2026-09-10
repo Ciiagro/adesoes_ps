@@ -148,7 +148,7 @@
     </label>
     <p class="hint">É pra esse e-mail que mandamos a confirmação do pedido e o aviso de aprovação/recusa.</p>
     <label>Observações (opcional)
-      <textarea name="observacoes" rows="3">{{ request.form.get('observacoes', '') }}</textarea>
+      <textarea name="observacoes" rows="6" placeholder="Alguma informação extra que ajude a gente a entender o pedido...">{{ request.form.get('observacoes', '') }}</textarea>
     </label>
   </fieldset>
 
