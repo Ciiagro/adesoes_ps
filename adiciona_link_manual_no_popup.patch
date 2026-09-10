@@ -1,0 +1,16 @@
+diff --git a/templates/carreta_form.html b/templates/carreta_form.html
+index 7370722..a8db7b1 100644
+--- a/templates/carreta_form.html
++++ b/templates/carreta_form.html
+@@ -9,7 +9,10 @@
+       <li><strong>O ofício</strong> assinado, em PDF.</li>
+       <li><strong>O Manual da Carreta</strong> — baixado, lido e assinado por quem vai se responsabilizar pelo evento (Termo de Ciência), em PDF.</li>
+     </ul>
+-    <p class="hint" style="margin-bottom:20px;">Sem os dois documentos assinados, o pedido não é aceito no envio.</p>
++    <p class="hint" style="margin-bottom:16px;">Sem os dois documentos assinados, o pedido não é aceito no envio.</p>
++    <p style="margin-bottom:16px;">
++      <a href="{{ url_for('static', filename='documentos/manual_da_carreta.pdf') }}" target="_blank" class="prox" style="display:block;text-align:center;text-decoration:none;">⬇️ Baixar Manual da Carreta agora</a>
++    </p>
+     <button type="button" id="btn-fechar-popup-documentos" class="prox" style="width:100%;">Entendi, já tenho os dois documentos</button>
+   </div>
+ </div>
