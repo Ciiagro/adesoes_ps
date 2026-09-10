@@ -1,0 +1,38 @@
+diff --git a/templates/admin_carreta_calendario.html b/templates/admin_carreta_calendario.html
+index 8604c2e..2ddf091 100644
+--- a/templates/admin_carreta_calendario.html
++++ b/templates/admin_carreta_calendario.html
+@@ -2,7 +2,7 @@
+ {% block admin_content %}
+ <div class="page-head">
+   <h1>Calendário — {{ tipos_recurso.get(tipo, tipo) }}</h1>
+-  <p class="sub">Dias já com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em bege (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>.</p>
++  <p class="sub">Dias já com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em bege (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>. Eventos com ⏳ ainda aguardam aprovação; eventos em cinza claro já aconteceram.</p>
+ </div>
+ 
+ <div class="secao-card" style="margin-bottom:16px;">
+@@ -40,12 +40,21 @@
+           {% endfor %}
+           {% for s in ocupado or [] %}
+           {% set eh_agro = s.tipo_recurso == 'carreta_agro' %}
++          {% set eh_realizada = s.status == 'realizada' %}
++          {% set eh_pendente = s.status == 'pendente' %}
+           <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}"
+-             title="{{ s.evento }} — {{ s.municipio_nome }} — Solicitante: {{ s.responsavel_nome or 'não informado' }}"
++             title="{{ s.evento }} — {{ s.municipio_nome }} — Solicitante: {{ s.responsavel_nome or 'não informado' }} — {{ 'Já aconteceu' if eh_realizada else ('Aguardando aprovação' if eh_pendente else 'Aprovada') }}"
+              style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;text-decoration:none;
++                    {% if eh_realizada %}
++                    background:#EDEAE0;border-left:3px solid #B8AF98;opacity:.7;
++                    {% else %}
+                     background:{{ 'var(--agro-bg)' if eh_agro else 'var(--saude-bg)' }};
+-                    border-left:3px solid {{ 'var(--agro)' if eh_agro else 'var(--saude)' }};">
+-            <span style="display:block;font-size:.7rem;font-weight:700;color:{{ 'var(--agro)' if eh_agro else 'var(--saude)' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.evento }}</span>
++                    border-left:3px solid {{ 'var(--agro)' if eh_agro else 'var(--saude)' }};
++                    {% endif %}">
++            <span style="display:block;font-size:.7rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
++                         color:{{ '#8A8168' if eh_realizada else ('var(--agro)' if eh_agro else 'var(--saude)') }};">
++              {% if eh_pendente %}⏳ {% endif %}{{ s.evento }}
++            </span>
+             <span style="display:block;font-size:.65rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.municipio_nome }} · {{ tipos_recurso.get(s.tipo_recurso, s.tipo_recurso) }}</span>
+             <span style="display:block;font-size:.65rem;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.responsavel_nome or 'sem responsável' }}</span>
+           </a>
