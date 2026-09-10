@@ -1926,13 +1926,14 @@ def carreta_form():
         if not (request.form.get("sindicato_nome") or "").strip():
             flash("Informe o sindicato solicitante.")
             return _renderizar_formulario()
-        # O Termo de Compromisso assinado também virou obrigatório aqui no
-        # formulário público (baixa o modelo, assina no gov.br e reanexa já
-        # assinado) — mesma lógica: só nesse formulário, o admin continua
-        # podendo cadastrar sem isso.
+        # O Termo de Ciência do Manual da Carreta também virou obrigatório
+        # aqui no formulário público (baixa o manual, quem for responsável
+        # pelo evento assina reconhecendo ciência, e reanexa já assinado) —
+        # mesma lógica: só nesse formulário, o admin continua podendo
+        # cadastrar sem isso.
         arquivo_termo = request.files.getlist("termo_compromisso")
         if not any(a and a.filename for a in arquivo_termo):
-            flash("Anexe o Termo de Compromisso assinado (baixe o modelo, assine no gov.br e envie o PDF assinado).")
+            flash("Anexe o Termo de Ciência assinado (baixe o Manual da Carreta, colha a assinatura de quem vai se responsabilizar pelo evento e envie o PDF).")
             return _renderizar_formulario()
         try:
             solicitacao = carr.criar_solicitacao(

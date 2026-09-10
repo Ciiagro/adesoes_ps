@@ -44,7 +44,7 @@ CATEGORIA_TERMO_COMPROMISSO = "termo_compromisso"
 
 CATEGORIA_ARQUIVO_LABEL = {
     CATEGORIA_OFICIO: "Ofício",
-    CATEGORIA_TERMO_COMPROMISSO: "Termo de Compromisso assinado",
+    CATEGORIA_TERMO_COMPROMISSO: "Termo de Ciência assinado",
 }
 
 

@@ -1,0 +1,98 @@
+diff --git a/app.py b/app.py
+index 0526e3d..4c2a7a1 100644
+--- a/app.py
++++ b/app.py
+@@ -1926,13 +1926,14 @@ def carreta_form():
+         if not (request.form.get("sindicato_nome") or "").strip():
+             flash("Informe o sindicato solicitante.")
+             return _renderizar_formulario()
+-        # O Termo de Compromisso assinado também virou obrigatório aqui no
+-        # formulário público (baixa o modelo, assina no gov.br e reanexa já
+-        # assinado) — mesma lógica: só nesse formulário, o admin continua
+-        # podendo cadastrar sem isso.
++        # O Termo de Ciência do Manual da Carreta também virou obrigatório
++        # aqui no formulário público (baixa o manual, quem for responsável
++        # pelo evento assina reconhecendo ciência, e reanexa já assinado) —
++        # mesma lógica: só nesse formulário, o admin continua podendo
++        # cadastrar sem isso.
+         arquivo_termo = request.files.getlist("termo_compromisso")
+         if not any(a and a.filename for a in arquivo_termo):
+-            flash("Anexe o Termo de Compromisso assinado (baixe o modelo, assine no gov.br e envie o PDF assinado).")
++            flash("Anexe o Termo de Ciência assinado (baixe o Manual da Carreta, colha a assinatura de quem vai se responsabilizar pelo evento e envie o PDF).")
+             return _renderizar_formulario()
+         try:
+             solicitacao = carr.criar_solicitacao(
+diff --git a/carreta.py b/carreta.py
+index 4a31159..07e5eff 100644
+--- a/carreta.py
++++ b/carreta.py
+@@ -44,7 +44,7 @@ CATEGORIA_TERMO_COMPROMISSO = "termo_compromisso"
+ 
+ CATEGORIA_ARQUIVO_LABEL = {
+     CATEGORIA_OFICIO: "Ofício",
+-    CATEGORIA_TERMO_COMPROMISSO: "Termo de Compromisso assinado",
++    CATEGORIA_TERMO_COMPROMISSO: "Termo de Ciência assinado",
+ }
+ 
+ 
+diff --git a/templates/admin_carreta_editar.html b/templates/admin_carreta_editar.html
+index 0fdc718..5bd909a 100644
+--- a/templates/admin_carreta_editar.html
++++ b/templates/admin_carreta_editar.html
+@@ -62,7 +62,7 @@
+       </span>
+     </label>
+     <label style="grid-column:1/-1;">
+-      <span class="rot" style="display:block;margin-bottom:5px;">Anexar Termo de Compromisso assinado (PDF)</span>
++      <span class="rot" style="display:block;margin-bottom:5px;">Anexar Termo de Ciência assinado (PDF)</span>
+       <input type="file" name="termo_compromisso" accept="application/pdf">
+     </label>
+   </div>
+diff --git a/templates/admin_carreta_nova.html b/templates/admin_carreta_nova.html
+index 7ccf667..c183113 100644
+--- a/templates/admin_carreta_nova.html
++++ b/templates/admin_carreta_nova.html
+@@ -100,7 +100,7 @@
+       <input type="file" name="oficios" accept="application/pdf" multiple>
+     </label>
+     <label style="grid-column:1/-1;">
+-      <span class="rot" style="display:block;margin-bottom:5px;">Anexar Termo de Compromisso assinado (PDF)</span>
++      <span class="rot" style="display:block;margin-bottom:5px;">Anexar Termo de Ciência assinado (PDF)</span>
+       <input type="file" name="termo_compromisso" accept="application/pdf">
+     </label>
+   </div>
+diff --git a/templates/carreta_form.html b/templates/carreta_form.html
+index 8a376d4..2783e40 100644
+--- a/templates/carreta_form.html
++++ b/templates/carreta_form.html
+@@ -109,23 +109,22 @@
+   </fieldset>
+ 
+   <fieldset>
+-    <legend>✍️ Termo de Compromisso</legend>
++    <legend>✍️ Manual da Carreta</legend>
+     <p class="hint">
+-      Antes de enviar o pedido, baixe o Termo de Compromisso, confira os requisitos de espaço e
+-      infraestrutura do local do evento, assine digitalmente (pelo <strong>gov.br</strong>, com sua
+-      conta gov.br nível prata ou ouro) e anexe aqui o PDF já assinado.
++      Antes de enviar o pedido, baixe o Manual da Carreta abaixo, leia com atenção e colete a
++      assinatura de quem vai se responsabilizar pelo evento (pode ser assinatura digital com
++      validade jurídica), confirmando ciência das regras. Depois, anexe aqui o PDF assinado.
+     </p>
+     <p>
+-      <a href="{{ url_for('static', filename='documentos/termo_compromisso_carreta.pdf') }}" target="_blank" class="prox" style="display:inline-block;text-decoration:none;">⬇️ Baixar Termo de Compromisso</a>
++      <a href="{{ url_for('static', filename='documentos/manual_da_carreta.pdf') }}" target="_blank" class="prox" style="display:inline-block;text-decoration:none;">⬇️ Baixar Manual da Carreta</a>
+     </p>
+-    <label>Anexar Termo de Compromisso assinado (PDF) <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
++    <label>Anexar Termo de Ciência assinado (PDF) <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+       <input type="file" name="termo_compromisso" id="input-termo" accept="application/pdf,.pdf" required>
+     </label>
+-    <p class="hint">Tamanho máximo: <strong>10 MB</strong>. Precisa ser o PDF baixado acima, assinado (não vale o modelo em branco).
++    <p class="hint">Tamanho máximo: <strong>10 MB</strong>. Precisa estar assinado por quem vai se responsabilizar pelo evento — não vale o modelo em branco.
+     {% if request.method == 'POST' %}⚠️ Por segurança do navegador, o(s) arquivo(s) NÃO ficam salvos ao voltar aqui — se deu erro, escolha os PDFs de novo (ofício e termo).{% endif %}</p>
+   </fieldset>
+ 
+-
+   <fieldset>
+     <legend>👤 Responsável</legend>
+     <label>Nome do responsável <span style="color:var(--danger);font-weight:700;">* obrigatório</span>

@@ -109,22 +109,21 @@
   </fieldset>
 
   <fieldset>
-    <legend>✍️ Termo de Compromisso</legend>
+    <legend>✍️ Manual da Carreta</legend>
     <p class="hint">
-      Antes de enviar o pedido, baixe o Termo de Compromisso, confira os requisitos de espaço e
-      infraestrutura do local do evento, assine digitalmente (pelo <strong>gov.br</strong>, com sua
-      conta gov.br nível prata ou ouro) e anexe aqui o PDF já assinado.
+      Antes de enviar o pedido, baixe o Manual da Carreta abaixo, leia com atenção e colete a
+      assinatura de quem vai se responsabilizar pelo evento (pode ser assinatura digital com
+      validade jurídica), confirmando ciência das regras. Depois, anexe aqui o PDF assinado.
     </p>
     <p>
-      <a href="{{ url_for('static', filename='documentos/termo_compromisso_carreta.pdf') }}" target="_blank" class="prox" style="display:inline-block;text-decoration:none;">⬇️ Baixar Termo de Compromisso</a>
+      <a href="{{ url_for('static', filename='documentos/manual_da_carreta.pdf') }}" target="_blank" class="prox" style="display:inline-block;text-decoration:none;">⬇️ Baixar Manual da Carreta</a>
     </p>
-    <label>Anexar Termo de Compromisso assinado (PDF) <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
+    <label>Anexar Termo de Ciência assinado (PDF) <span style="color:var(--danger);font-weight:700;">* obrigatório</span>
       <input type="file" name="termo_compromisso" id="input-termo" accept="application/pdf,.pdf" required>
     </label>
-    <p class="hint">Tamanho máximo: <strong>10 MB</strong>. Precisa ser o PDF baixado acima, assinado (não vale o modelo em branco).
+    <p class="hint">Tamanho máximo: <strong>10 MB</strong>. Precisa estar assinado por quem vai se responsabilizar pelo evento — não vale o modelo em branco.
     {% if request.method == 'POST' %}⚠️ Por segurança do navegador, o(s) arquivo(s) NÃO ficam salvos ao voltar aqui — se deu erro, escolha os PDFs de novo (ofício e termo).{% endif %}</p>
   </fieldset>
-
 
   <fieldset>
     <legend>👤 Responsável</legend>
