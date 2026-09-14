@@ -3,6 +3,8 @@ import secrets
 from datetime import datetime
 from io import BytesIO
 
+import hashlib
+
 from flask import (
     Flask, render_template, request, redirect, url_for, session, flash, abort,
     Response, send_file
@@ -2481,15 +2483,30 @@ def admin_carreta_arquivo(arquivo_id):
         abort(404)
 
     if arquivo.storage_path:
+        # ETag determinístico (não muda enquanto o arquivo for o mesmo) —
+        # deixa o navegador perguntar "isso mudou?" (If-None-Match) em vez
+        # de sempre pedir o PDF inteiro de novo. Quando bate, respondemos
+        # 304 sem baixar nada do Storage: é isso que evita gerar egress
+        # toda vez que alguém reabre o mesmo ofício.
+        etag = hashlib.sha1(arquivo.storage_path.encode("utf-8")).hexdigest()
+        if request.headers.get("If-None-Match") == etag:
+            resp = Response(status=304)
+            resp.headers["ETag"] = etag
+            resp.headers["Cache-Control"] = "private, max-age=86400"
+            return resp
+
         try:
             conteudo = supabase_storage.baixar_bytes_privado(arquivo.storage_path)
         except Exception:
             abort(404)
-        return Response(
+        resp = Response(
             conteudo,
             mimetype=arquivo.tipo_mime or "application/pdf",
             headers={"Content-Disposition": f'inline; filename="{arquivo.nome_arquivo}"'},
         )
+        resp.headers["ETag"] = etag
+        resp.headers["Cache-Control"] = "private, max-age=86400"
+        return resp
 
     if not arquivo.conteudo:
         abort(404)
