@@ -2150,6 +2150,35 @@ def admin_carreta_calendario():
     )
 
 
+@app.route("/admin/carreta/calendario/pdf")
+def admin_carreta_calendario_pdf():
+    """Mesmo calendário de /admin/carreta/calendario, em PDF para
+    download/impressão."""
+    if not pode_ver_carreta():
+        return redirect(url_for("admin_login"))
+
+    db = SessionLocal()
+    ano = request.args.get("ano", type=int) or datetime.now().year
+    mes = request.args.get("mes", type=int) or datetime.now().month
+    tipo = request.args.get("tipo") if request.args.get("tipo") in carr.TIPOS_RECURSO else "carreta_agro"
+
+    conteudo = carr.gerar_pdf_calendario(
+        ano, mes, tipo,
+        semanas=carr.matriz_semanas(ano, mes),
+        calendario=carr.dados_calendario(db, ano, mes, tipo_recurso=tipo),
+        bloqueados=carr.dias_bloqueados_do_mes(db, ano, mes),
+        tipos_recurso=carr.TIPOS_RECURSO,
+        meses_nomes=carr.MESES_NOMES,
+    )
+    nome_arquivo = f"Calendario_Carreta_{carr.MESES_NOMES[mes]}_{ano}.pdf"
+
+    return Response(
+        conteudo,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{nome_arquivo}"'},
+    )
+
+
 @app.route("/admin/carreta/<int:solicitacao_id>")
 def admin_carreta_detalhe(solicitacao_id):
     """Detalhe de uma solicitação: dados, ofícios anexados, e ações de
