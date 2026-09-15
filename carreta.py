@@ -751,6 +751,10 @@ _cal_legenda_style = ParagraphStyle(
     "CalLegenda", parent=_cal_estilos["Normal"], fontName="Helvetica", fontSize=8,
     textColor=_CAL_ROTULO, leading=11,
 )
+_cal_impresso_style = ParagraphStyle(
+    "CalImpresso", parent=_cal_estilos["Normal"], fontName="Helvetica-Oblique", fontSize=7,
+    textColor=_CAL_ROTULO, leading=9, spaceBefore=2,
+)
 
 
 def _cal_celula_dia(dia, ocupado, bloqueio_dia, tipos_recurso):
@@ -816,7 +820,7 @@ def gerar_pdf_calendario(ano, mes, tipo_recurso, semanas, calendario, bloqueados
     # Espaço reservado (em mm) para cabeçalho + espaçamentos + legenda no
     # rodapé, medido com folga — o que sobrar é dividido entre as linhas
     # de semana da grade, para a tabela nunca vazar para uma 2ª página.
-    ALTURA_RESERVADA_MM = 42
+    ALTURA_RESERVADA_MM = 46
 
     dias_semana = ["Seg", "Ter", "Qua", "Qui", "Sex", "S\u00e1b", "Dom"]
     linhas = [dias_semana]
@@ -865,6 +869,10 @@ def gerar_pdf_calendario(ano, mes, tipo_recurso, semanas, calendario, bloqueados
         "O mesmo motorista/ve\u00edculo atende Carreta do Agro e Carreta da Sa\u00fade, "
         "por isso o calend\u00e1rio mostra os dois programas juntos.",
         _cal_legenda_style,
+    ))
+    story.append(Paragraph(
+        f"Impresso em {datetime.now(FUSO_BRASIL):%d/%m/%Y \u00e0s %H:%M}",
+        _cal_impresso_style,
     ))
 
     buffer = BytesIO()
