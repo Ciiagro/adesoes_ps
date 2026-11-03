@@ -6,3 +6,4 @@ reportlab>=4.2.0
 openpyxl>=3.1.2
 requests>=2.32.0
 pymupdf>=1.24.0
+scramp==1.4.18
