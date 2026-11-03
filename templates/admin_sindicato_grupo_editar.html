@@ -1,15 +1,213 @@
 {% extends 'admin_base.html' %}
 {% block title %}Editar sindicato · {{ sindicato.nome }}{% endblock %}
 {% block admin_content %}
-<a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
-<div class="page-head">
-  <h1>{{ sindicato.nome }}{% if not sindicato.ativo %} <span style="color:var(--danger);font-size:.6em;font-weight:600;">(INATIVO)</span>{% endif %}</h1>
-  <p class="sub">
-    Tudo aqui se aplica de uma vez a <strong>todos os {{ municipios|length }} município(s)</strong>
-    vinculados a este sindicato — não precisa repetir município por município.
-  </p>
-  <a class="btn secundario" href="{{ url_for('admin_sindicato_ficha_individual', sindicato_id=sindicato.id) }}" target="_blank" style="margin-top:10px;">📄 Gerar ficha em PDF (dados + histórico)</a>
-  <a class="btn secundario" href="{{ url_for('admin_processos_eleitorais', sindicato_id=sindicato.id) }}" style="margin-top:10px;">🗳️ Processos Eleitorais</a>
+<style>
+  .aba-painel[hidden]{display:none !important}
+  .conteudo{max-width:none !important}
+  body,.conteudo{background:#F2F6EF !important}
+  .cad-fixo{background:#F2F6EF !important;border-bottom:1px solid #DCE6D8;box-shadow:0 3px 10px rgba(31,77,47,.06)}
+  .cad-tit h1,.cad-layout .cad-sec h2,.cad-sec-mun h2,.cad-lado .cad-av b{font-family:'Inter',system-ui,sans-serif !important;font-weight:700;letter-spacing:-.01em}
+  .cad-tit h1{font-size:clamp(1.3rem,1.7vw,1.6rem)}
+  .cad-linha1{flex-wrap:nowrap !important;align-items:flex-start}
+  .cad-fixo .acoes{flex-wrap:nowrap !important;flex:none}
+  .cad-fixo .acoes .btn{padding:8px 14px;font-size:.84rem;white-space:nowrap}
+  .cad-fixo .btn-salvar{background:#1F4D2F;color:#fff;white-space:nowrap}
+  .cad-pill{background:#DDEEDD;color:#1F4D2F}
+  .cad-layout .cad-sec,.cad-lado,.cad-sec-mun{border-color:#E2EADF;box-shadow:0 1px 3px rgba(31,77,47,.06)}
+  .cad-layout .cad-sec h2{border-bottom-color:#EAF0E7}
+  .cad-lado .st.on,.cad-lado .chips span{background:#DDEEDD;border-color:#DDEEDD;color:#1F4D2F}
+  .cad-av .ci{background:#C9E3CC}
+  .cad-sec-mun thead th{background:#EAF3E7;color:#1F4D2F}
+  .cad-sec-mun .tabela-wrap{border-color:#E2EADF}
+  @media(max-width:1100px){.cad-linha1,.cad-fixo .acoes{flex-wrap:wrap !important}}
+  /* cabeçalho em destaque */
+  .cad-fixo{background:linear-gradient(120deg,#17402A 0%,#1F5A37 55%,#2E7D4A 100%) !important;border-bottom:0 !important;border-radius:0 0 18px 18px;padding:16px 40px 18px !important;margin-bottom:22px !important;box-shadow:0 8px 22px rgba(23,64,42,.28) !important;position:sticky}
+  .cad-fixo .cad-linha1{margin:0 !important;align-items:center}
+  .cad-fixo .link-voltar{color:#CFE6D2 !important;font-weight:600}
+  .cad-fixo .link-voltar:hover{color:#fff !important}
+  .cad-fixo .cad-tit h1{color:#fff !important;font-size:clamp(1.5rem,2.1vw,1.95rem)}
+  .cad-fixo .cad-pill{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.28)}
+  .cad-fixo .cad-pill i{background:#8FD19E;color:#17402A}
+  .cad-fixo .acoes .btn.secundario{background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.35);box-shadow:none}
+  .cad-fixo .acoes .btn.secundario:hover{background:rgba(255,255,255,.22)}
+  .cad-fixo .btn-salvar{background:#fff !important;color:#17402A !important;height:42px;padding:0 22px;font-size:.95rem;box-shadow:0 4px 12px rgba(0,0,0,.22)}
+  .cad-fixo .btn-salvar:hover{background:#E9F5EA !important}
+  .cad-lado{top:128px}
+  .cad-dir{display:flex;flex-direction:column;align-items:flex-end;gap:10px;flex:none}
+  .cad-nav{display:inline-flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
+  .cad-nav a,.cad-nav .off{color:#fff;font-size:.82rem;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.10);text-decoration:none}
+  .cad-nav a:hover{background:rgba(255,255,255,.24)}.cad-nav .off{opacity:.4}
+  .cad-nav select{height:32px;max-width:230px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:#fff;color:#17402A;font:600 .82rem Inter,sans-serif;padding:0 12px}
+  .cad-nav small{color:#CFE6D2;font-size:.78rem}
+  /* resumo igual ao modelo */
+  .cad-lado{padding:0 !important;overflow:hidden}
+  .cad-lado .rs-cab{display:flex;align-items:center;gap:10px;padding:15px 22px;border-bottom:1px solid #E6EDE3;font-weight:700;color:#1F4D2F;font-size:.98rem}
+  .cad-lado .rs-cab .ico{color:#2B6B43}
+  .cad-lado .rs-corpo{padding:18px 22px 22px}
+  .cad-lado .cad-av{border:0;padding:0;margin:0 0 20px;gap:16px}
+  .cad-lado .cad-av .ci{width:66px;height:66px;background:#BFDDC4}
+  .cad-lado .cad-av b{font-size:1.1rem}
+  .cad-lado .rs-l{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+  .cad-lado .rs-l:last-child{margin-bottom:0}
+  .cad-lado .rs-l>.ico{flex:none;color:#2B6B43;margin-top:2px}
+  .cad-lado .rs-l small{display:block;text-transform:none;letter-spacing:0;font-size:.84rem;font-weight:400;color:#5E7766;margin:0 0 2px}
+  .cad-lado .rs-l b{display:block;font-size:.92rem;font-weight:600;color:#1F3B2A}
+  .cad-lado .rs-c{display:flex;align-items:center;gap:8px;font-size:.88rem;color:#1F3B2A;margin-top:5px;word-break:break-all}
+  .cad-lado .rs-c .ico{width:14px;height:14px;color:#2B6B43;flex:none}
+  .cad-lado .st{margin-top:2px;padding:3px 14px;font-weight:600;font-size:.82rem;background:#CDEBD2}
+  .cad-lado .chips{margin-top:6px}.cad-lado .chips span{background:#DCEFDF;border:0;padding:4px 12px;font-size:.82rem;font-weight:500}
+  .cad-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+  .cad-layout .cad-card{margin-bottom:0}
+  .cad-lado{position:sticky;top:112px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);padding:20px 22px}
+  .cad-lado h3{font-family:'Inter',sans-serif;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 12px}
+  .cad-lado .it{padding:10px 0;border-top:1px solid var(--line-soft);font-size:.9rem}
+  .cad-lado .it small{display:block;color:var(--ink-faint);font-size:.74rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .cad-lado .it b{color:#1f4a2f;font-weight:600;word-break:break-word}
+  .cad-lado .st{display:inline-block;border-radius:999px;padding:3px 12px;font-weight:700;font-size:.8rem}
+  .cad-lado .st.on{background:#E3F1E4;color:#1f4a2f}.cad-lado .st.off{background:#F8E3E0;color:#9b2c1f}
+  .cad-lado .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .cad-lado .chips span{background:#F1F4EC;border:1px solid var(--line-soft);border-radius:999px;padding:3px 10px;font-size:.8rem;color:#1f4a2f}
+  @media(max-width:1250px){.cad-layout{grid-template-columns:minmax(0,1fr)}.cad-lado{display:none}}
+  .cad-fixo{padding:10px 40px 0;margin-bottom:18px}
+  .cad-fixo .cad-linha1{margin-bottom:10px}
+  .cad-layout .cad-card{background:transparent;border:0;box-shadow:none;overflow:visible}
+  .cad-layout .cad-sec{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);padding:16px 22px 20px;margin-bottom:14px}
+  .cad-layout .cad-sec h2{font-size:1.05rem;margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+  .cad-layout .cad-sec h2 .n{width:28px;height:28px;font-size:.85rem}
+  .cad-layout .cad-grid{gap:14px 18px}
+  .cad-layout .cad-grid input[type=text],.cad-layout .cad-grid input[type=email],.cad-layout .cad-grid input[type=date]{height:40px;font-size:.92rem}
+  .cad-layout .cad-grid label{font-size:.82rem}
+  .cad-sec-mun{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);margin-top:14px}
+  .cad-av{display:flex;align-items:center;gap:14px;padding-bottom:14px;margin-bottom:12px;border-bottom:1px solid var(--line-soft)}
+  .cad-av .ci{flex:none;width:56px;height:56px;border-radius:50%;background:#CFE6D2;color:#1f4a2f;display:flex;align-items:center;justify-content:center;font:700 1.4rem 'Inter',sans-serif}
+  .cad-av b{display:block;color:#1f4a2f;font-size:1.05rem}.cad-av span{color:var(--ink-soft);font-size:.85rem}
+  .cad-sec .corpo{padding:0}
+  .cad-fixo{position:sticky;top:0;z-index:30;background:var(--bg);margin:-34px -40px 20px;padding:14px 40px 0;border-bottom:1px solid var(--line);box-shadow:0 4px 14px rgba(44,81,55,.08)}
+  /* cabeçalho compacto: linha 1 = voltar + aviso + navegação; linha 2 = título + botões */
+  .cad-fixo{padding:12px 36px 14px !important;margin-bottom:18px !important}
+  .cad-fixo .cad-topo{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .cad-fixo .cad-topo-esq{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .cad-fixo .link-voltar{font-size:.85rem;flex:none}
+  .cad-fixo .cad-pill{white-space:nowrap;padding:3px 12px;font-size:.78rem}
+  .cad-fixo .cad-linha1{flex-wrap:wrap !important;gap:10px 20px;margin:0 !important}
+  .cad-fixo .cad-tit{flex:1 1 340px;min-width:0;display:block}
+  .cad-fixo .cad-tit h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:clamp(1.3rem,1.8vw,1.65rem) !important}
+  .cad-fixo .cad-dir{flex:0 1 auto;margin-left:auto}
+  .cad-fixo .acoes{flex-wrap:wrap !important;justify-content:flex-end}
+  .cad-fixo .acoes .btn{padding:8px 12px !important;font-size:.8rem !important}
+  .cad-fixo .btn-salvar{height:38px !important;padding:0 16px !important;font-size:.88rem !important}
+  .cad-fixo .cad-nav{justify-content:flex-end}
+  .cad-fixo .acoes .btn,.cad-fixo .btn-salvar{white-space:nowrap}
+  .cad-lado{top:140px !important}
+  @media(min-width:901px) and (max-width:1500px){.c3{grid-column:span 6}.c4{grid-column:span 6}.cad-lado{top:170px !important}}
+  .cad-fixo{padding:12px 36px 16px !important;margin-bottom:0 !important;border-radius:0 !important}
+  .cad-fixo .link-voltar{display:block;margin-bottom:6px}
+  .cad-fixo .cad-tit{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+  .cad-fixo .cad-tit h1{max-width:100%}
+  .cad-faixa{background:#EAF3E7;margin:0 -40px 18px;padding:10px 36px;border-bottom:1px solid #DCE6D8}
+  .cad-faixa .cad-nav{display:flex;justify-content:flex-start;gap:12px}
+  .cad-faixa .cad-nav a,.cad-faixa .cad-nav .off{background:#DDEEDD;color:#1F4D2F;border:1px solid #C5DCC5;padding:8px 18px;font-size:.9rem}
+  .cad-faixa .cad-nav select{height:40px;min-width:260px;font-size:.92rem;color:#1F4D2F;border:1px solid #C5DCC5}
+  .cad-faixa .cad-nav small{color:#4A5A4E;font-size:.9rem}
+  /* padrão claro do painel */
+  .cad-fixo{background:#FBF7E9 !important;border-bottom:1px solid #E6DFC8 !important;box-shadow:0 3px 10px rgba(31,77,47,.06) !important;border-radius:0 !important}
+  .cad-fixo .link-voltar{color:#2F5233 !important}
+  .cad-fixo .cad-tit h1{color:#1F4D2F !important}
+  .cad-fixo .cad-pill{background:#DDEEDD !important;color:#1F4D2F !important;border:1px solid #C5DCC5 !important}
+  .cad-fixo .cad-pill i{background:#2E7D4A !important;color:#fff !important}
+  .cad-fixo .acoes .btn.secundario{background:#fff !important;color:#1F4D2F !important;border:1px solid #D5CFB8 !important}
+  .cad-fixo .acoes .btn.secundario:hover{background:#F1EEDD !important}
+  .cad-fixo .btn-salvar{background:#1F4D2F !important;color:#fff !important;box-shadow:none !important}
+  .cad-fixo .btn-salvar:hover{background:#2F5233 !important}
+  .cad-faixa{background:#F4F1E4;border-bottom:1px solid #E6DFC8}
+  @media(max-width:700px){.cad-fixo .cad-tit h1{white-space:normal}.cad-fixo .cad-dir{margin-left:0}}
+  .cad-linha1{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+  .cad-tit .link-voltar{font-size:.82rem}
+  .cad-tit h1{font-size:clamp(1.25rem,1.8vw,1.6rem);color:#1f4a2f;margin:0}
+  .cad-fixo .acoes{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .cad-fixo .btn-salvar{height:40px;padding:0 18px;border-radius:10px;font-weight:700}
+  .cad-fixo .acoes .btn{padding:9px 13px;font-size:.84rem}
+  .cad-tit{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}.cad-tit .link-voltar{flex:0 0 100%}
+  .cad-tit .cad-pill{padding:4px 12px;font-size:.78rem}
+  .cad-abas{display:flex;gap:4px;overflow-x:auto}
+  .cad-aba{display:inline-flex;align-items:center;gap:9px;background:transparent;color:var(--ink-soft);border:0;border-bottom:3px solid transparent;border-radius:0;padding:9px 16px;font-weight:600;font-size:.9rem;white-space:nowrap;box-shadow:none;transform:none !important;cursor:pointer}
+  .cad-aba:hover{background:rgba(31,74,47,.06);color:#1f4a2f}
+  .cad-aba .n{width:24px;height:24px;border-radius:50%;background:#C9CFC6;color:#fff;font-size:.78rem;display:inline-flex;align-items:center;justify-content:center}
+  .cad-aba .cont{background:#E3F1E4;color:#1f4a2f;border-radius:999px;padding:1px 9px;font-size:.78rem}
+  .cad-aba.ativa{color:#1f4a2f;border-bottom-color:#2E7D4A;background:transparent}
+  .cad-aba.ativa .n{background:#1f4a2f}
+  .cad-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .cad-topo h1{font-size:clamp(1.6rem,2.4vw,2.2rem);color:#1f4a2f;margin:6px 0 10px}
+  .cad-topo .acoes{display:flex;gap:10px;flex-wrap:wrap}
+  .cad-pill{display:inline-flex;align-items:center;gap:8px;background:#E3F1E4;color:#1f4a2f;border-radius:999px;padding:7px 16px;font-size:.88rem;font-weight:600}
+  .cad-pill i{font-style:normal;background:#2E7D4A;color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem}
+  .cad-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:22px}
+  .cad-sec{padding:22px 28px 26px;border-bottom:1px solid var(--line-soft)}
+  .cad-sec h2{display:flex;align-items:center;gap:12px;font-size:1.25rem;margin:0 0 18px;color:#1f4a2f}
+  .cad-sec h2 .n{flex:none;width:32px;height:32px;border-radius:50%;background:#1f4a2f;color:#fff;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-weight:700}
+  .cad-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px 20px}
+  .c12{grid-column:span 12}.c6{grid-column:span 6}.c4{grid-column:span 4}.c3{grid-column:span 3}
+  @media(max-width:900px){.c6,.c4,.c3{grid-column:span 12}}
+  @media(min-width:901px) and (max-width:1500px){.c3{grid-column:span 6}.c4{grid-column:span 6}}
+  .cad-grid label{display:block;margin:0;font-size:.88rem;font-weight:600;color:#1f4a2f}
+  .cad-grid input[type=text],.cad-grid input[type=email],.cad-grid input[type=date]{width:100%;height:46px;margin-top:6px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-weight:500;color:var(--ink)}
+  .cad-grid input:focus{outline:2px solid #2E7D4A33;border-color:#2E7D4A}
+  .cad-grid .ajuda{display:block;margin-top:5px;font-size:.78rem;font-weight:400;color:var(--ink-faint)}
+  .cad-grid label.sw{display:flex;align-items:center;gap:12px;height:46px;margin-top:6px;cursor:pointer;position:relative;font-weight:500}
+  .cad-grid label.sw input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;margin:0;padding:0}
+  .cad-grid .sw .trilho{display:block;width:50px;height:28px;border-radius:999px;background:#C9CFC6;position:relative;transition:background .15s;flex:none}
+  .cad-grid .sw .trilho:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+  .cad-grid .sw input:checked + .trilho{background:#2E7D4A}.cad-grid .sw input:checked + .trilho:after{left:25px}
+  .cad-grid .sw .txt{font-weight:500;color:var(--ink)}
+  .cad-det{border-top:1px solid var(--line-soft)}
+  .cad-det:first-of-type{border-top:0}
+  .cad-det summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:18px 30px;background:#F7F8F3}
+  .cad-det summary::-webkit-details-marker{display:none}
+  .cad-det summary .n{flex:none;width:30px;height:30px;border-radius:50%;background:#1f4a2f;color:#fff;font-size:.9rem;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+  .cad-det summary b{font-size:1.05rem;color:#1f4a2f;display:block}.cad-det summary small{color:var(--ink-faint);font-size:.82rem}
+  .cad-det summary .seta{margin-left:auto;transition:transform .15s;color:var(--ink-soft)}
+  .cad-det[open] summary .seta{transform:rotate(180deg)}
+  .cad-det .corpo{padding:22px 30px 26px}
+  .cad-sub{font-family:'Inter',sans-serif;font-size:1rem;font-weight:700;color:#1f4a2f;margin:0 0 12px;padding-top:6px}
+  .corpo .cad-grid{margin-bottom:26px}.corpo .cad-grid:last-child{margin-bottom:0}
+  .cad-nota{font-size:.84rem;color:var(--ink-faint);margin:-4px 0 14px}
+  .cad-rodape{display:flex;justify-content:flex-end;gap:12px;padding:18px 30px;background:#fff;border-top:1px solid var(--line-soft)}
+  .cad-rodape button,.cad-rodape a{height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 22px;border-radius:10px;font-weight:700}
+  .cad-rodape a.canc{background:#fff;color:var(--green-dark);border:1px solid var(--line)}
+  .vinc-cab{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .vinc-cab h2{margin:0;font-size:1.2rem;color:#1f4a2f}
+  .vinc-add{margin-top:18px;padding-top:16px;border-top:1px solid var(--line-soft);display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .vinc-add select{width:100%;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:10px;margin-top:6px}
+</style>
+
+<div class="cad-fixo">
+  <a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
+  <div class="cad-linha1">
+    <div class="cad-tit">
+      <h1>Cadastro do Sindicato — {{ sindicato.nome }}{% if not sindicato.ativo %} <span style="color:var(--danger);font-size:.6em;font-weight:600;">(INATIVO)</span>{% endif %}</h1>
+      <span class="cad-pill"><i>✓</i> {% if municipios %}Vale para os {{ municipios|length }} município(s) vinculado(s){% else %}Aplica-se ao sindicato{% endif %}</span>
+    </div>
+    <div class="cad-dir">
+    <div class="acoes">
+        <a class="btn secundario" href="{{ url_for('admin_sindicato_ficha_individual', sindicato_id=sindicato.id) }}" target="_blank">📄 Gerar ficha PDF</a>
+        <a class="btn secundario" href="{{ url_for('admin_processos_eleitorais', sindicato_id=sindicato.id) }}">🗳️ Processos Eleitorais</a>
+        <a class="btn secundario" href="{{ url_for('admin_sindicatos') }}">Cancelar</a>
+        <button type="submit" form="f-sind" class="btn-salvar">💾 Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="cad-faixa">
+  {% if lista_sindicatos %}
+      <span class="cad-nav">
+    {% if sind_ant %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=sind_ant.id) }}" title="{{ sind_ant.nome }}">← Anterior</a>{% else %}<span class="off">← Anterior</span>{% endif %}
+        <select onchange="if(this.value)location.href=this.value" aria-label="Ir para outro sindicato">
+      {% for x in lista_sindicatos %}<option value="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=x.id) }}" {% if x.id == sindicato.id %}selected{% endif %}>{{ x.nome }}{% if not x.ativo %} (inativo){% endif %}</option>{% endfor %}
+        </select>
+    {% if sind_prox %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=sind_prox.id) }}" title="{{ sind_prox.nome }}">Próximo →</a>{% else %}<span class="off">Próximo →</span>{% endif %}
+        <small>{{ pos_sind }} de {{ lista_sindicatos|length }}</small>
+      </span>
+  {% endif %}
 </div>
 
 {% if not municipios %}
@@ -17,204 +215,170 @@
   <p>
     <strong>Nenhum município está vinculado a este sindicato no momento</strong> — provavelmente
     porque os municípios dele foram todos reatribuídos a outro sindicato. Se for esse o caso,
-    marque-o como inativo abaixo (o registro continua existindo, só fica sinalizado).
+    desative o sindicato abaixo (o registro continua existindo, só fica sinalizado).
   </p>
 </div>
 {% endif %}
 
-<form method="post" enctype="multipart/form-data" class="secao-card">
-  <h2>O mais comum: nome e presidente</h2>
-  <div class="info-grid">
-    <label style="grid-column:1/-1;">
-      <span class="rot" style="display:block;margin-bottom:5px;">Nome do sindicato</span>
-      <input type="text" name="nome" value="{{ sindicato.nome }}" required style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-weight:600;">
-    </label>
-    {% if municipios %}
-    <label style="grid-column:1/-1;">
-      <span class="rot" style="display:block;margin-bottom:5px;">Presidente do Sindicato</span>
-      <input type="text" name="presidente_nome" value="{{ referencia.presidente_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-weight:600;">
-    </label>
-    <label style="grid-column:1/-1;">
-      <span class="rot" style="display:block;margin-bottom:5px;">Secretário(a) do Sindicato</span>
-      <input type="text" name="secretario_nome" value="{{ referencia.secretario_nome or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-weight:600;">
-    </label>
-    {% endif %}
-    <label>
-      <span class="rot" style="display:block;margin-bottom:5px;">Início da gestão</span>
-      <input type="date" name="gestao_inicio" value="{{ sindicato.gestao_inicio or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-    </label>
-    <label>
-      <span class="rot" style="display:block;margin-bottom:5px;">Fim da gestão</span>
-      <input type="date" name="gestao_fim" value="{{ sindicato.gestao_fim or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      <span style="display:block;font-size:.78rem;color:var(--ink-faint);margin-top:4px;">Deixe em branco se ainda está no cargo.</span>
-    </label>
-    <label style="grid-column:1/-1;">
-      <span class="rot" style="display:block;margin-bottom:5px;">Região FAEC do sindicato</span>
-      <input type="text" name="regiao_faec" value="{{ sindicato.regiao_faec or '' }}" list="lista-regioes-faec" placeholder="Ex.: Região Norte" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      <datalist id="lista-regioes-faec">
-        {% for r in regioes_faec %}
-        <option value="{{ r }}">
-        {% endfor %}
-      </datalist>
-      <span style="display:block;font-size:.78rem;color:var(--ink-faint);margin-top:4px;">
-        Normalmente a região já vem dos municípios vinculados — preencha isso aqui só se o
-        sindicato não tiver nenhum município no momento (senão ele some dos relatórios por
-        região, mesmo continuando cadastrado).
-      </span>
-    </label>
-  </div>
-
-  <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:16px;">
-    <input type="checkbox" name="ativo" {% if sindicato.ativo %}checked{% endif %} style="width:auto;">
-    Este sindicato está ativo
-  </label>
-  <p style="margin:6px 0 0;font-size:.85rem;color:var(--ink-faint);">
-    Desmarque quando ele deixar de existir/atuar (por exemplo, foi substituído por outro que
-    passou a atender os mesmos municípios). Ele continua no histórico, só sinalizado como inativo.
-  </p>
-
-  {% if municipios %}
-  <details style="margin-top:22px;">
-    <summary style="cursor:pointer;font-weight:600;color:var(--green-dark);padding:4px 0;">
-      Contato do Sindicato (telefones, e-mails)
-    </summary>
-    <div class="info-grid" style="margin-top:14px;">
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">Telefone 1</span>
-        <input type="text" name="telefone1" value="{{ referencia.telefone1 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+<div class="cad-layout" id="cad-layout">
+<form method="post" enctype="multipart/form-data" class="cad-card" id="f-sind">
+  <div class="cad-sec aba-painel" data-aba="dados">
+    <h2><span class="n">1</span> Dados principais</h2>
+    <div class="cad-grid">
+      <label class="c12">Nome do sindicato
+        <input type="text" name="nome" value="{{ sindicato.nome }}" required>
       </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">Telefone 2</span>
-        <input type="text" name="telefone2" value="{{ referencia.telefone2 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      {% if municipios %}
+      <label class="c6">Presidente do Sindicato
+        <input type="text" name="presidente_nome" value="{{ referencia.presidente_nome or '' }}">
       </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 1</span>
-        <input type="email" name="email1" value="{{ referencia.email1 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+      <label class="c6">Secretário(a) do Sindicato
+        <input type="text" name="secretario_nome" value="{{ referencia.secretario_nome or '' }}" placeholder="Digite o nome do secretário(a)">
       </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 2</span>
-        <input type="email" name="email2" value="{{ referencia.email2 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 3</span>
-        <input type="email" name="email3" value="{{ referencia.email3 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">E-mail 4</span>
-        <input type="email" name="email4" value="{{ referencia.email4 or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-    </div>
-  </details>
-
-  <details style="margin-top:14px;">
-    <summary style="cursor:pointer;font-weight:600;color:var(--green-dark);padding:4px 0;">
-      Contato do Vice-Presidente Regional
-    </summary>
-    <p style="margin:10px 0 0;font-size:.85rem;color:var(--ink-faint);">
-      Pessoa responsável pela região (às vezes é também presidente de algum
-      sindicato específico) — o contato abaixo é dela(e) no papel de
-      vice-presidente/diretor(a) regional, separado do contato do sindicato acima.
-    </p>
-    <div class="info-grid" style="margin-top:14px;">
-      <label style="grid-column:1/-1;">
-        <span class="rot" style="display:block;margin-bottom:5px;">Vice-Presidente Regional</span>
-        <input type="text" name="vice_presidente_texto" value="{{ referencia.vice_presidente_texto or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">Telefone</span>
-        <input type="text" name="telefone_vice_presidente" value="{{ referencia.telefone_vice_presidente or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">E-mail</span>
-        <input type="email" name="email_vice_presidente" value="{{ referencia.email_vice_presidente or '' }}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-    </div>
-  </details>
-  {% endif %}
-
-  <details style="margin-top:14px;">
-    <summary style="cursor:pointer;font-weight:600;color:var(--green-dark);padding:4px 0;">
-      Endereço, localização e foto do presidente
-    </summary>
-    <div class="info-grid" style="margin-top:14px;">
-      <label style="grid-column:1/-1;">
-        <span class="rot" style="display:block;margin-bottom:5px;">Endereço da sede</span>
-        <input type="text" name="endereco" value="{{ sindicato.endereco or '' }}" placeholder="Rua, número, bairro, município" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">Latitude</span>
-        <input type="text" name="latitude" value="{{ sindicato.latitude or '' }}" placeholder="Ex.: -4.2345678" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      <label>
-        <span class="rot" style="display:block;margin-bottom:5px;">Longitude</span>
-        <input type="text" name="longitude" value="{{ sindicato.longitude or '' }}" placeholder="Ex.: -38.9876543" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-      </label>
-      {% if sindicato.latitude and sindicato.longitude %}
-      <p style="grid-column:1/-1;margin:0;">
-        <a href="https://www.google.com/maps?q={{ sindicato.latitude }},{{ sindicato.longitude }}" target="_blank">📍 Ver localização atual no Google Maps</a>
-      </p>
       {% endif %}
-      <p style="grid-column:1/-1;font-size:.8rem;color:var(--ink-faint);margin:-4px 0 0;">
-        Dica: abra o local no Google Maps, clique com o botão direito no ponto exato e copie as
-        duas coordenadas que aparecem (a primeira é a latitude, a segunda a longitude).
-      </p>
-      <label style="grid-column:1/-1;">
-        <span class="rot" style="display:block;margin-bottom:5px;">Foto do presidente</span>
-        {% if sindicato.foto_presidente_url or sindicato.foto_presidente %}
-        <img src="{{ url_for('admin_sindicato_foto', sindicato_id=sindicato.id) }}" alt="Foto do presidente" style="display:block;max-width:140px;border-radius:9px;border:1px solid var(--line);margin-bottom:8px;">
-        <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:10px;">
-          <input type="checkbox" name="remover_foto_presidente" value="1" style="width:auto;">
-          Remover a foto atual (sem colocar outra no lugar)
-        </label>
-        {% endif %}
-        <input type="file" name="foto_presidente" accept="image/jpeg,image/png,image/webp">
-        <span style="display:block;font-size:.8rem;color:var(--ink-faint);margin-top:4px;">JPG, PNG ou WEBP, até 5 MB. Enviar um arquivo novo substitui a foto atual.</span>
-      </label>
     </div>
-  </details>
-
-  <div style="margin-top:22px;">
-    <button type="submit">💾 Salvar{% if municipios %} para todos os {{ municipios|length }} município(s){% endif %}</button>
   </div>
+
+  <div class="cad-sec aba-painel" data-aba="mandato">
+    <h2><span class="n">2</span> Mandato e situação</h2>
+    <div class="cad-grid">
+      <label class="c3">Início da gestão
+        <input type="date" name="gestao_inicio" value="{{ sindicato.gestao_inicio or '' }}">
+      </label>
+      <label class="c3">Fim da gestão
+        <input type="date" name="gestao_fim" value="{{ sindicato.gestao_fim or '' }}">
+        <span class="ajuda">Deixe em branco se ainda está no cargo.</span>
+      </label>
+      <label class="c3">Região FAEC do sindicato
+        <input type="text" name="regiao_faec" value="{{ sindicato.regiao_faec or '' }}" list="lista-regioes-faec" placeholder="Ex.: Região Norte">
+        <datalist id="lista-regioes-faec">
+          {% for r in regioes_faec %}<option value="{{ r }}">{% endfor %}
+        </datalist>
+        <span class="ajuda" title="Normalmente a região já vem dos municípios vinculados. Preencha só se o sindicato não tiver nenhum município no momento.">Só preencha se o sindicato estiver sem municípios.</span>
+      </label>
+      <div class="c3">
+        <label style="margin:0">Situação do mandato</label>
+        <label class="sw">
+          <input type="checkbox" name="ativo" {% if sindicato.ativo %}checked{% endif %}>
+          <span class="trilho"></span><span class="txt">{{ 'Ativo' if sindicato.ativo else 'Inativo' }}</span>
+        </label>
+      </div>
+    </div>
+    <p class="cad-nota" style="margin-top:14px">Desative quando o sindicato deixar de atuar (por exemplo, foi substituído por outro). Ele continua no histórico, só sinalizado como inativo.</p>
+  </div>
+
+  <div class="cad-sec aba-painel" data-aba="contatos">
+    <h2><span class="n">3</span> Contatos e localização</h2>
+    <div class="corpo">
+      {% if municipios %}
+      <h3 class="cad-sub">Contato do Sindicato</h3>
+      <div class="cad-grid">
+        <label class="c6">Telefone 1<input type="text" name="telefone1" value="{{ referencia.telefone1 or '' }}"></label>
+        <label class="c6">Telefone 2<input type="text" name="telefone2" value="{{ referencia.telefone2 or '' }}"></label>
+        <label class="c6">E-mail 1<input type="email" name="email1" value="{{ referencia.email1 or '' }}"></label>
+        <label class="c6">E-mail 2<input type="email" name="email2" value="{{ referencia.email2 or '' }}"></label>
+        <label class="c6">E-mail 3<input type="email" name="email3" value="{{ referencia.email3 or '' }}"></label>
+        <label class="c6">E-mail 4<input type="email" name="email4" value="{{ referencia.email4 or '' }}"></label>
+      </div>
+
+      <h3 class="cad-sub">Vice-Presidente Regional</h3>
+      <p class="cad-nota">Pessoa responsável pela região (às vezes é também presidente de algum sindicato). O contato abaixo é dela(e) no papel de vice-presidente/diretor(a) regional, separado do contato do sindicato.</p>
+      <div class="cad-grid">
+        <label class="c6">Vice-Presidente Regional<input type="text" name="vice_presidente_texto" value="{{ referencia.vice_presidente_texto or '' }}"></label>
+        <label class="c6">Telefone<input type="text" name="telefone_vice_presidente" value="{{ referencia.telefone_vice_presidente or '' }}"></label>
+        <label class="c6">E-mail<input type="email" name="email_vice_presidente" value="{{ referencia.email_vice_presidente or '' }}"></label>
+      </div>
+      {% endif %}
+
+      <h3 class="cad-sub">Endereço, localização e foto do presidente</h3>
+      <div class="cad-grid">
+        <label class="c12">Endereço da sede
+          <input type="text" name="endereco" value="{{ sindicato.endereco or '' }}" placeholder="Rua, número, bairro, município">
+        </label>
+        <label class="c3">Latitude<input type="text" name="latitude" value="{{ sindicato.latitude or '' }}" placeholder="Ex.: -4.2345678"></label>
+        <label class="c3">Longitude<input type="text" name="longitude" value="{{ sindicato.longitude or '' }}" placeholder="Ex.: -38.9876543"></label>
+        <div class="c12" style="margin-top:-8px">
+          {% if sindicato.latitude and sindicato.longitude %}
+          <a href="https://www.google.com/maps?q={{ sindicato.latitude }},{{ sindicato.longitude }}" target="_blank">📍 Ver localização atual no Google Maps</a><br>
+          {% endif %}
+          <span class="ajuda" style="font-size:.8rem;color:var(--ink-faint)">Dica: abra o local no Google Maps, clique com o botão direito no ponto exato e copie as duas coordenadas (a primeira é a latitude, a segunda a longitude).</span>
+        </div>
+        <div class="c12">
+          <label style="margin-bottom:6px">Foto do presidente</label>
+          {% if sindicato.foto_presidente_url or sindicato.foto_presidente %}
+          <img src="{{ url_for('admin_sindicato_foto', sindicato_id=sindicato.id) }}" alt="Foto do presidente" style="display:block;max-width:140px;border-radius:10px;border:1px solid var(--line);margin:6px 0 8px;">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-bottom:10px;">
+            <input type="checkbox" name="remover_foto_presidente" value="1" style="width:auto;height:auto;margin:0">
+            Remover a foto atual (sem colocar outra no lugar)
+          </label>
+          {% endif %}
+          <input type="file" name="foto_presidente" accept="image/jpeg,image/png,image/webp" style="height:auto;padding:8px 0;border:0">
+          <span class="ajuda">JPG, PNG ou WEBP, até 5 MB. Enviar um arquivo novo substitui a foto atual.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </form>
 
-<div class="secao-card">
-  <h2>Municípios vinculados a este sindicato</h2>
-  <form method="post" action="{{ url_for('admin_sindicato_municipios_vinculo', sindicato_id=sindicato.id) }}">
-    {% if municipios %}
-    <table>
-      <thead><tr><th>Município</th><th>Região FAEC</th><th></th></tr></thead>
-      <tbody>
-      {% for m in municipios %}
-      <tr>
-        <td><a href="{{ url_for('admin_sindicato_editar', cod_ibge=m.cod_ibge) }}">{{ m.nome }}</a></td>
-        <td>{{ m.regiao_faec or '-' }}</td>
-        <td>
-          <button type="submit" name="remover_cod_ibge" value="{{ m.cod_ibge }}"
-                  class="secundario" style="padding:4px 10px;font-size:.8rem;">
-            ✖ Remover
-          </button>
-        </td>
-      </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p class="vazio">Nenhum município vinculado no momento.</p>
-    {% endif %}
-
-    <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
-      <label style="flex:1;min-width:240px;">
-        <span class="rot" style="display:block;margin-bottom:5px;">Adicionar outro município a este sindicato</span>
-        <select name="adicionar_cod_ibge" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
-          <option value="">— selecione um município —</option>
-          {% for m in municipios_disponiveis %}
-          <option value="{{ m.cod_ibge }}">{{ m.nome }}{% if m.sindicato %} (hoje em: {{ m.sindicato.nome }}){% endif %}</option>
-          {% endfor %}
-        </select>
-      </label>
-      <button type="submit">➕ Adicionar a este sindicato</button>
-    </div>
-  </form>
+<aside class="cad-lado">
+  <div class="rs-cab"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Resumo do sindicato</span></div>
+  <div class="rs-corpo">
+    <div class="cad-av"><span class="ci"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#2B6B43" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12c0-4-2.5-6.5-7-6.5 0 4 2.5 6.5 7 6.5z"/><path d="M12 12c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6z"/></svg></span><div><b>{{ sindicato.nome }}</b><span>{{ sindicato.regiao_faec or (municipios[0].regiao_faec if municipios else '—') or '—' }}</span></div></div>
+    <div class="rs-l"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><div><small>Presidente</small><b>{{ referencia.presidente_nome or '—' if referencia else '—' }}</b></div></div>
+    <div class="rs-l"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg><div><small>Secretário(a)</small><b>{{ (referencia.secretario_nome if referencia else '') or '—' }}</b></div></div>
+    <div class="rs-l"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V9h14v11z"/></svg><div><small>Gestão</small><b>{% if sindicato.gestao_inicio %}{{ sindicato.gestao_inicio.strftime('%d/%m/%Y') if sindicato.gestao_inicio.strftime is defined else sindicato.gestao_inicio }}{% else %}—{% endif %} a {% if sindicato.gestao_fim %}{{ sindicato.gestao_fim.strftime('%d/%m/%Y') if sindicato.gestao_fim.strftime is defined else sindicato.gestao_fim }}{% else %}—{% endif %}</b></div></div>
+    <div class="rs-l"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><div><small>Situação</small><span class="st {{ 'on' if sindicato.ativo else 'off' }}">{{ 'Ativo' if sindicato.ativo else 'Inativo' }}</span></div></div>
+    <div class="rs-l"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1.02l-2.2 2.2z"/></svg><div><small>Contato</small>
+      <span class="rs-c"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1.02l-2.2 2.2z"/></svg>{{ (referencia.telefone1 if referencia else '') or '—' }}</span>
+      <span class="rs-c"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>{{ (referencia.email1 if referencia else '') or '—' }}</span></div></div>
+    <div class="rs-l"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M21.41 11.58l-9-9A2 2 0 0011 2H4a2 2 0 00-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM6.5 8A1.5 1.5 0 118 6.5 1.5 1.5 0 016.5 8z"/></svg><div><small>Municípios vinculados ({{ municipios|length }})</small>
+      <div class="chips">{% for m in municipios %}<span>{{ m.nome }}</span>{% else %}<b>Nenhum</b>{% endfor %}</div></div></div>
+  </div>
+</aside>
 </div>
+
+<div class="cad-sec-mun">
+  <div class="cad-sec" style="border-bottom:0;padding:16px 22px 22px">
+    <div class="vinc-cab">
+      <h2 style="border:0;padding:0;margin:0;display:flex;align-items:center;gap:12px"><span class="n" style="flex:none;width:28px;height:28px;border-radius:50%;background:#1f4a2f;color:#fff;font:700 .85rem Inter,sans-serif;display:inline-flex;align-items:center;justify-content:center">4</span> Municípios vinculados a este sindicato</h2>
+      <span class="cad-pill">{{ municipios|length }} município(s)</span>
+    </div>
+    <form method="post" action="{{ url_for('admin_sindicato_municipios_vinculo', sindicato_id=sindicato.id) }}">
+      {% if municipios %}
+      <div class="tabela-wrap" style="margin-top:0">
+      <table>
+        <thead><tr><th>Município</th><th>Região FAEC</th><th></th></tr></thead>
+        <tbody>
+        {% for m in municipios %}
+        <tr>
+          <td><a href="{{ url_for('admin_sindicato_editar', cod_ibge=m.cod_ibge) }}"><strong>{{ m.nome }}</strong></a></td>
+          <td>{{ m.regiao_faec or '-' }}</td>
+          <td style="text-align:right">
+            <button type="submit" name="remover_cod_ibge" value="{{ m.cod_ibge }}" class="btn secundario" style="padding:5px 12px;font-size:.8rem;">✖ Remover</button>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% else %}
+      <p class="vazio">Nenhum município vinculado no momento.</p>
+      {% endif %}
+
+      <div class="vinc-add">
+        <label style="flex:1;min-width:240px;font-size:.88rem;font-weight:600;color:#1f4a2f;">Adicionar outro município a este sindicato
+          <select name="adicionar_cod_ibge">
+            <option value="">— selecione um município —</option>
+            {% for m in municipios_disponiveis %}
+            <option value="{{ m.cod_ibge }}">{{ m.nome }}{% if m.sindicato %} (hoje em: {{ m.sindicato.nome }}){% endif %}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit" style="height:46px">➕ Adicionar a este sindicato</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}

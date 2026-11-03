@@ -75,7 +75,10 @@
   .sidebar .brand .sub{display:block;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:#9FBBA4;}
   .sidebar .brand:hover{text-decoration:none}
 
+  .sidebar{border-right:2px solid rgba(47,191,113,.55)}
   .sidebar nav{display:flex;flex-direction:column;gap:2px;}
+  .sidebar nav.nav-centro{flex:1;justify-content:center;gap:6px;}
+  .sidebar nav.nav-centro .nav-sep{text-align:center;}
   .sidebar a.nav-item{
     position:relative;
     display:flex;align-items:center;gap:11px;
@@ -253,7 +256,7 @@
       <span class="mark">SA</span>
       <span class="nome">Sistema de Adesões<span class="sub">Painel administrativo</span></span>
     </a>
-    <nav>
+    <nav class="{{ 'nav-centro' if apenas_sindicatos else '' }}">
       {% if not apenas_sindicatos and not apenas_carreta %}
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'dashboard' else '' }}" href="{{ url_for('admin_dashboard') }}"><span class="ic">📊</span> Dashboard</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'adesoes' else '' }}" href="{{ url_for('admin_adesoes') }}"><span class="ic">📋</span> Todas as Adesões</a>
@@ -266,7 +269,8 @@
       <div class="nav-sep">Relatórios</div>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'estatisticas' else '' }}" href="{{ url_for('admin_estatisticas') }}"><span class="ic">📈</span> Estatísticas</a>
       <div class="nav-sep">Sindicatos</div>
-      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">🤝</span> Sindicatos x Municípios</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos_lista' else '' }}" href="{{ url_for('admin_sindicatos_lista') }}"><span class="ic">🤝</span> Sindicatos Rurais</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">📍</span> Municípios</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_sindicatos' else '' }}" href="{{ url_for('admin_sindicatos_mapa') }}"><span class="ic">🗺️</span> Mapa dos Sindicatos</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'processos_eleitorais' else '' }}" href="{{ url_for('admin_todos_processos_eleitorais') }}"><span class="ic">🗳️</span> Processos Eleitorais</a>
       <div class="nav-sep">Carreta (Agro/Saúde)</div>
@@ -278,7 +282,8 @@
 
       {% if apenas_sindicatos %}
       <div class="nav-sep">Sindicatos</div>
-      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">🤝</span> Sindicatos x Municípios</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos_lista' else '' }}" href="{{ url_for('admin_sindicatos_lista') }}"><span class="ic">🤝</span> Sindicatos Rurais</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'sindicatos' else '' }}" href="{{ url_for('admin_sindicatos') }}"><span class="ic">📍</span> Municípios</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_sindicatos' else '' }}" href="{{ url_for('admin_sindicatos_mapa') }}"><span class="ic">🗺️</span> Mapa dos Sindicatos</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'processos_eleitorais' else '' }}" href="{{ url_for('admin_todos_processos_eleitorais') }}"><span class="ic">🗳️</span> Processos Eleitorais</a>
       {% endif %}

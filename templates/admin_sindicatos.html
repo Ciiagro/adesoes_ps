@@ -1,63 +1,170 @@
 {% extends 'admin_base.html' %}
-{% block title %}Sindicatos x Municípios{% endblock %}
+{% block title %}Municípios · Sindicatos{% endblock %}
 {% block admin_content %}
-<div class="page-head">
-  <h1>Sindicatos Rurais x Municípios</h1>
-  <p class="sub">
-    Sindicato responsável e contatos (presidente, vice/diretor regional) de cada
-    município do Ceará. Edite quando um município mudar de sindicato ou trocar de
-    presidente — cada mudança fica registrada no histórico. Depois é só gerar a
-    planilha atualizada para os setores.
-  </p>
+<style>
+  .conteudo{max-width:1320px}
+  .cab{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin-bottom:18px}
+  .cab .mig{font-size:.8rem;color:var(--green-dark);font-weight:600;margin-bottom:6px}
+  .cab h1{font-size:2.1rem;color:#1f4a2f;margin:0 0 6px}
+  .cab .sub{color:var(--ink-soft);font-size:.95rem;margin:0}
+  .cab .banner{width:min(520px,100%);height:100px;border-radius:14px;box-shadow:var(--shadow-sm);border:1px solid var(--line-soft);background:#f3e6c9 url('{{ url_for("static", filename="img/banner_sindicatos.jpg") }}') center/cover no-repeat}
+  .kpis3{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin-bottom:18px}
+  .kp{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:14px;border:1px solid;background:#fff;text-align:left;font:inherit;cursor:default;box-shadow:none;transform:none !important;width:100%}
+  .kp .ic{flex:none;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff}
+  .kp .tt{font-weight:700;font-size:.92rem}.kp .nn{font-family:'Fraunces',serif;font-size:2.1rem;font-weight:600;line-height:1.1}.kp .ll{font-size:.82rem;font-weight:600}
+  .kp.venc{background:#FDECEA;border-color:#F3C5BE;color:#B3261E;cursor:pointer}.kp.venc:hover{background:#FBE0DC;color:#B3261E}.kp.venc .ic{background:#D93B30}
+  .kp.breve{background:#FEF3DC;border-color:#F3D9A4;color:#9A6817;cursor:pointer}.kp.breve:hover{background:#FCEBC6;color:#9A6817}.kp.breve .ic{background:#F2A81D}
+  .kp.total{background:#E8F4EA;border-color:#C5DFCB;color:#1f4a2f}.kp.total .ic{background:#2E7D4A}
+  .kp.total .ll{color:var(--ink-soft);font-weight:500}
+  .al-painel{display:none;margin:-4px 0 16px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .al-painel.aberto{display:flex;flex-direction:column;gap:6px}
+  .al-item{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line-soft);border-radius:8px;padding:8px 12px}
+  .al-tag{color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .filtro-card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);margin-bottom:16px;overflow:hidden}
+  .filtro-card .filtro-form{padding:18px 20px 14px;margin:0;border:0;box-shadow:none;background:none;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .filtro-card .filtro-form label{flex:1 1 200px;font-weight:600;color:#1f4a2f;font-size:.85rem}
+  .filtro-card .filtro-form input[type=text],.filtro-card .filtro-form select{height:44px;padding-top:0;padding-bottom:0;margin-top:6px;border-radius:10px}
+  .filtro-card .filtro-form button,.filtro-card .filtro-form .btn{height:44px;padding-top:0;padding-bottom:0;display:inline-flex;align-items:center;gap:8px;border-radius:10px}
+  .btn-limpar{background:#fff !important;color:var(--green-dark) !important;border:1px solid var(--line) !important;box-shadow:none !important}
+  .acoes-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:12px 20px 16px;background:#F6FAF4;border-top:1px solid var(--line-soft)}
+  .acoes-row a{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--green-dark);font-weight:600;font-size:.86rem;text-decoration:none}
+  .acoes-row a:hover{background:var(--line-soft)}
+  .acoes-row .cnt{margin-left:auto;color:var(--ink-soft);font-size:.85rem}
+  /* topo fixo e compacto: título, cartões, filtros e ações ficam parados enquanto a tabela rola */
+  .conteudo{max-width:none !important}
+  .lista-fixo{position:sticky;top:0;z-index:30;background:var(--bg);margin:-34px -40px 14px;padding:12px 40px 6px;box-shadow:0 6px 16px rgba(44,81,55,.10)}
+  /* estado grande (no topo da página): cartões amplos, como no modelo */
+  .lista-fixo .cab{margin-bottom:14px}
+  .lista-fixo .kpis3{margin-bottom:14px;gap:16px}
+  .lista-fixo .kp{padding:20px 26px;gap:20px;border-radius:16px}
+  .lista-fixo .kp .ic{width:64px;height:64px;font-size:1.8rem}
+  .lista-fixo .kp .tt{font-size:1rem}.lista-fixo .kp .nn{font-size:2.6rem}.lista-fixo .kp .ll{font-size:.88rem}
+  .lista-fixo .kp.al-btn:hover{transform:translateY(-1px) !important;box-shadow:0 6px 16px rgba(44,81,55,.12)}
+  /* estado compacto (depois de rolar a página) */
+  .lista-fixo.compacto .cab{margin-bottom:10px;gap:12px}
+  .lista-fixo.compacto .cab .mig{display:none}
+  .lista-fixo.compacto .cab h1{font-size:clamp(1.3rem,1.9vw,1.7rem);margin:0 0 2px}
+  .lista-fixo.compacto .cab .sub{font-size:.85rem}
+  .lista-fixo.compacto .cab .banner{height:66px;width:min(380px,100%)}
+  .lista-fixo.compacto .kpis3{margin-bottom:10px;gap:12px}
+  .lista-fixo.compacto .kp{padding:9px 16px;gap:12px}
+  .lista-fixo.compacto .kp .ic{width:38px;height:38px;font-size:1.1rem}
+  .lista-fixo.compacto .kp>span:last-child{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap}
+  .lista-fixo.compacto .kp br{display:none}
+  .lista-fixo.compacto .kp .tt{font-size:.85rem}.lista-fixo .kp .nn{font-size:1.5rem}.lista-fixo .kp .ll{font-size:.78rem}
+  .lista-fixo .al-painel{max-height:210px;overflow:auto;margin:-2px 0 10px}
+  .lista-fixo .filtro-card{margin-bottom:6px}
+  .lista-fixo .filtro-card .filtro-form{padding:10px 16px 8px}
+  .lista-fixo .filtro-card .filtro-form input[type=text],.lista-fixo .filtro-card .filtro-form select,.lista-fixo .filtro-card .filtro-form button,.lista-fixo .filtro-card .filtro-form .btn{height:38px}
+  .lista-fixo .acoes-row{padding:8px 16px 10px;gap:8px}.lista-fixo .acoes-row a{padding:7px 12px;font-size:.82rem}
+  @media(max-height:760px),(max-width:900px){.lista-fixo{position:static;box-shadow:none;margin:0 0 14px;padding:0}}
+  .tabela-wrap{margin-top:0}
+  .tabela-wrap{overflow:visible}
+  .tab-sind{width:100%;table-layout:fixed;font-size:clamp(.78rem,.9vw,.9rem);line-height:1.35}
+  .tab-sind th,.tab-sind td{padding:12px 10px;vertical-align:middle;white-space:normal;word-break:normal;overflow-wrap:break-word;hyphens:none}
+  .tab-sind th{white-space:nowrap}
+  .tab-sind .por{display:block;font-size:.85em;color:var(--ink-faint);overflow-wrap:anywhere}
+  .tab-sind .email-cel{overflow-wrap:anywhere}
+  .kp .nn{font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1,"pnum" 0;letter-spacing:.01em}
+  .filtro-card .filtro-form label{text-transform:none;letter-spacing:0}
+  .acoes-row .cnt{white-space:nowrap}
+  .tabela-wrap thead th{background:#EEF4EA;color:#1f4a2f}
+  .tabela-wrap tbody tr:hover{background:#FAFCF7}
+  .mun-cel{display:flex;gap:12px;align-items:flex-start}.mun-cel .pin{color:#2B6B43;margin-top:2px;flex:none}
+  .tab-sind.ed th,.tab-sind.ed td{padding:16px 12px}
+  .tab-sind.ed th{white-space:normal;line-height:1.25;vertical-align:middle}
+  .tab-sind.ed th:last-child,.tab-sind.ed td:last-child{padding-right:16px}
+  .tab-sind.ed tbody td{border-top:1px solid #EEF2EA}
+  .tab-sind.ed .sind-cel{display:flex;align-items:center;gap:10px;font-weight:700;color:#1F4D2F;text-decoration:none}
+  .tab-sind.ed a.sind-cel:hover{text-decoration:underline}
+  .tab-sind.ed .sind-cel .ic2{color:#2B6B43;flex:none}
+  .tab-sind.ed .pres{color:#1F3B2A}
+  .ic2{display:inline-block;vertical-align:middle}
+  .mun-cel a.hist{display:block;font-size:.78rem;font-weight:500;color:#2E7D4A;text-decoration:underline}
+  .stt{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:999px;font-size:.82rem;font-weight:700;line-height:1.2;max-width:100%}
+  .stt .ic2{flex:none}
+  .tab-sind.ed .stt{white-space:nowrap}
+  .stt.i{background:#E7E9E4;color:#4F5B52}.stt.s{background:#EEF0EC;color:#6B766E}
+  .stt.v{background:#FBDAD5;color:#B3261E}.stt.b{background:#FDE9BD;color:#9A6817}.stt.a{background:#D8EFDB;color:#1F6B3B}
+  .acoes-cel{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+  .acoes-cel a{color:var(--ink-soft);text-decoration:none;font-size:1.2rem;line-height:1;padding:4px 6px;border-radius:6px}.acoes-cel a:hover{background:var(--line-soft)}
+  .acoes-cel details{position:relative}.acoes-cel summary{list-style:none;cursor:pointer;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #DDE6D9;border-radius:10px;background:#fff;color:#33503C;font-size:1.3rem;line-height:1}
+  .acoes-cel summary::-webkit-details-marker{display:none}.acoes-cel summary:hover,.acoes-cel details[open] summary{background:#F1F6EE}
+  .acoes-cel .menu{position:absolute;right:0;top:calc(100% + 6px);z-index:5;background:#fff;border:1px solid #E2EADF;border-radius:14px;box-shadow:0 12px 28px rgba(31,77,47,.18);min-width:250px;padding:12px;display:flex;flex-direction:column}
+  .acoes-cel .menu .mt{font-size:.82rem;font-weight:700;color:#1F3B2A;padding:2px 8px 8px}
+  .acoes-cel .menu .sep{height:1px;background:#EAF0E7;margin:6px 4px}
+  .acoes-cel .menu a{display:flex;align-items:center;gap:12px;font-size:.92rem;font-weight:500;padding:10px 8px;border-radius:8px;color:#1F3B2A;text-align:left}
+  .acoes-cel .menu a .ic2{color:#2B6B43;flex:none}
+  .acoes-cel .menu a:hover{background:#F1F6EE}
+  .pag{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:14px}
+  .pag .info{color:var(--ink-faint);font-size:.88rem}
+  .pag .nums{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .pag .nums a,.pag .nums span{min-width:36px;height:36px;padding:0 10px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--green-dark);font-weight:600;font-size:.9rem;text-decoration:none}
+  .pag .nums a:hover{background:var(--line-soft)}
+  .pag .nums .atual{background:var(--green-dark);border-color:var(--green-dark);color:#fff}
+  .pag .nums .desab{opacity:.4;pointer-events:none}.pag .nums .reticencias{border:0;background:none;min-width:20px;padding:0}
+  .pag select{width:auto;margin:0;padding:7px 10px}
+  @media(max-width:900px){.cab .banner{display:none}}
+</style>
+<style>
+  /* banner grande com o título dentro */
+  .lista-fixo .cab{position:relative;display:block;min-height:104px;margin-bottom:12px;padding:14px 32px;display:flex;align-items:center;border-radius:18px;border:1px solid #E2EADF;background:#FBF7E9 url('{{ url_for("static", filename="img/banner_sindicatos.jpg") }}') right center/auto 128% no-repeat;box-shadow:0 2px 8px rgba(44,81,55,.10);overflow:hidden}
+  .lista-fixo .cab>div:first-child{max-width:60%;position:relative;z-index:1}
+  .lista-fixo .cab .banner{display:none}
+  .lista-fixo .cab::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#FBF7E9 0,#FBF7E9 calc(100% - 672px),rgba(251,247,233,0) calc(100% - 380px));pointer-events:none}
+  .lista-fixo .cab h1{text-shadow:none !important}
+  .lista-fixo .cab .mig{display:none}
+  .lista-fixo .cab h1{font-size:clamp(1.5rem,2vw,1.85rem);color:#1F4D2F;margin:0 0 2px;line-height:1.15}
+  .lista-fixo .cab .sub{color:#3F5C49;font-size:.9rem;margin:0;max-width:none;white-space:nowrap;text-shadow:0 0 8px rgba(251,247,233,.95),0 0 3px rgba(251,247,233,.95)}
+  .lista-fixo.compacto .cab{min-height:52px;padding:6px 24px}
+  .lista-fixo.compacto .cab .mig,.lista-fixo.compacto .cab .sub{display:none}
+  .lista-fixo.compacto .cab h1{font-size:1.3rem;margin:0}
+  @media(max-width:900px){.lista-fixo .cab>div:first-child{max-width:100%}.lista-fixo .cab .sub{white-space:normal}.lista-fixo .cab{min-height:90px;padding:14px 20px}}
+</style>
+<div class="lista-fixo">
+<div class="cab">
+  <div>
+    <div class="mig">Sindicatos Rurais x Municípios</div>
+    <h1>Municípios e seus Sindicatos</h1>
+    <p class="sub">Veja todos os municípios e o sindicato rural responsável por cada um.</p>
+  </div>
+  <div class="banner" role="img" aria-label="Juntos pelo fortalecimento do nosso campo!"></div>
 </div>
 
 {% if avisos_gestao %}
-<div class="secao-card" style="border-left:4px solid var(--danger);background:var(--danger-bg);margin-bottom:20px;">
-  <h2 style="color:var(--danger);margin-bottom:{% if avisos_vencidos or avisos_a_vencer %}4px{% else %}0{% endif %};">⚠️ Mandato de presidente vencendo</h2>
-
-  {% if avisos_vencidos %}
-  <details style="margin-top:10px;">
-    <summary style="cursor:pointer;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:var(--danger);padding:4px 0;">
-      Já venceu ({{ avisos_vencidos|length }})
-    </summary>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
-      {% for s, dias in avisos_vencidos %}
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid rgba(192,57,43,.3);border-radius:8px;padding:8px 12px;">
-        <span style="background:var(--danger);color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;">
-          {{ -dias }} DIA{{ 's' if -dias != 1 else '' }} VENCIDO
-        </span>
-        <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}" style="font-weight:700;">{{ s.nome }}</a>
-        <span style="font-size:.8rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap;">venceu em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
-      </div>
-      {% endfor %}
-    </div>
-  </details>
-  {% endif %}
-
-  {% if avisos_a_vencer %}
-  <details style="margin-top:10px;">
-    <summary style="cursor:pointer;font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em;color:#9A6817;padding:4px 0;">
-      Vence em breve ({{ avisos_a_vencer|length }})
-    </summary>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
-      {% for s, dias in avisos_a_vencer %}
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid rgba(154,104,23,.3);border-radius:8px;padding:8px 12px;">
-        <span style="background:#9A6817;color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;">
-          {% if dias == 0 %}VENCE HOJE{% else %}EM {{ dias }} DIA{{ 's' if dias != 1 else '' }}{% endif %}
-        </span>
-        <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}" style="font-weight:700;">{{ s.nome }}</a>
-        <span style="font-size:.8rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap;">vence em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
-      </div>
-      {% endfor %}
-    </div>
-  </details>
-  {% endif %}
+<div class="kpis3">
+  <button type="button" class="kp venc al-btn" data-alvo="al-venc"><span class="ic">⚠</span><span><span class="tt">Mandatos vencidos</span><br><span class="nn">{{ avisos_vencidos|length }}</span><br><span class="ll">Ver detalhes →</span></span></button>
+  <button type="button" class="kp breve al-btn" data-alvo="al-breve"><span class="ic">◔</span><span><span class="tt">Vencem em breve</span><br><span class="nn">{{ avisos_a_vencer|length }}</span><br><span class="ll">Ver detalhes →</span></span></button>
+  <div class="kp total"><span class="ic">✓</span><span><span class="tt">Sindicatos Rurais</span><br><span class="nn">{{ total_sind }}</span><br><span class="ll">{{ pct_ativos }}% de ativos ({{ sind_ativos }} de {{ total_sind }})</span></span></div>
+</div>
+{% if avisos_vencidos %}
+<div class="al-painel" id="al-venc">
+  {% for s, dias in avisos_vencidos %}
+  <div class="al-item">
+    <span class="al-tag" style="background:var(--danger)">{{ -dias }} DIA{{ 'S' if -dias != 1 else '' }} VENCIDO</span>
+    <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}" style="font-weight:700;">{{ s.nome }}</a>
+    <span style="font-size:.8rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap;">venceu em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
+  </div>
+  {% endfor %}
 </div>
 {% endif %}
+{% if avisos_a_vencer %}
+<div class="al-painel" id="al-breve">
+  {% for s, dias in avisos_a_vencer %}
+  <div class="al-item">
+    <span class="al-tag" style="background:#9A6817">{% if dias == 0 %}VENCE HOJE{% else %}EM {{ dias }} DIA{{ 'S' if dias != 1 else '' }}{% endif %}</span>
+    <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}" style="font-weight:700;">{{ s.nome }}</a>
+    <span style="font-size:.8rem;color:var(--ink-faint);margin-left:auto;white-space:nowrap;">vence em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
 
+<div class="filtro-card">
 <form method="get" class="filtro-form">
-  <label>Buscar município
-    <input type="text" name="busca" value="{{ filtro_busca }}" placeholder="Nome do município">
+  <label>Município
+    <input type="text" name="busca" value="{{ filtro_busca }}" placeholder="Digite o nome do município">
   </label>
   <label>Região FAEC
     <select name="regiao_faec" onchange="this.form.sindicato_id.value=''; this.form.submit()">
@@ -75,61 +182,140 @@
       {% endfor %}
     </select>
   </label>
+  <input type="hidden" name="por_pagina" value="{{ por_pagina }}">
   <button type="submit">Filtrar</button>
-  {% if pode_editar_sindicatos %}
-  <a class="btn" href="{{ url_for('admin_sindicato_novo') }}">➕ Novo sindicato</a>
-  <a class="btn secundario" href="{{ url_for('admin_sindicatos_exportar', busca=filtro_busca, regiao_faec=filtro_regiao_faec, sindicato_id=filtro_sindicato_id) }}">⬇️ Gerar planilha para os setores</a>
-  <a class="btn secundario" href="{{ url_for('admin_sindicatos_ficha') }}" target="_blank">📄 Gerar ficha de distribuição (PDF)</a>
-  <a class="btn secundario" href="{{ url_for('admin_sindicatos_vice_presidencia') }}">🗂️ Vice-Presidência e Sindicatos Rurais</a>
-  {% endif %}
+  <a class="btn btn-limpar" href="{{ url_for('admin_sindicatos', por_pagina=por_pagina) }}">Limpar</a>
 </form>
+<div class="acoes-row">
+  {% if pode_editar_sindicatos %}
+  <a href="{{ url_for('admin_sindicatos_exportar', busca=filtro_busca, regiao_faec=filtro_regiao_faec, sindicato_id=filtro_sindicato_id) }}">⬇️ Gerar planilha para os setores</a>
+  <a href="{{ url_for('admin_sindicatos_ficha') }}" target="_blank">📄 Gerar ficha de distribuição (PDF)</a>
+  <a href="{{ url_for('admin_sindicatos_vice_presidencia') }}">🗂️ Vice-Presidência e Sindicatos Rurais</a>
+  <a href="{{ url_for('admin_sindicato_novo') }}">➕ Novo sindicato</a>
+  {% endif %}
+  <span class="cnt">☰ {{ total }} município(s) encontrado(s)</span>
+</div>
+</div>
+
+</div>
 
 <div class="tabela-wrap">
-<table>
+<table class="tab-sind{{ ' ed' if pode_editar_sindicatos }}">
+  <colgroup>
+    <col style="width:{{ '17%' if pode_editar_sindicatos else '17%' }}"><col style="width:{{ '16%' if pode_editar_sindicatos else '20%' }}"><col style="width:{{ '17%' if pode_editar_sindicatos else '21%' }}">
+    <col style="width:{{ '22%' if pode_editar_sindicatos else '20%' }}">
+    {% if pode_editar_sindicatos %}<col style="width:19%"><col style="width:9%">{% else %}<col style="width:22%">{% endif %}
+  </colgroup>
   <thead>
   <tr>
-    <th>Município</th><th>Região FAEC</th><th>Sindicato responsável</th>
-    <th>Presidente</th><th>E-mail</th>
-    {% if pode_editar_sindicatos %}<th>Telefone 1</th><th>Atualizado em</th>{% endif %}
+    <th>Município</th><th>Região FAEC</th><th>{% if pode_editar_sindicatos %}Sindicato responsável{% else %}Sindicato{% endif %}</th>
+    <th>Presidente</th>
+    {% if pode_editar_sindicatos %}<th>Status</th><th style="text-align:right;white-space:nowrap">Ações</th>{% else %}<th>E-mail</th>{% endif %}
   </tr>
   </thead>
   <tbody>
   {% for m in municipios %}
   <tr>
     <td>
+      <div class="mun-cel"><span class="pin"><svg class="ic2" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z"/></svg></span><div>
       {% if pode_editar_sindicatos %}
       <a href="{{ url_for('admin_sindicato_editar', cod_ibge=m.cod_ibge) }}"><strong>{{ m.nome }}</strong></a>
-      <br><a href="{{ url_for('admin_sindicato_historico', cod_ibge=m.cod_ibge) }}" style="font-size:.78rem;color:var(--ink-faint);font-weight:500;">Histórico</a>
+      <a class="hist" href="{{ url_for('admin_sindicato_historico', cod_ibge=m.cod_ibge) }}">Ver detalhes</a>
       {% else %}
       <strong>{{ m.nome }}</strong>
       {% endif %}
+      </div></div>
     </td>
     <td>{{ m.regiao_faec or '-' }}</td>
     <td>
       {% if pode_editar_sindicatos and m.sindicato %}
-      <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=m.sindicato.id) }}" title="Editar nome, presidente e contatos deste sindicato">✏️ {{ m.sindicato.nome }}</a>
-      {% if not m.sindicato.ativo %}<span style="color:var(--danger);font-size:.75rem;font-weight:600;"> (inativo)</span>{% endif %}
+      <a class="sind-cel" href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=m.sindicato.id) }}" title="Editar nome, presidente e contatos deste sindicato"><svg class="ic2" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12c0-4-2.5-6.5-7-6.5 0 4 2.5 6.5 7 6.5z"/><path d="M12 12c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6z"/></svg>{{ m.sindicato.nome }}</a>
       {% else %}
       {{ m.sindicato.nome if m.sindicato else '-' }}
-      {% if m.sindicato and not m.sindicato.ativo %}<span style="color:var(--danger);font-size:.75rem;font-weight:600;"> (inativo)</span>{% endif %}
       {% endif %}
     </td>
-    <td>{{ m.presidente_nome or '-' }}</td>
-    <td>{{ m.email1 or '-' }}</td>
-    {% if pode_editar_sindicatos %}
-    <td>{{ m.telefone1 or '-' }}</td>
-    <td>
-      {% if m.atualizado_em %}{{ m.atualizado_em.strftime('%d/%m/%Y %H:%M') }}
-        {% if m.atualizado_por %}<br><span style="color:var(--ink-faint);font-size:.8rem;">por {{ m.atualizado_por }}</span>{% endif %}
-      {% else %}-{% endif %}
+    <td class="pres"{% if pode_editar_sindicatos %} title="{{ m.email1 or '' }}{{ ' · ' if m.email1 and m.telefone1 }}{{ m.telefone1 or '' }}"{% endif %}>
+      {{ m.presidente_nome or '-' }}
     </td>
+    {% if pode_editar_sindicatos %}
+    <td>
+      {% if not m.sindicato %}<span class="stt s"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm5 11H7v-2h10v2z"/></svg>Sem sindicato</span>
+      {% elif not m.sindicato.ativo %}<span class="stt i"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm5 11H7v-2h10v2z"/></svg>Sindicato inativo</span>
+      {% elif m.sindicato.id in ids_vencidos %}<span class="stt v"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2L1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z"/></svg>Mandato vencido</span>
+      {% elif m.sindicato.id in ids_breve %}<span class="stt b"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/></svg>Vence em breve</span>
+      {% else %}<span class="stt a"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Mandato vigente</span>{% endif %}
+    </td>
+    <td>
+      <div class="acoes-cel">
+        <details><summary title="Ações">⋮</summary>
+          <div class="menu">
+            <div class="mt">Ações do município</div>
+            <a href="{{ url_for('admin_sindicato_editar', cod_ibge=m.cod_ibge) }}"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>Editar município</a>
+            <a href="{{ url_for('admin_sindicato_historico', cod_ibge=m.cod_ibge) }}"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M13 3a9 9 0 00-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 117 7 6.98 6.98 0 01-4.95-2.05l-1.42 1.42A8.96 8.96 0 0013 21a9 9 0 000-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>Consultar histórico</a>
+            {% if m.sindicato %}<div class="sep"></div><a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=m.sindicato.id) }}"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Editar sindicato</a>{% endif %}
+          </div>
+        </details>
+      </div>
+    </td>
+    {% else %}
+    <td class="email-cel">{{ m.email1 or '-' }}</td>
     {% endif %}
   </tr>
   {% else %}
-  <tr><td colspan="{{ 7 if pode_editar_sindicatos else 5 }}" class="vazio">Nenhum município encontrado com esse filtro.</td></tr>
+  <tr><td colspan="{{ 6 if pode_editar_sindicatos else 5 }}" class="vazio">Nenhum município encontrado com esse filtro.</td></tr>
   {% endfor %}
   </tbody>
 </table>
 </div>
-<p style="margin-top:12px;color:var(--ink-faint);font-size:.85rem;">{{ municipios|length }} município(s) encontrado(s).</p>
+{% macro purl(n) %}{{ url_for('admin_sindicatos', pagina=n, **args_base) }}{% endmacro %}
+<div class="pag">
+  <div class="info">Mostrando {{ item_ini }} a {{ item_fim }} de {{ total }} municípios</div>
+  {% if paginas > 1 %}
+  <div class="nums">
+    <a class="{{ 'desab' if pagina == 1 }}" href="{{ purl(pagina - 1) }}" aria-label="Página anterior">‹</a>
+    {% set ult = [] %}
+    {% for n in range(1, paginas + 1) %}
+      {% if n == 1 or n == paginas or (n >= pagina - 2 and n <= pagina + 2) %}
+        {% if ult and n - ult[-1] > 1 %}<span class="reticencias">…</span>{% endif %}
+        {% if n == pagina %}<span class="atual">{{ n }}</span>{% else %}<a href="{{ purl(n) }}">{{ n }}</a>{% endif %}
+        {% set _ = ult.append(n) %}
+      {% endif %}
+    {% endfor %}
+    <a class="{{ 'desab' if pagina == paginas }}" href="{{ purl(pagina + 1) }}" aria-label="Próxima página">›</a>
+  </div>
+  {% endif %}
+  <form method="get" style="display:flex;align-items:center;gap:8px;margin:0;font-size:.88rem;color:var(--ink-faint);">
+    <input type="hidden" name="busca" value="{{ filtro_busca }}"><input type="hidden" name="regiao_faec" value="{{ filtro_regiao_faec }}"><input type="hidden" name="sindicato_id" value="{{ filtro_sindicato_id or '' }}">
+    Por página
+    <select name="por_pagina" onchange="this.form.submit()">
+      {% for n in (25, 50, 100) %}<option value="{{ n }}" {% if n == por_pagina %}selected{% endif %}>{{ n }}</option>{% endfor %}
+    </select>
+  </form>
+</div>
+<script>
+  // menu "⋮" das linhas: fecha ao clicar fora, ao escolher uma opção, ao apertar Esc ou ao abrir outro
+  (function(){
+    function fechaTodos(exceto){ document.querySelectorAll('.acoes-cel details[open]').forEach(function(d){ if(d!==exceto) d.removeAttribute('open'); }); }
+    document.addEventListener('click', function(e){
+      var d = e.target.closest ? e.target.closest('.acoes-cel details') : null;
+      fechaTodos(d);
+      if (d && e.target.closest('.menu a')) d.removeAttribute('open');
+    });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') fechaTodos(null); });
+    window.addEventListener('scroll', function(){ fechaTodos(null); }, {passive:true});
+  })();
+  (function(){
+    var f=document.querySelector('.lista-fixo'); if(!f) return;
+    function ajusta(){ var y=window.pageYOffset||document.documentElement.scrollTop; if(y>140) f.classList.add('compacto'); else if(y<10) f.classList.remove('compacto'); }
+    window.addEventListener('scroll',ajusta,{passive:true}); ajusta();
+  })();
+  document.querySelectorAll('.al-btn').forEach(function(b){
+    b.onclick = function(){
+      var painel = document.getElementById(b.dataset.alvo), aberto = !painel.classList.contains('aberto');
+      document.querySelectorAll('.al-painel').forEach(function(p){ p.classList.remove('aberto'); });
+      document.querySelectorAll('.al-btn').forEach(function(x){ x.classList.remove('aberto'); });
+      if (aberto) { painel.classList.add('aberto'); b.classList.add('aberto'); }
+    };
+  });
+</script>
 {% endblock %}

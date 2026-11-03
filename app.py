@@ -30,6 +30,63 @@ import distancia_municipios
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev")
+
+
+# ---------------------------------------------------------------
+# MODO "SÓ SINDICATOS": com SOMENTE_SINDICATOS=1 no ambiente, este sistema mostra apenas a
+# entrada e o módulo Sindicatos x Municípios. Agrinho, Valores, Carreta e o resto do /admin
+# ficam inexistentes (404). Serve para publicar um site separado só para a gestão de sindicatos.
+# ---------------------------------------------------------------
+SOMENTE_SINDICATOS = os.environ.get("SOMENTE_SINDICATOS", "").strip().lower() in ("1", "true", "sim", "yes")
+
+
+@app.before_request
+def _modo_somente_sindicatos():
+    if not SOMENTE_SINDICATOS:
+        return None
+    from flask import abort
+    path = request.path
+    if path == "/":
+        return redirect(url_for("sindicatos_entrada"))
+    if path == "/admin/login":
+        return redirect(url_for("sindicatos_entrada"))
+    permitido = (
+        path == "/sindicatos" or path == "/admin/logout"
+        or path.startswith("/admin/sindicatos")
+        or path.startswith("/static/") or request.endpoint == "static"
+    )
+    if not permitido:
+        abort(404)
+    return None
+# ---------------------------------------------------------------
+# MODO "SÓ CARRETA DO AGRO": com SOMENTE_CARRETA=1 no ambiente, este sistema mostra apenas o
+# formulário público de solicitação da Carreta e a gestão da Carreta (login próprio, com senha
+# de gestão ou só-leitura). Adesões, Sindicatos e o resto do /admin ficam inexistentes (404).
+# Serve para publicar um site separado só para a Carreta do Agro.
+# ---------------------------------------------------------------
+SOMENTE_CARRETA = os.environ.get("SOMENTE_CARRETA", "").strip().lower() in ("1", "true", "sim", "yes")
+
+
+@app.before_request
+def _modo_somente_carreta():
+    if not SOMENTE_CARRETA:
+        return None
+    from flask import abort
+    path = request.path
+    if path == "/admin/login":
+        return redirect(url_for("carreta_entrada"))
+    permitido = (
+        path == "/" or path == "/carreta" or path == "/gestao-carreta" or path == "/admin/logout"
+        or path.startswith("/admin/carreta")
+        or path.startswith("/static/") or request.endpoint == "static"
+    )
+    if not permitido:
+        abort(404)
+    if path == "/":
+        return redirect(url_for("carreta_form"))
+    return None
+
+
 app.jinja_env.filters["data_brasil"] = carr._data_hora_brasil_str
 app.jinja_env.filters["so_data_brasil"] = carr._data_brasil_str
 
@@ -795,14 +852,62 @@ def admin_login():
     return render_template("admin_login.html")
 
 
+@app.route("/sindicatos", methods=["GET", "POST"])
+def sindicatos_entrada():
+    """Tela inicial própria da gestão de Sindicatos x Municípios: pede só a senha de
+    gestão de sindicatos e leva direto ao módulo (sem passar pelo /admin)."""
+    if gestao_sindicato_logado():
+        return redirect(url_for("admin_sindicatos_lista"))
+    if request.method == "POST":
+        senha = request.form.get("senha")
+        if senha and senha == os.environ.get("GESTAO_SINDICATO_PASSWORD"):
+            session.pop("admin_ok", None)
+            session.pop("carreta_admin_ok", None)
+            session.pop("carreta_leitura_ok", None)
+            session["gestao_sindicato_ok"] = True
+            return redirect(url_for("admin_sindicatos_lista"))
+        flash("Senha incorreta.")
+    return render_template("sindicatos_entrada.html")
+
+
+@app.route("/gestao-carreta", methods=["GET", "POST"])
+def carreta_entrada():
+    """Tela inicial própria da gestão da Carreta do Agro: pede só a senha da Carreta
+    (gestão ou só-leitura) e leva direto ao módulo (sem passar pelo /admin)."""
+    if carreta_admin_logado() or carreta_leitura_logado():
+        return redirect(url_for("admin_carreta"))
+    if request.method == "POST":
+        senha = request.form.get("senha")
+        if senha and senha == os.environ.get("CARRETA_PASSWORD"):
+            session.pop("admin_ok", None)
+            session.pop("gestao_sindicato_ok", None)
+            session.pop("carreta_leitura_ok", None)
+            session["carreta_admin_ok"] = True
+            return redirect(url_for("admin_carreta"))
+        if senha and senha == os.environ.get("CARRETA_LEITURA_PASSWORD"):
+            session.pop("admin_ok", None)
+            session.pop("gestao_sindicato_ok", None)
+            session.pop("carreta_admin_ok", None)
+            session["carreta_leitura_ok"] = True
+            return redirect(url_for("admin_carreta"))
+        flash("Senha incorreta.")
+    return render_template("carreta_entrada.html")
+
+
 @app.route("/admin/logout")
 def admin_logout():
+    era_gestao_sind = session.get("gestao_sindicato_ok", False) and not session.get("admin_ok", False)
+    era_carreta = (session.get("carreta_admin_ok", False) or session.get("carreta_leitura_ok", False)) and not session.get("admin_ok", False)
     session.pop("admin_ok", None)
     session.pop("gestao_sindicato_ok", None)
     session.pop("carreta_admin_ok", None)
     session.pop("carreta_leitura_ok", None)
     session.pop("admin_programa", None)
     session.pop("admin_ano", None)
+    if era_gestao_sind:
+        return redirect(url_for("sindicatos_entrada"))
+    if era_carreta and SOMENTE_CARRETA:
+        return redirect(url_for("carreta_entrada"))
     return redirect(url_for("index"))
 
 
@@ -1291,14 +1396,37 @@ def admin_sindicatos():
 
     municipios = sind.listar_municipios(db, busca, regiao_faec, sindicato_id)
 
+    # Paginação (a lista tem ~184 municípios): 25 por página por padrão
+    por_pagina = request.args.get("por_pagina", 25, type=int)
+    if por_pagina not in (25, 50, 100):
+        por_pagina = 25
+    total = len(municipios)
+    paginas = max(1, -(-total // por_pagina))
+    pagina = min(max(request.args.get("pagina", 1, type=int) or 1, 1), paginas)
+    ini = (pagina - 1) * por_pagina
+    municipios = municipios[ini:ini + por_pagina]
+    args_base = {"busca": busca, "regiao_faec": regiao_faec, "sindicato_id": sindicato_id or "", "por_pagina": por_pagina}
+
     avisos_gestao = sind.sindicatos_com_gestao_vencendo(db) if gestao_sindicato_logado() else []
     avisos_vencidos = [(s, dias) for s, dias in avisos_gestao if dias < 0]
     avisos_a_vencer = [(s, dias) for s, dias in avisos_gestao if dias >= 0]
+    ids_vencidos = {s.id for s, _ in avisos_vencidos}
+    ids_breve = {s.id for s, _ in avisos_a_vencer}
+    todos_mun = sind.listar_municipios(db, "", "", None)
+    total_geral = len(todos_mun)
+    total_ativos = sum(1 for m in todos_mun if m.sindicato and m.sindicato.ativo)
+    _sinds = {m.sindicato.id: m.sindicato for m in todos_mun if m.sindicato}
+    total_sind = len(_sinds)
+    sind_ativos = sum(1 for x in _sinds.values() if x.ativo)
+    pct_ativos = round(100 * sind_ativos / total_sind) if total_sind else 0
 
     return render_template(
         "admin_sindicatos.html",
+        ids_vencidos=ids_vencidos, ids_breve=ids_breve, total_geral=total_geral, total_ativos=total_ativos, total_sind=total_sind, sind_ativos=sind_ativos, pct_ativos=pct_ativos,
         pagina_ativa="sindicatos",
         municipios=municipios,
+        total=total, pagina=pagina, paginas=paginas, por_pagina=por_pagina,
+        item_ini=(ini + 1 if total else 0), item_fim=ini + len(municipios), args_base=args_base,
         sindicatos=sind.listar_sindicatos(db, regiao_faec),
         regioes_faec=sind.listar_regioes_faec(db),
         filtro_busca=busca,
@@ -1690,6 +1818,49 @@ def admin_sindicato_foto(sindicato_id):
     return resp
 
 
+@app.route("/admin/sindicatos/lista")
+def admin_sindicatos_lista():
+    """Lista dos SINDICATOS RURAIS (uma linha por sindicato), com presidente,
+    contatos, municípios vinculados e situação do mandato."""
+    if not pode_ver_sindicatos():
+        return redirect(url_for("admin_login"))
+
+    db = SessionLocal()
+    sindicatos = sind.listar_sindicatos(db)
+    todos_mun = sind.listar_municipios(db, "", "", None)
+    por_sind = {}
+    for m in todos_mun:
+        if m.sindicato:
+            por_sind.setdefault(m.sindicato.id, []).append(m)
+
+    avisos = sind.sindicatos_com_gestao_vencendo(db) if gestao_sindicato_logado() else []
+    avisos_vencidos = [(x, d) for x, d in avisos if d < 0]
+    avisos_a_vencer = [(x, d) for x, d in avisos if d >= 0]
+    ids_vencidos = {x.id for x, _ in avisos_vencidos}
+    ids_breve = {x.id for x, _ in avisos_a_vencer}
+
+    linhas = []
+    for sd in sindicatos:
+        muns = por_sind.get(sd.id, [])
+        ref = sind.melhor_referencia(muns)
+        regiao = sd.regiao_faec or (muns[0].regiao_faec if muns else "")
+        linhas.append({"s": sd, "muns": muns, "ref": ref, "regiao": regiao})
+
+    regioes = sorted({l["regiao"] for l in linhas if l["regiao"]})
+    return render_template(
+        "admin_sindicatos_lista.html",
+        pagina_ativa="sindicatos_lista",
+        linhas=linhas, regioes=regioes,
+        ids_vencidos=ids_vencidos, ids_breve=ids_breve,
+        total_sind=len(linhas),
+        sind_ativos=sum(1 for l in linhas if l["s"].ativo),
+        total_vencidos=len(ids_vencidos), total_breve=len(ids_breve),
+        avisos_vencidos=avisos_vencidos, avisos_a_vencer=avisos_a_vencer,
+        pct_ativos=(round(100 * sum(1 for l in linhas if l["s"].ativo) / len(linhas)) if linhas else 0),
+        apenas_sindicatos=True, pode_editar_sindicatos=gestao_sindicato_logado(),
+    )
+
+
 @app.route("/admin/sindicatos/grupo/<int:sindicato_id>/editar", methods=["GET", "POST"])
 def admin_sindicato_grupo_editar(sindicato_id):
     """Edita os dados de contato (presidente, vice-presidente, telefones,
@@ -1749,8 +1920,15 @@ def admin_sindicato_grupo_editar(sindicato_id):
         m for m in sind.listar_municipios_para_selecao(db)
         if not m.sindicato or m.sindicato.id != sindicato_id
     ]
+    # navegação entre sindicatos (anterior / próximo / pular para outro)
+    lista_sindicatos = sind.listar_sindicatos(db)
+    _ids = [x.id for x in lista_sindicatos]
+    _pos = _ids.index(sindicato_id) if sindicato_id in _ids else -1
+    sind_ant = lista_sindicatos[_pos - 1] if _pos > 0 else None
+    sind_prox = lista_sindicatos[_pos + 1] if 0 <= _pos < len(lista_sindicatos) - 1 else None
     return render_template(
         "admin_sindicato_grupo_editar.html",
+        lista_sindicatos=lista_sindicatos, sind_ant=sind_ant, sind_prox=sind_prox, pos_sind=_pos + 1,
         pagina_ativa="sindicatos",
         sindicato=sindicato,
         municipios=municipios,
@@ -2549,4 +2727,32 @@ def admin_carreta_arquivo(arquivo_id):
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=os.environ.get("FLASK_DEBUG") == "1")
+    # Porta configurável: se outra aplicação já estiver usando a 5000 (muito
+    # comum no Windows/macOS), defina PORT no .env (ex.: PORT=5001) ou rode
+    # `python app.py 5001`. Se a porta escolhida estiver ocupada, tenta as
+    # seguintes automaticamente.
+    import socket
+    import sys
+
+    porta = int(sys.argv[1]) if len(sys.argv) > 1 else int(os.environ.get("PORT", "5000"))
+    host = os.environ.get("HOST", "127.0.0.1")
+
+    def _porta_livre(p: int) -> bool:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("127.0.0.1", p)) != 0
+
+    escolhida = next((p for p in range(porta, porta + 20) if _porta_livre(p)), None)
+    if escolhida is None:
+        raise SystemExit(f"Nenhuma porta livre entre {porta} e {porta + 19}.")
+    if escolhida != porta:
+        print(f"* Porta {porta} ocupada — usando a {escolhida}.")
+    print(f"* Acesse: http://localhost:{escolhida}/")
+
+    # use_reloader=False evita que o modo debug reinicie o processo e a
+    # escolha de porta seja refeita (o que pode trocar de porta no meio).
+    app.run(
+        host=host,
+        port=escolhida,
+        debug=os.environ.get("FLASK_DEBUG") == "1",
+        use_reloader=False,
+    )
