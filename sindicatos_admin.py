@@ -249,9 +249,9 @@ def dados_mapa_sindicatos(db, regiao_filtro=None):
     - `regiao_por_cod_ibge`: {cod_ibge: nome_da_regiao}, usado pra colorir
       o contorno de cada um dos 184 municípios no mapa de regiões."""
     paleta = [
-        "#16A34A", "#F59E0B", "#EF4444", "#2563EB", "#9333EA",
-        "#06B6D4", "#F97316", "#84CC16", "#EC4899", "#14B8A6",
-        "#6366F1", "#EAB308", "#10B981", "#E11D48", "#8B5CF6",
+        "#E6194B", "#2E9E4F", "#F2C200", "#2F6FDE", "#F58231",
+        "#8E24AA", "#00B8D9", "#E91EAD", "#8D5524", "#1B2A7A",
+        "#00897B", "#7B1F2B", "#9AA800", "#FF7A9A", "#546E7A",
     ]
     nomes_regioes = listar_regioes_faec(db)
     cor_por_regiao = {nome: paleta[i % len(paleta)] for i, nome in enumerate(nomes_regioes)}

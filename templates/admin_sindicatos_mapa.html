@@ -56,7 +56,7 @@
 {{ cab_hero('Mapa dos Sindicatos', 'Visualize a distribuição dos sindicatos rurais e acesse informações de cada região — ' ~ (dados_mapa.sindicatos|length) ~ ' sindicato(s) georreferenciado(s)' ~ ((' na região ' ~ regiao_filtro) if regiao_filtro else '') ~ '.') }}
 <form method="get" class="mp-filtro">
   <span class="rot"><svg viewBox="0 0 24 24" width="17" height="17" fill="#2F7A43" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5z"/></svg>Filtrar por região</span>
-  <select name="regiao">
+  <select name="regiao" onchange="this.form.submit()">
     <option value="">Todas as regiões</option>
     {% for r in dados_mapa.regioes %}
     <option value="{{ r.nome }}" {% if regiao_filtro == r.nome %}selected{% endif %}>{{ r.nome }}</option>
@@ -102,6 +102,7 @@
   const corPorRegiao = {{ dados_mapa.cor_por_regiao|tojson }};
   const CENTRO_CEARA = [-5.2, -39.3];
   const COR_SEM_REGIAO = '#C9CFC4';
+  const REGIAO_SEL = {{ (regiao_filtro or '')|tojson }};
   // "999999" é só um placeholder pra poder trocar pelo id de cada sindicato lá embaixo
   const URL_EDITAR_TEMPLATE = "{{ url_for('admin_sindicato_grupo_editar', sindicato_id=999999) }}";
   const URL_FICHA_TEMPLATE = "{{ url_for('admin_sindicato_ficha_individual', sindicato_id=999999) }}";
@@ -157,9 +158,12 @@
       const camada = L.geoJSON(geojson, {
         style: feature => {
           const regiao = regiaoPorCodIbge[feature.properties.id];
+          if (REGIAO_SEL && regiao !== REGIAO_SEL) {
+            return { fillColor: '#D9DDD6', fillOpacity: 0.55, color: '#fff', weight: 0.8 };
+          }
           return {
             fillColor: regiao ? corPorRegiao[regiao] : COR_SEM_REGIAO,
-            fillOpacity: 0.88, color: '#fff', weight: 1.4,
+            fillOpacity: 0.9, color: '#fff', weight: REGIAO_SEL ? 1.6 : 1.4,
           };
         },
         onEachFeature: (feature, layer) => {
@@ -185,7 +189,15 @@
           .addTo(mapaRegioes);
       });
 
-      mapaRegioes.fitBounds(camada.getBounds(), { padding: [10, 10] });
+      if (REGIAO_SEL) {
+        const sel = L.featureGroup();
+        camada.eachLayer(l => {
+          if (regiaoPorCodIbge[l.feature.properties.id] === REGIAO_SEL) { l.bringToFront(); sel.addLayer(l); }
+        });
+        mapaRegioes.fitBounds(sel.getLayers().length ? sel.getBounds() : camada.getBounds(), { padding: [20, 20] });
+      } else {
+        mapaRegioes.fitBounds(camada.getBounds(), { padding: [10, 10] });
+      }
     });
 </script>
 {% endblock %}
