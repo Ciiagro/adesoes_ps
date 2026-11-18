@@ -31,6 +31,10 @@
   .gp-q .bar{height:10px;background:#E4EBE3;border-radius:6px;overflow:hidden}
   .gp-q .bar i{display:block;height:100%;background:#176B31}
   .gp-q .bar i.baixo{background:#E08A00}.gp-q .bar i.crit{background:#C62828}
+  .ch{display:inline-block;min-width:30px;padding:3px 10px;border-radius:999px;font-weight:800;font-size:.85rem;color:#fff;background:#6B7C6E}
+  .ch.vencido{background:#C62828}.ch.m3{background:#E08A00}.ch.m6{background:#C9A100}.ch.m12{background:#2E7D4A}.ch.sem_data{background:#8A948C}
+  .gp-box details summary{list-style:none}.gp-box details summary::-webkit-details-marker{display:none}
+  .gp-box tr:hover td{background:#F6FAF4}
   .gp-vazio{padding:16px 18px;color:#4F6354}
 </style>
 {{ cab_hero('Painel da Gestão', 'Mandatos, vencimentos e qualidade do cadastro dos sindicatos rurais em um só lugar.', 'cab') }}
@@ -43,25 +47,31 @@
 </div>
 
 <div class="gp-box">
-  <div class="gp-topo">Calendário de vencimentos por região<small>clique em "ver" para listar os sindicatos</small></div>
+  <div class="gp-topo">Calendário de vencimentos por região<small>clique no número para listar os sindicatos</small></div>
   <table>
-    <tr><th>Região</th><th style="text-align:center">Vencidos</th><th style="text-align:center">Até 3 meses</th><th style="text-align:center">3 a 6 meses</th><th style="text-align:center">6 a 12 meses</th><th style="text-align:center">Sem data</th></tr>
+    <tr><th>Região</th><th style="text-align:center">Vencidos</th><th style="text-align:center">Até 3 meses</th><th style="text-align:center">3 a 6 meses</th><th style="text-align:center">6 a 12 meses</th><th style="text-align:center">Sem data</th><th style="text-align:center">Total</th></tr>
     {% for c in calendario %}
     <tr>
-      <td><b>{{ c.regiao }}</b></td>
+      <td><b>{{ c.exib }}</b></td>
       {% for f in ['vencido','m3','m6','m12','sem_data'] %}
-      <td class="n" style="{% if f=='vencido' and c[f] %}color:#C62828{% elif f=='m3' and c[f] %}color:#9A6817{% endif %}">
+      <td class="n">
         {% if c[f] %}
-        <details><summary>{{ c[f]|length }} · ver</summary>
+        <details><summary><span class="ch {{ f }}">{{ c[f]|length }}</span></summary>
           <div class="gp-lst" style="text-align:left;font-weight:500">
             {% for it in c[f] %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }}{% if it.s.gestao_fim %} · {{ it.s.gestao_fim.strftime('%d/%m/%Y') }}{% endif %}</a>{% endfor %}
           </div>
         </details>
-        {% else %}<span style="color:#9AA39A">0</span>{% endif %}
+        {% else %}<span style="color:#C3CBC2">–</span>{% endif %}
       </td>
       {% endfor %}
+      <td class="n">{{ c.vencido|length + c.m3|length + c.m6|length + c.m12|length + c.sem_data|length }}</td>
     </tr>
     {% endfor %}
+    <tr style="background:#F3F9F3">
+      <td><b>Total</b></td>
+      <td class="n">{{ totais.vencido }}</td><td class="n">{{ totais.m3 }}</td><td class="n">{{ totais.m6 }}</td><td class="n">{{ totais.m12 }}</td><td class="n">{{ totais.sem_data }}</td>
+      <td class="n">{{ total }}</td>
+    </tr>
   </table>
 </div>
 
@@ -74,7 +84,7 @@
     <tr>
       <td><span class="gp-tag r">{{ -it.dias }} DIA{{ 'S' if -it.dias != 1 else '' }}</span></td>
       <td><a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}" style="font-weight:700;color:#14301E;text-decoration:none">{{ it.s.nome }}</a></td>
-      <td>{{ it.regiao }}</td>
+      <td>{{ it.regiao_exib }}</td>
       <td>{{ it.presidente or '—' }}</td>
       <td>{% if it.telefone %}<a href="tel:{{ it.telefone }}">{{ it.telefone }}</a>{% endif %}{% if it.telefone and it.email %}<br>{% endif %}{% if it.email %}<a href="mailto:{{ it.email }}">{{ it.email }}</a>{% endif %}{% if not it.telefone and not it.email %}<span class="gp-tag g">sem contato</span>{% endif %}</td>
       <td>{{ it.s.gestao_fim.strftime('%d/%m/%Y') }}</td>
@@ -96,7 +106,7 @@
       </div>
       {% if q.faltam %}
       <details style="margin:4px 0 0 212px"><summary>{{ q.faltam|length }} sem {{ q.campo|lower }} · ver quais</summary>
-        <div class="gp-lst">{% for it in q.faltam %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }} <span style="color:#4F6354">({{ it.regiao }})</span></a>{% endfor %}</div>
+        <div class="gp-lst">{% for it in q.faltam %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }} <span style="color:#4F6354">({{ it.regiao_exib }})</span></a>{% endfor %}</div>
       </details>
       {% endif %}
     </div>

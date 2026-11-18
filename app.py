@@ -1888,6 +1888,7 @@ def admin_sindicatos_gestao():
     if not pode_ver_sindicatos():
         return redirect(url_for("admin_login"))
 
+    import re
     from datetime import date as _date
     db = SessionLocal()
     hoje = _date.today()
@@ -1905,6 +1906,7 @@ def admin_sindicatos_gestao():
         dias = (sd.gestao_fim - hoje).days if sd.gestao_fim else None
         itens.append({
             "s": sd, "regiao": regiao, "dias": dias,
+            "regiao_exib": re.sub(r"^Região\s+(d[aeo]s?\s+)?", "", regiao) or regiao,
             "presidente": (ref.presidente_nome if ref else None),
             "telefone": (ref.telefone1 if ref else None),
             "email": (ref.email1 if ref else None),
@@ -1927,7 +1929,7 @@ def admin_sindicatos_gestao():
     regioes = sorted({it["regiao"] for it in itens})
     calendario = []
     for r in regioes:
-        linha = {"regiao": r}
+        linha = {"regiao": r, "exib": re.sub(r"^Região\s+(d[aeo]s?\s+)?", "", r) or r}
         for f in faixas:
             linha[f] = sorted([it for it in itens if it["regiao"] == r and it["faixa"] == f],
                               key=lambda x: x["dias"])
