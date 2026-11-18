@@ -2,32 +2,84 @@
 {% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
-<style>.cr-btn-pdf{margin-left:auto;display:inline-flex;align-items:center;background:#176B31;color:#fff !important;border-radius:999px;padding:.6em 1.5em;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}.cr-btn-pdf:hover{background:#0F5A28}</style>
-{% call cr_head('Calendário', 'Dias já ocupados pelas solicitações pendentes ou aprovadas da Carreta do Agro e da Carreta da Saúde.', 'calendario') %}{% endcall %}
-<p class="sub" style="margin:0 0 16px;max-width:none;">Dias com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em bege (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>. Eventos com ⏳ ainda aguardam aprovação; eventos em cinza claro já aconteceram.</p>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  .cl{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);color:#14301E;width:100%}
+  .cl .cr-head{margin-bottom:1em !important}
+  .cl-info{display:flex;align-items:center;gap:.8em;background:#DFF1E0;border-radius:14px;padding:.75em 1.1em;margin:0 0 1em;font-weight:500;color:#14301E}
+  .cl-info svg{flex:none;width:1.8em;height:1.8em}
+  .cl-barra{display:flex;align-items:center;gap:.7em;flex-wrap:wrap;margin-bottom:1em}
+  .cl-pill{display:inline-flex;align-items:center;gap:.5em;height:2.7em;padding:0 1.3em;border-radius:999px;border:1.5px solid #CFE0D2;background:#fff;color:#0F5A28 !important;font-weight:700;text-decoration:none;box-shadow:0 2px 8px rgba(15,107,46,.08);white-space:nowrap}
+  .cl-pill:hover{background:#F1F8F2}
+  .cl-pill.on{background:#0F5A28;border-color:#0F5A28;color:#fff !important;box-shadow:0 4px 12px rgba(15,90,40,.3)}
+  .cl-pill svg{width:1.2em;height:1.2em}
+  .cl-esp{flex:1}
+  .cl-leg{display:flex;align-items:center;gap:1.1em;flex-wrap:wrap;font-weight:600}
+  .cl-leg a{display:inline-flex;align-items:center;gap:.45em;color:#14301E !important;text-decoration:none;padding:.2em .3em;border-radius:8px}
+  .cl-leg a:hover{background:#EAF3EB}
+  .cl-leg a.sel{background:#DFF1E0;box-shadow:inset 0 0 0 1.5px #2E9E4F}
+  .cl-leg i{width:.85em;height:.85em;border-radius:50%;display:inline-block}
+  .cl-sep{width:2px;height:2.2em;background:#0F5A28;opacity:.8}
+  .cl-pdf{display:inline-flex;align-items:center;gap:.5em;height:2.7em;padding:0 1.3em;border-radius:12px;background:#0F5A28;color:#fff !important;font-weight:700;text-decoration:none;box-shadow:0 4px 12px rgba(15,90,40,.3)}
+  .cl-pdf:hover{background:#0B4A21}
+  .cl-pdf svg{width:1.2em;height:1.2em}
 
-<div class="secao-card" style="margin-bottom:16px;">
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <a class="btn {{ '' if not ver else 'secundario' }}" href="{{ url_for('admin_carreta_calendario', ano=ano, mes=mes) }}">Os dois programas</a>
-    {% for chave, rotulo in tipos_recurso.items() %}
-    <a class="btn aba-programa {{ 'agro' if chave == 'carreta_agro' else 'saude' }} {{ 'secundario' if ver != chave else '' }}" href="{{ url_for('admin_carreta_calendario', ver=chave, ano=ano, mes=mes) }}">{{ rotulo }}</a>
-    {% endfor %}
-    <span style="color:var(--ink-faint);font-size:.85rem;">{% if ver %}Os eventos do outro programa ficam esmaecidos — a data continua ocupada.{% endif %}</span>
-    <a class="cr-btn-pdf" target="_blank" href="{{ url_for('admin_carreta_calendario_pdf', tipo=(ver or tipo), ano=ano, mes=mes) }}">Gerar PDF</a>
+  .cl-card{position:relative;background:#fff;border-radius:18px;box-shadow:0 6px 24px rgba(15,107,46,.12);padding:.8em .8em 1em;overflow:hidden}
+  .cl-mes{display:flex;align-items:center;justify-content:center;gap:.6em;margin:.1em 0 .7em;font-size:1.7em;font-weight:800;color:#0F5A28}
+  .cl-mes svg{width:1.1em;height:1.1em}
+  table.cl-t{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+  table.cl-t th{background:#0F6B30;color:#fff;font-weight:700;padding:.7em 0;text-align:center;border-right:1px solid rgba(255,255,255,.18)}
+  table.cl-t th:first-child{border-top-left-radius:8px}table.cl-t th:last-child{border-top-right-radius:8px;border-right:0}
+  table.cl-t td{vertical-align:top;height:8.2em;padding:.45em .4em .5em;border-right:1px solid #E6EEE7;border-bottom:1px solid #E6EEE7;background:#fff;text-align:left}
+  table.cl-t td:last-child{border-right:0}
+  table.cl-t td.vz{background:#FAFCFA}
+  table.cl-t td.blq{background:#F1EBDB}
+  .cl-dia{font-weight:800;margin:0 0 .3em .15em;display:inline-flex;align-items:center;justify-content:center;min-width:1.7em;height:1.7em;border-radius:999px}
+  .cl-dia.hoje{background:#0F6B30;color:#fff}
+  .cl-ev{display:flex;align-items:center;gap:.4em;margin-top:.3em;padding:.35em .5em .35em .6em;border-radius:10px;text-decoration:none;border-left:4px solid var(--c);background:var(--bg);box-shadow:0 1px 4px rgba(15,107,46,.10)}
+  .cl-ev:hover{filter:brightness(.97)}
+  .cl-ev .tx{min-width:0;flex:1;line-height:1.2}
+  .cl-ev .t{display:block;font-weight:800;font-size:.88em;color:#14301E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cl-ev .l{display:flex;align-items:center;gap:.3em;font-size:.76em;font-weight:600;color:#3A4F40;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cl-ev .l svg{flex:none;width:.95em;height:.95em}
+  .cl-ev .go{flex:none;width:1.6em;height:1.6em;border-radius:50%;background:var(--c);display:flex;align-items:center;justify-content:center}
+  .cl-ev .go svg{width:.9em;height:.9em}
+  .cl-ev.agro{--c:#1E8A3D;--bg:#E3F4E6}
+  .cl-ev.saude{--c:#2F6FB5;--bg:#E2EDFA}
+  .cl-ev.pend{--c:#E8890C;--bg:#FDEBD0}
+  .cl-ev.real{--c:#9AA39B;--bg:#EEF0EE;opacity:.8}
+  .cl-ev.apagado{opacity:.32;filter:grayscale(.6)}
+  .cl-blq{display:block;margin-top:.3em;padding:.3em .5em;border-radius:8px;background:#E6DAB4;color:#5C4A1E;font-size:.76em;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cl-deco{position:absolute;right:.6em;bottom:.4em;width:15em;height:7em;pointer-events:none;opacity:.55}
+  @media (max-width:1100px){.cl-leg{display:none}}
+</style>
+
+<div class="cl">
+{% call cr_head('Calendário', 'Dias já ocupados pelas solicitações pendentes ou aprovadas da Carreta do Agro e da Carreta da Saúde.') %}{% endcall %}
+
+<div class="cl-info"><svg viewBox="0 0 24 24" fill="#0F6B30" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14zM7 12v2h2v-2H7zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z"/></svg>
+  <span>As duas carretas usam o mesmo motorista e veículo: um dia ocupado por uma bloqueia a outra. Clique em um evento para ver os detalhes. Datas bloqueadas ficam em bege (veja em <a href="{{ url_for('admin_carreta_bloqueios') }}" style="color:#0F5A28;font-weight:700">Bloqueio de Datas</a>).</span></div>
+
+<div class="cl-barra">
+  <a class="cl-pill" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_anterior, mes=mes_anterior) }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Mês anterior</a>
+  <a class="cl-pill" href="{{ url_for('admin_carreta_calendario', ver=ver or None) }}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>Calendário hoje</a>
+  <span class="cl-pill on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>{{ MESES_NOMES[mes] }} de {{ ano }}</span>
+  <a class="cl-pill" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_proximo, mes=mes_proximo) }}">Próximo mês<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a>
+  <span class="cl-esp"></span>
+  <div class="cl-leg" title="Clique para destacar um programa">
+    <a class="{{ 'sel' if ver == 'carreta_agro' else '' }}" href="{{ url_for('admin_carreta_calendario', ver=None if ver == 'carreta_agro' else 'carreta_agro', ano=ano, mes=mes) }}"><i style="background:#1E8A3D"></i>Carreta do Agro</a>
+    <a class="{{ 'sel' if ver == 'carreta_saude' else '' }}" href="{{ url_for('admin_carreta_calendario', ver=None if ver == 'carreta_saude' else 'carreta_saude', ano=ano, mes=mes) }}"><i style="background:#2F6FB5"></i>Carreta da Saúde</a>
+    <span><i style="background:#E8890C"></i>Pendente</span>
+    <span><i style="background:#9AA39B"></i>Realizada</span>
   </div>
+  <span class="cl-sep"></span>
+  <a class="cl-pdf" target="_blank" href="{{ url_for('admin_carreta_calendario_pdf', tipo=(ver or tipo), ano=ano, mes=mes) }}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h9l5 5v15H6V2zm8 1.500V8h4.500L14 3.500zM9 13h8v1.600H9V13zm0 3.500h8v1.600H9v-1.600z"/></svg>Baixar PDF</a>
 </div>
 
-<div class="secao-card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
-    <h2 style="margin:0;">{{ MESES_NOMES[mes] }} de {{ ano }}</h2>
-    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
-  </div>
-
-  <table style="text-align:center;">
-    <thead>
-      <tr><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th></tr>
-    </thead>
+<div class="cl-card">
+  <div class="cl-mes"><svg viewBox="0 0 24 24" fill="#0F6B30" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14zM7 12v2h2v-2H7zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z"/></svg>{{ MESES_NOMES[mes] }} de {{ ano }}</div>
+  <table class="cl-t">
+    <thead><tr><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th></tr></thead>
     <tbody>
       {% for semana in semanas %}
       <tr>
@@ -35,42 +87,38 @@
         {% if dia %}
         {% set ocupado = calendario.get(dia) %}
         {% set bloqueio_dia = bloqueados.get(dia) %}
-        <td style="vertical-align:top;height:110px;max-width:150px;{% if bloqueio_dia %}background:#E3DCC8;{% elif ocupado %}background:#F9E7E0;{% endif %}">
-          <div style="font-weight:700;">{{ dia.day }}</div>
+        <td class="{{ 'blq' if bloqueio_dia else '' }}">
+          <span class="cl-dia {{ 'hoje' if dia == hoje else '' }}">{{ dia.day }}</span>
           {% for b in bloqueio_dia or [] %}
-          <div title="{{ b.motivo }} ({{ tipos_recurso.get(b.tipo_recurso, 'Ambas as carretas') }})" style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;background:#D9CFAE;color:#5C4A1E;font-size:.65rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            🚫 {{ b.motivo }}{% if b.tipo_recurso %} ({{ 'Agro' if b.tipo_recurso == 'carreta_agro' else 'Saúde' }}){% endif %}
-          </div>
+          <span class="cl-blq" title="{{ b.motivo }} ({{ tipos_recurso.get(b.tipo_recurso, 'Ambas as carretas') }})">🚫 {{ b.motivo }}{% if b.tipo_recurso %} ({{ 'Agro' if b.tipo_recurso == 'carreta_agro' else 'Saúde' }}){% endif %}</span>
           {% endfor %}
           {% for s in ocupado or [] %}
-          {% set eh_agro = s.tipo_recurso == 'carreta_agro' %}
-          {% set eh_realizada = s.status == 'realizada' %}
-          {% set eh_pendente = s.status == 'pendente' %}
-          <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}"
-             title="{{ s.evento }} — {{ s.municipio_nome }} — Solicitante: {{ s.responsavel_nome or 'não informado' }} — {{ 'Já aconteceu' if eh_realizada else ('Aguardando aprovação' if eh_pendente else 'Aprovada') }}"
-             style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;text-decoration:none;{% if ver and s.tipo_recurso != ver %}opacity:.35;filter:grayscale(.6);{% endif %}
-                    {% if eh_realizada %}
-                    background:#EDEAE0;border-left:3px solid #B8AF98;opacity:.7;
-                    {% else %}
-                    background:{{ 'var(--agro-bg)' if eh_agro else 'var(--saude-bg)' }};
-                    border-left:3px solid {{ 'var(--agro)' if eh_agro else 'var(--saude)' }};
-                    {% endif %}">
-            <span style="display:block;font-size:.7rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-                         color:{{ '#8A8168' if eh_realizada else ('var(--agro)' if eh_agro else 'var(--saude)') }};">
-              {% if eh_pendente %}⏳ {% endif %}{{ s.evento }}
+          {% set classe = 'real' if s.status == 'realizada' else ('pend' if s.status == 'pendente' else ('agro' if s.tipo_recurso == 'carreta_agro' else 'saude')) %}
+          <a class="cl-ev {{ classe }} {{ 'apagado' if ver and s.tipo_recurso != ver else '' }}" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}"
+             title="{{ s.evento }} — {{ s.municipio_nome }} — {{ tipos_recurso.get(s.tipo_recurso, s.tipo_recurso) }} — Solicitante: {{ s.responsavel_nome or 'não informado' }} — {{ 'Já aconteceu' if s.status == 'realizada' else ('Aguardando aprovação' if s.status == 'pendente' else 'Aprovada') }}">
+            <span class="tx">
+              <span class="t">{% if s.status == 'pendente' %}⏳ {% endif %}{{ s.evento }}</span>
+              <span class="l"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.200 7 13 7 13s7-7.800 7-13a7 7 0 0 0-7-7zm0 9.500a2.500 2.500 0 1 1 0-5 2.500 2.500 0 0 1 0 5z"/></svg>{{ s.municipio_nome }}</span>
+              <span class="l">{{ 'Agro' if s.tipo_recurso == 'carreta_agro' else 'Saúde' }} · {{ s.responsavel_nome or 'sem responsável' }}</span>
             </span>
-            <span style="display:block;font-size:.65rem;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.municipio_nome }} · {{ tipos_recurso.get(s.tipo_recurso, s.tipo_recurso) }}</span>
-            <span style="display:block;font-size:.65rem;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.responsavel_nome or 'sem responsável' }}</span>
+            <span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.500" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>
           </a>
           {% endfor %}
         </td>
         {% else %}
-        <td></td>
+        <td class="vz"></td>
         {% endif %}
         {% endfor %}
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  <svg class="cl-deco" viewBox="0 0 300 140" aria-hidden="true">
+    <path d="M0 140C60 90 170 40 300 30V140Z" fill="#CFE9D3"/>
+    <path d="M60 140C130 100 220 70 300 66V140Z" fill="#9BD3A5"/>
+    <g fill="none" stroke="#2E9E4F" stroke-width="3" stroke-linecap="round"><path d="M100 128C160 108 220 100 285 96"/><path d="M130 136C185 120 235 114 290 112"/></g>
+    <g transform="translate(175 28)" fill="#2E9E4F"><rect x="0" y="22" width="52" height="22" rx="5"/><rect x="30" y="4" width="26" height="22" rx="4"/><circle cx="14" cy="50" r="14"/><circle cx="14" cy="50" r="6" fill="#fff"/><circle cx="52" cy="54" r="9"/><circle cx="52" cy="54" r="4" fill="#fff"/><rect x="-6" y="14" width="10" height="6" rx="2"/></g>
+  </svg>
+</div>
 </div>
 {% endblock %}

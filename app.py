@@ -2520,6 +2520,7 @@ def admin_carreta_calendario():
         pagina_ativa="carreta_calendario",
         ano=ano, mes=mes, tipo=tipo,
         ver=ver,
+        hoje=datetime.now().date(),
         mes_anterior=mes_anterior, ano_anterior=ano_anterior,
         mes_proximo=mes_proximo, ano_proximo=ano_proximo,
         calendario=carr.dados_calendario(db, ano, mes, tipo_recurso=tipo),
