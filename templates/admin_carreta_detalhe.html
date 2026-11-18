@@ -1,5 +1,5 @@
 {% extends 'admin_base.html' %}
-{% from '_cr_head.html' import cr_head %}
+{% from '_cr_head.html' import cr_head, cr_form_css %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -21,7 +21,8 @@
 {% endblock %}
 
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}</style>
+{{ cr_form_css() }}
+<div class="cf">
 <a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
 {% call cr_head('Detalhe da solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome ~ ' — ' ~ solicitacao.data_inicio.strftime('%d/%m/%Y') ~ ' a ' ~ solicitacao.data_fim.strftime('%d/%m/%Y')) %}{% endcall %}
 {% if pode_editar_carreta %}<div class="cr-barra"><a class="cr-btn" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">Editar</a></div>{% endif %}
@@ -90,7 +91,7 @@
   </fieldset>
   {% endif %}
 
-  <table style="margin-top:16px;">
+  <table class="kv" style="margin-top:16px;">
     <tbody>
       <tr><td style="width:200px;color:var(--ink-faint);">Programa</td><td><span class="badge-programa {{ 'agro' if solicitacao.tipo_recurso == 'carreta_agro' else 'saude' }}">{{ tipos_recurso.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso) }}</span></td></tr>
       <tr><td style="color:var(--ink-faint);">Sindicato</td><td>{{ solicitacao.sindicato_nome or '—' }}</td></tr>
@@ -103,7 +104,7 @@
     </tbody>
   </table>
 
-  <p style="margin:16px 0 8px;font-weight:600;">Documentos anexados</p>
+  <h2 style="margin-top:1.4em;">Documentos anexados</h2>
   {% if solicitacao.arquivos %}
   <ul>
     {% for arq in solicitacao.arquivos %}
@@ -189,6 +190,7 @@
   <button type="submit" class="btn secundario" style="color:var(--danger);">🗑️ Remover esta solicitação</button>
 </form>
 {% endif %}
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
