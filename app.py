@@ -1452,9 +1452,16 @@ def admin_sindicatos_mapa():
     db = SessionLocal()
     regiao_filtro = request.args.get("regiao", "").strip()
     dados = sind.dados_mapa_sindicatos(db, regiao_filtro=regiao_filtro or None)
+    municipios_regiao = []
+    if regiao_filtro:
+        municipios_regiao = sorted(
+            sind.listar_municipios(db, regiao_faec=regiao_filtro),
+            key=lambda m: m.nome,
+        )
 
     return render_template(
         "admin_sindicatos_mapa.html",
+        municipios_regiao=municipios_regiao,
         pagina_ativa="mapa_sindicatos",
         apenas_sindicatos=(gestao_sindicato_logado() and not admin_logado()),
         dados_mapa=dados,
@@ -2004,6 +2011,7 @@ def admin_sindicato_editar(cod_ibge):
         pagina_ativa="sindicatos",
         municipio=municipio,
         sindicatos=sind.listar_sindicatos(db),
+        regioes_faec=sind.listar_regioes_faec(db),
         historico=sind.obter_historico(db, cod_ibge)[:8],
         apenas_sindicatos=True,
     )

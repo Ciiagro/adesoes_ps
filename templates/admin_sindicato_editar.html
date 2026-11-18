@@ -11,7 +11,21 @@
 </div>
 
 <form method="post" class="secao-card">
-  <h2>Sindicato responsável</h2>
+  <h2>Região FAEC</h2>
+  <p style="margin:-4px 0 12px;font-size:.85rem;color:var(--ink-faint);">
+    A região vale para o município mesmo que ele não tenha sindicato. É ela que pinta o município no Mapa dos Sindicatos.
+  </p>
+  <div class="info-grid">
+    <label style="grid-column:1/-1;">
+      <span class="rot" style="display:block;margin-bottom:5px;">Região FAEC deste município</span>
+      <select name="regiao_faec" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
+        <option value="">— sem região —</option>
+        {% for r in regioes_faec %}<option value="{{ r }}" {% if municipio.regiao_faec == r %}selected{% endif %}>{{ r }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <h2 style="margin-top:24px;">Sindicato responsável</h2>
   {% if municipio.sindicato %}
   <p style="margin:-4px 0 12px;font-size:.85rem;color:var(--ink-faint);">
     Só quer trocar o presidente ou contato deste sindicato? Isso vale pra todos os

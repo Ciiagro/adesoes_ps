@@ -228,6 +228,21 @@ def salvar_edicao(db, municipio, form, alterado_por, observacao):
             setattr(municipio, campo, valor_novo)
             algo_mudou = True
 
+    # --- Região FAEC (município pode ter região mesmo sem sindicato) ---
+    if "regiao_faec" in form:
+        reg_nova = _limpar(form.get("regiao_faec"))
+        if (municipio.regiao_faec or None) != (reg_nova or None):
+            db.add(HistoricoSindicato(
+                cod_ibge=municipio.cod_ibge,
+                campo="Região FAEC",
+                valor_antigo=municipio.regiao_faec,
+                valor_novo=reg_nova,
+                alterado_por=alterado_por,
+                observacao=observacao,
+            ))
+            municipio.regiao_faec = reg_nova
+            algo_mudou = True
+
     if algo_mudou:
         municipio.atualizado_em = datetime.utcnow()
         municipio.atualizado_por = alterado_por
