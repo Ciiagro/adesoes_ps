@@ -1,189 +1,157 @@
 {% extends 'admin_base.html' %}
+{% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}  </style>
+<style>.conteudo{max-width:none !important}</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  .cr-wrap{font-size:clamp(15px,.3vw + 10px,18px);max-width:1760px;margin:0 auto}
-  .cr-head{position:relative;overflow:hidden;display:flex;align-items:center;gap:22px;min-height:150px;padding:20px 30px 64px;margin:0 0 -34px;background:#fff;border-radius:0 0 0 0}
-  .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:48%;background:url('{{ url_for("static", filename="img/banner_carreta_foto.jpg") }}') right center/auto 100% no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%);mask-image:linear-gradient(90deg,transparent 0,#000 12%);z-index:0}
-  .cr-head>*{position:relative;z-index:1}
-  .cr-ico{flex:none;width:80px;height:80px;padding-right:22px;border-right:2px solid #BFD6C3;box-sizing:content-box}
-  .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:clamp(1.6em,2.6vw,2.4em);line-height:1.05}
-  .cr-head h1 em{display:block;font-weight:700;font-size:.78em;color:#14301E}
-  .cr-head .sub{margin:6px 0 0;color:#23382A;font-size:.98em;font-style:italic}
-  .cr-nova{display:inline-flex;align-items:center;gap:8px;margin:0 0 0 0;background:#176B31;color:#fff !important;border-radius:999px;padding:11px 24px;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
-  .cr-nova:hover{background:#0F5A28}
-  .cr-filtros{position:relative;z-index:2;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.14);padding:18px 24px 20px;margin:0 0 18px}
-  .cr-ft{display:flex;align-items:center;gap:12px;margin-bottom:14px;color:#176B31;font-weight:800;font-size:1.1em}
-  .cr-ft::after{content:"";flex:1;height:1px;background:#CFE3D2}
-  .cr-limpar{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #176B31;color:#176B31 !important;border-radius:999px;padding:8px 20px;font-weight:700;font-size:.92em;text-decoration:none;background:#fff}
-  .cr-limpar:hover{background:#EAF6EC}
-  .cr-busca{display:flex;gap:10px;margin-bottom:14px}
-  .cr-busca input{flex:1;height:44px;border:1px solid #D5E3D6;border-radius:999px;padding:0 18px;font-size:.93em;margin:0}
-  .cr-pills{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-  .cr-pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #D5E3D6;background:#fff;color:#14301E !important;border-radius:999px;padding:9px 20px;font-weight:700;font-size:.92em;text-decoration:none}
-  .cr-pill:hover{background:#F1F8F2}
-  .cr-pill.on{background:#176B31;border-color:#176B31;color:#fff !important;box-shadow:0 3px 10px rgba(23,107,49,.28)}
-  .cr-per{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .cr-sel{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #D5E3D6;border-radius:999px;padding:0 14px;height:44px;background:#fff;font-weight:700;color:#14301E}
-  .cr-sel select,.cr-sel input{border:0;outline:0;background:transparent;font-weight:500;height:40px;margin:0;padding:0 4px;box-shadow:none;width:auto}
-  .cr-sel input{width:70px}
-  .cr-bt{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;border:1.5px solid #176B31;background:#fff;color:#176B31 !important;font-weight:700;text-decoration:none;cursor:pointer;font-size:.92em;margin:0}
-  .cr-bt:hover{background:#EAF6EC}
-  .cr-tab{background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.12);overflow:hidden}
-  table.cr-t{width:100%;border-collapse:separate;border-spacing:0;font-size:.92em}
-  table.cr-t th{background:#176B31;color:#fff;text-align:left;font-size:.85em;letter-spacing:.03em;padding:1.05em 1.1em;font-weight:700}
-  table.cr-t td{padding:.95em 1.1em;border-bottom:1px solid #EEF3EE;vertical-align:middle}
-  table.cr-t tbody tr:hover{background:#F3F9F3}
-  table.cr-t tbody tr:last-child td{border-bottom:0}
-  .cr-mun{font-weight:800;color:#176B31;text-decoration:none}.cr-mun:hover{text-decoration:underline}
-  .cr-sit{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 14px;font-weight:700;font-size:.84em}
-  .cr-sit.ap{background:#DFF3E3;color:#1F6B3A}.cr-sit.re{background:#DCEBFA;color:#1F4E8C}.cr-sit.pe{background:#FDEBC8;color:#8A5300}.cr-sit.ca{background:#FBE3E0;color:#B3261E}
-  .cr-acoes{display:flex;gap:8px;white-space:nowrap}
-  .cr-acoes a,.cr-acoes button{width:38px;height:38px;border-radius:10px;border:1.5px solid #D5E3D6;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;text-decoration:none}
-  .cr-acoes a:hover,.cr-acoes button:hover{background:#F1F8F2}
-  .cr-acoes form{display:inline;margin:0}
-  .cr-rodape{display:flex;align-items:flex-end;justify-content:flex-end;min-height:90px;padding:10px 30px;margin-top:10px;background:linear-gradient(180deg,transparent 40%,#E3F1E3 100%);border-radius:0 0 16px 16px}
-  .cr-rodape span{font-family:'Fraunces',serif;font-style:italic;font-weight:600;font-size:1.25em;color:#176B31;border-bottom:3px solid #7BC043;padding-bottom:4px}
-  table.cr-t{table-layout:fixed}
-  .cr-pill{padding:.6em 1.3em}
-  .cr-head .cr-nova{margin-top:14px}
-  .cr-ft .cr-limpar{margin-left:auto}
-  .cr-pag{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #EEF3EE;background:#F7FAF6;font-size:.92em;color:#2d3a30}
+  .cr-wrap{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);width:100%;margin:0 !important;max-width:none !important;color:#14301E}
+  .cr-wrap .cr-head{margin-bottom:-1.6em !important}
+  .cr-wrap h1,.cr-wrap .sub{font-family:'Plus Jakarta Sans','Inter',sans-serif !important}
 
-  /* ===== proporção do modelo: tudo em em, escala única pelo wrapper ===== */
-  .cr-wrap{font-size:clamp(13px,.95vw,17px) !important;max-width:none !important;margin:0 !important;width:100%}
-  .cr-head{min-height:0 !important;padding:.9em 1.3em !important;margin:0 0 1em !important;border-radius:16px !important;box-shadow:0 4px 18px rgba(15,107,46,.10);gap:1em !important}
-  .cr-head::before{width:46% !important}
-  .cr-head>div{max-width:54%}
-  .cr-ico{width:3.2em !important;height:3.2em !important;padding-right:1em !important}
-  .cr-head h1{font-size:1.7em !important;line-height:1.1 !important}
-  .cr-head h1 em{font-size:.62em !important;margin-top:.15em}
-  .cr-head .sub{font-size:.9em !important;margin:.3em 0 0 !important}
-  .cr-nova,.cr-head .cr-nova{font-size:.95em !important;padding:.55em 1.3em !important;margin-top:.7em !important}
-  .cr-filtros{padding:.9em 1.2em 1em !important;margin:0 0 1em !important;border-radius:16px !important}
-  .cr-ft{font-size:1.15em !important;margin-bottom:.8em !important;gap:.8em !important}
-  .cr-limpar{font-size:.95em !important;padding:.45em 1.2em !important}
-  .cr-busca{margin-bottom:.8em !important;gap:.6em !important}
-  .cr-busca input{height:2.5em !important;font-size:1em !important;padding:0 1.1em !important}
-  .cr-pills{gap:.7em !important;margin-bottom:.8em !important}
-  .cr-pill{font-size:1em !important;padding:.5em 1.3em !important}
-  .cr-per{gap:.7em !important}
-  .cr-sel{height:2.5em !important;font-size:1em !important;padding:0 1em !important}
-  .cr-sel select,.cr-sel input{font-size:1em !important;height:2.2em !important}
-  .cr-bt{height:2.5em !important;font-size:1em !important;padding:0 1.3em !important}
-  .cr-tab{border-radius:16px !important}
-  table.cr-t{font-size:1em !important}
-  table.cr-t th{font-size:1em !important;letter-spacing:0 !important;padding:.95em 1.1em !important;border-right:0}
-  table.cr-t td{font-size:1em !important;padding:.7em 1.1em !important;border-bottom:1px solid #E6EEE6 !important;border-right:1px solid #EDF3ED}
-  table.cr-t td:last-child{border-right:0}
-  table.cr-t td[style]{font-size:1em !important}
-  .cr-sit{font-size:.95em !important;padding:.3em .9em !important}
-  .badge-programa{font-size:.95em !important;padding:.3em .9em !important}
-  .cr-acoes{gap:.5em !important;justify-content:center}
-  .cr-acoes a,.cr-acoes button{width:2.3em !important;height:2.3em !important;border-radius:50% !important}
-  .cr-acoes svg{width:1.1em !important;height:1.1em !important}
-  table.cr-t th:last-child{text-align:center}
-  .cpag{font-size:1em !important;padding:.8em .3em 1em !important}
-  .cpag-info{gap:1.5em !important}
-  .cpag-por{font-size:1em !important;color:#14301E !important}
-  .cpag-por select{height:2.4em !important;font-size:1em !important;border-radius:999px !important}
-  .cpag-bt button{height:2.4em !important;min-width:2.4em !important;font-size:1em !important}
-  .cr-rodape{min-height:5.5em !important;padding:.6em 1.5em !important}
-  .cr-rodape span{font-size:1.5em !important}
+  /* ---------- card de filtros ---------- */
+  .cr-filtros{position:relative;z-index:2;overflow:hidden;background:#fff;border-radius:16px;box-shadow:0 6px 22px rgba(15,107,46,.14);padding:.9em 1.3em 1.2em;margin:0 0 1.1em}
+  .cr-filtros::after{content:"";position:absolute;right:0;bottom:0;width:30%;height:85%;pointer-events:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 160' preserveAspectRatio='none'%3E%3Cpath d='M0 160C60 110 130 60 300 40V160Z' fill='%23CDE9D2' fill-opacity='.55'/%3E%3Cpath d='M90 160C170 120 230 80 300 78V160Z' fill='%2347A95F' fill-opacity='.38'/%3E%3Cpath d='M200 160C230 110 260 70 300 46' stroke='%2347A95F' stroke-opacity='.45' stroke-width='2' fill='none'/%3E%3C/svg%3E") right bottom/100% 100% no-repeat;z-index:0}
+  .cr-filtros>*{position:relative;z-index:1}
+  .cr-ft{display:flex;align-items:center;gap:.8em;padding-bottom:.7em;margin-bottom:.9em;border-bottom:1px solid #E7EFE8}
+  .cr-ft .ic{flex:none;width:2.6em;height:2.6em;border-radius:50%;background:#0F6B2E;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(15,107,46,.3)}
+  .cr-ft h2{margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:1.3em;font-weight:800;color:#0F5A28}
+  .cr-ft .esp{flex:1}
+  .cr-ft .cr-busca-mini{display:flex;align-items:center;gap:.5em;border:1.5px solid #D5E3D6;border-radius:999px;padding:0 1em;height:2.4em;background:#fff;min-width:22em}
+  .cr-ft .cr-busca-mini input{border:0;outline:0;background:transparent;font:inherit;font-size:.92em;width:100%;margin:0;padding:0;box-shadow:none;height:auto}
+  .cr-limpar,.cr-nova{display:inline-flex;align-items:center;gap:.5em;border-radius:999px;font-weight:700;font-size:.92em;text-decoration:none;padding:.5em 1.2em;white-space:nowrap}
+  .cr-limpar{background:#fff;color:#0F5A28 !important;box-shadow:0 2px 10px rgba(15,107,46,.18);border:1px solid #E0ECE2}
+  .cr-limpar:hover{background:#F1F8F2}
+  .cr-nova{background:#176B31;color:#fff !important;box-shadow:0 3px 10px rgba(23,107,49,.3)}
+  .cr-nova:hover{background:#0F5A28}
+  .cr-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.2em;max-width:76%}
+  .cr-fld label.rot{display:block;font-weight:800;color:#0F5A28;font-size:1em;margin:0 0 .4em}
+  .cr-fld .caixa{position:relative;display:flex;align-items:center;height:2.9em;border:1.5px solid #D9E6DB;border-radius:12px;background:#fff;padding:0 .9em;gap:.7em}
+  .cr-fld .caixa svg{flex:none;width:1.15em;height:1.15em}
+  .cr-fld select{appearance:none;-webkit-appearance:none;border:0;outline:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%2314301E' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right center no-repeat;font:inherit;font-size:.95em;color:#3A4F40;width:100%;height:100%;margin:0;padding:0 1.4em 0 0;box-shadow:none;cursor:pointer}
+  .cr-buscar{margin-top:1.1em;display:inline-flex;align-items:center;gap:.6em;border:0;background:linear-gradient(180deg,#14803A,#0F6B2E);color:#fff;font:inherit;font-weight:800;font-size:1em;padding:.75em 1.6em;border-radius:999px;box-shadow:0 5px 14px rgba(15,107,46,.35);cursor:pointer;margin-bottom:0}
+  .cr-buscar:hover{filter:brightness(1.08)}
+  .cr-aviso{background:#FBEED6;border:1px solid #EEDCB4;border-radius:10px;padding:.6em .9em;margin:0 0 .9em;font-size:.9em;max-width:76%}
+
+  /* ---------- resultados ---------- */
+  .cr-resbar{display:flex;align-items:center;gap:.8em;background:linear-gradient(90deg,#0F5A28,#137A38);color:#fff;border-radius:16px 16px 0 0;padding:.85em 1.3em}
+  .cr-resbar h2{margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:1.25em;font-weight:800;color:#fff}
+  .cr-resbar .esp{flex:1}
+  .cr-total{display:inline-flex;align-items:center;gap:.5em;background:rgba(255,255,255,.16);border-radius:999px;padding:.4em 1em;font-weight:700;font-size:.9em}
+  .cr-tab{background:#fff;border-radius:0 0 16px 16px;box-shadow:0 6px 22px rgba(15,107,46,.12);overflow:hidden}
+  table.cr-t{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:1em}
+  table.cr-t th{background:#0F6B2E;color:#fff;text-align:left;font-weight:700;font-size:1em;padding:.85em 1.1em;border-top:1px solid rgba(255,255,255,.28);border-right:1px solid rgba(255,255,255,.12)}
+  table.cr-t th:last-child{border-right:0;text-align:center}
+  table.cr-t td{padding:.62em 1.1em;border-bottom:1px solid #EAF0EB;vertical-align:middle;color:#1A2E20}
+  table.cr-t tbody tr:hover{background:#F4FAF5}
+  table.cr-t tbody tr:last-child td{border-bottom:0}
+  .cr-mun{font-weight:800;color:#14301E;text-decoration:none}.cr-mun:hover{color:#176B31;text-decoration:underline}
+  .cr-sit{display:inline-flex;align-items:center;gap:.35em;border-radius:999px;padding:.25em .85em;font-weight:800;font-size:.92em}
+  .cr-sit.ap{background:#CFEFC5;color:#1B6E2E}.cr-sit.re{background:#D6EAFB;color:#1F5FA8}.cr-sit.pe{background:#FDEBC8;color:#8A5300}.cr-sit.ca{background:#FFD9D6;color:#C62828}
+  .cr-acoes{display:flex;gap:.5em;justify-content:center;white-space:nowrap}
+  .cr-acoes a,.cr-acoes button{width:2.3em;height:2.3em;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 8px rgba(15,107,46,.2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;text-decoration:none}
+  .cr-acoes a:hover,.cr-acoes button:hover{background:#F1F8F2}
+  .cr-acoes svg{width:1.1em;height:1.1em}
+  .cr-acoes form{display:inline;margin:0}
+
+  .cpag{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:.8em .3em 1em;color:#14301E;font-size:1em}
+  .cpag-info{display:flex;align-items:center;gap:1.5em;flex-wrap:wrap;font-weight:600}
+  .cpag-por{display:inline-flex;align-items:center;gap:.6em;margin:0;font-weight:600;color:#14301E}
+  .cpag-por select{width:auto;height:2.4em;margin:0;padding:0 .8em;border-radius:999px;border:1px solid #D9E6DB;background:#fff;font:inherit}
+  .cpag-bt{display:flex;gap:6px;flex-wrap:wrap}
+  .cpag-bt button{width:auto;min-width:2.4em;height:2.4em;margin:0;padding:0 .8em;border-radius:999px;border:1px solid #D9E6DB;background:#fff;color:#14301E;font:inherit;font-weight:700;cursor:pointer}
+  .cpag-bt button:hover:not(:disabled){background:#EEF4E8}
+  .cpag-bt button.on{background:#0F6B2E;border-color:#0F6B2E;color:#fff}
+  .cpag-bt button:disabled{opacity:.4;cursor:default}
+  .cpag-bt .pt{align-self:center;padding:0 4px}
+
+  .cr-rodape{position:relative;display:flex;justify-content:flex-end;align-items:flex-start;min-height:7em;margin-top:.4em;padding:.8em 2em;border-radius:0 0 16px 16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,0),#EAF5EC)}
+  .cr-rodape::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 140' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%230F5A28'/%3E%3Cstop offset='.55' stop-color='%2325933F'/%3E%3Cstop offset='1' stop-color='%237BC043'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 140V50C200 25 430 85 720 100C940 111 1090 100 1200 88V140Z' fill='url(%23g)'/%3E%3Cpath d='M0 140V92C220 78 450 118 720 122C940 125 1090 118 1200 112V140Z' fill='%23fff' fill-opacity='.18'/%3E%3C/svg%3E") center bottom/100% 100% no-repeat}
+  .cr-rodape span{position:relative;font-family:'Plus Jakarta Sans',sans-serif;font-style:italic;font-weight:800;font-size:1.5em;color:#0F5A28;border-bottom:3px solid #7BC043;padding-bottom:.15em;align-self:flex-start;margin-top:.2em}
+  .cr-vazio{background:#fff;border-radius:0 0 16px 16px;padding:2em;text-align:center;color:#4F6354}
+  @media (max-width:1100px){.cr-grade{grid-template-columns:repeat(2,minmax(0,1fr));max-width:none}.cr-aviso{max-width:none}.cr-ft .cr-busca-mini{min-width:12em}}
 </style>
 
 <div class="cr-wrap">
-<div class="cr-head">
-  <svg class="cr-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="38" height="48" rx="5" fill="#fff" stroke="#176B31" stroke-width="4"/><path d="M18 22h22M18 30h22M18 38h12" stroke="#176B31" stroke-width="3.5" stroke-linecap="round"/><circle cx="47" cy="46" r="13" fill="#2E9E4F"/><path d="M41 46l4 4 8-9" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  <div>
-    <h1>Carreta do Agro / Carreta da Saúde<em>Solicitações</em></h1>
-    <p class="sub">Pesquise, acompanhe e gerencie as solicitações da Carreta do Agro e da Carreta da Saúde.</p>
-    {% if pode_editar_carreta %}<a class="cr-nova" href="{{ url_for('admin_carreta_nova') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>Nova solicitação</a>{% endif %}
-  </div>
-</div>
+{% call cr_head('Solicitações', 'Pesquise, acompanhe e gerencie as solicitações da Carreta do Agro e da Carreta da Saúde.') %}{% endcall %}
 
-<div class="cr-filtros">
+<form method="get" id="cr-form" class="cr-filtros" data-ano="{{ filtro_ano or '' }}" data-mes="{{ filtro_mes or '' }}">
   <div class="cr-ft">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="#176B31" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5z"/></svg>Filtros de pesquisa
-    <a class="cr-limpar" href="{{ url_for('admin_carreta') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#176B31" aria-hidden="true"><path d="M17.600 6.400A8 8 0 1 0 19.400 14h-2.100a6 6 0 1 1-1.400-6.200L13 11h7V4l-2.400 2.400z"/></svg>Limpar</a>
-  </div>
-
-  <form method="get" class="cr-busca">
-    {% if filtro_status %}<input type="hidden" name="status" value="{{ filtro_status }}">{% endif %}
-    {% if filtro_ano %}<input type="hidden" name="ano" value="{{ filtro_ano }}">{% endif %}
-    {% if filtro_mes %}<input type="hidden" name="mes" value="{{ filtro_mes }}">{% endif %}
-    <input type="text" name="busca" value="{{ filtro_busca or '' }}" placeholder="Buscar por município, evento, sindicato, responsável ou nº do ofício…">
-    <button type="submit" class="cr-bt" style="background:#176B31;color:#fff !important">Buscar</button>
-    {% if filtro_busca %}<a class="cr-bt" href="{{ url_for('admin_carreta', status=filtro_status or None, ano=filtro_ano, mes=filtro_mes) }}">Limpar busca</a>{% endif %}
-  </form>
-
-  <div class="cr-pills">
-    <a class="cr-pill {{ '' if filtro_status else 'on' }}" href="{{ url_for('admin_carreta', ano=filtro_ano, mes=filtro_mes, busca=filtro_busca or None) }}">Todas</a>
-    {% for chave, rotulo in status_label.items() %}
-    <a class="cr-pill {{ 'on' if filtro_status == chave else '' }}" href="{{ url_for('admin_carreta', status=chave, ano=filtro_ano, mes=filtro_mes, busca=filtro_busca or None) }}">
-      {% if chave == 'pendente' %}<svg viewBox="0 0 24 24" width="17" height="17" fill="#F08C00" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v5.400l4 2.300-.8 1.300L11 13V7h2z"/></svg>
-      {% elif chave == 'aprovada' %}<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M9 16.200 4.800 12l-1.400 1.400L9 19 21 7l-1.400-1.400L9 16.200z"/></svg>
-      {% elif chave == 'realizada' %}<svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M1.500 13.500 6 18l1.400-1.400L2.900 12.100l-1.400 1.400zM17.600 6.600 9.500 14.700 6.800 12l-1.400 1.400L9.500 17.500l9.500-9.500-1.400-1.400zM22 6.600 20.600 5.200 12 13.800l1.400 1.400L22 6.600z"/></svg>
-      {% else %}<svg viewBox="0 0 24 24" width="17" height="17" fill="#D32F2F" aria-hidden="true"><path d="M19 6.400 17.600 5 12 10.600 6.400 5 5 6.400 10.600 12 5 17.600 6.400 19 12 13.400 17.600 19 19 17.600 13.400 12 19 6.400z"/></svg>{% endif %}
-      {{ rotulo }}{% if chave == 'pendente' %} 🔔{% endif %}
-    </a>
-    {% endfor %}
+    <span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff" aria-hidden="true"><path d="M15.500 14h-.8l-.3-.3A6.500 6.500 0 1 0 14 15.500l.3.3v.8l5 5 1.500-1.500-5-5zm-6 0a4.500 4.500 0 1 1 0-9 4.500 4.500 0 0 1 0 9z"/></svg></span>
+    <h2>Filtros de Pesquisa</h2>
+    <span class="esp"></span>
+    <label class="cr-busca-mini"><svg viewBox="0 0 24 24" width="16" height="16" fill="#5E7565" aria-hidden="true"><path d="M15.500 14h-.8l-.3-.3A6.500 6.500 0 1 0 14 15.500l.3.3v.8l5 5 1.500-1.500-5-5zm-6 0a4.500 4.500 0 1 1 0-9 4.500 4.500 0 0 1 0 9z"/></svg><input type="text" name="busca" value="{{ filtro_busca or '' }}" placeholder="Buscar por sindicato, responsável ou nº do ofício…"></label>
+    {% if pode_editar_carreta %}<a class="cr-nova" href="{{ url_for('admin_carreta_nova') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>Nova solicitação</a>{% endif %}
+    <a class="cr-limpar" href="{{ url_for('admin_carreta') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#0F6B2E" aria-hidden="true"><path d="M17.600 6.400A8 8 0 1 0 19.400 14h-2.100a6 6 0 1 1-1.400-6.200L13 11h7V4l-2.400 2.400z"/></svg>Limpar filtros</a>
   </div>
 
   {% if ignorando_mes_por_pendente %}
-  <p class="hint" style="background:#FBEED6;border:1px solid #EEDCB4;border-radius:9px;padding:9px 12px;margin-bottom:14px;">
-    ⚠️ Mostrando <b>de qualquer mês</b>
-    {%- if filtro_busca %} (busca livre ignora o filtro de mês, procura em tudo){% else %} (pendente sempre precisa de uma decisão, então ignora o filtro de mês){% endif -%}
-    — o seletor de mês abaixo fica sem efeito nesse momento.
-  </p>
+  <p class="cr-aviso">⚠️ Mostrando <b>de qualquer mês</b>
+    {%- if filtro_busca %} (busca livre ignora o filtro de período){% else %} (pendente sempre precisa de uma decisão, então ignora o filtro de período){% endif -%}.</p>
   {% endif %}
 
-  <form method="get" class="cr-per" style="{% if ignorando_mes_por_pendente %}opacity:.5;{% endif %}">
-    {% if filtro_status %}<input type="hidden" name="status" value="{{ filtro_status }}">{% endif %}
-    {% if filtro_busca %}<input type="hidden" name="busca" value="{{ filtro_busca }}">{% endif %}
-    <label class="cr-sel"><svg viewBox="0 0 24 24" width="18" height="18" fill="#176B31" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>Mês
-      <select name="mes" {% if ignorando_mes_por_pendente %}disabled{% endif %}>
-        <option value="">Todos os meses</option>
-        {% for num in range(1, 13) %}<option value="{{ num }}" {% if filtro_mes == num %}selected{% endif %}>{{ MESES_NOMES[num] }}</option>{% endfor %}
-      </select>
-    </label>
-    <label class="cr-sel"><svg viewBox="0 0 24 24" width="18" height="18" fill="#176B31" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>Ano
-      <input type="number" name="ano" value="{{ filtro_ano or '' }}" placeholder="Ano" {% if ignorando_mes_por_pendente %}disabled{% endif %}>
-    </label>
-    <button type="submit" class="cr-bt" {% if ignorando_mes_por_pendente %}disabled{% endif %}><svg viewBox="0 0 24 24" width="16" height="16" fill="#176B31" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5z"/></svg>Filtrar</button>
-    <a class="cr-bt" href="{{ url_for('admin_carreta', status=filtro_status or None, busca=filtro_busca or None, mes='') }}">Ver todos os meses</a>
-  </form>
+  <input type="hidden" name="mes" id="cr-mes" value="{{ filtro_mes or '' }}">
+  <input type="hidden" name="ano" id="cr-ano" value="{{ filtro_ano or '' }}">
+
+  <div class="cr-grade">
+    <div class="cr-fld">
+      <label class="rot" for="f-mun">Município</label>
+      <div class="caixa"><svg viewBox="0 0 24 24" fill="#0F6B2E" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.200 7 13 7 13s7-7.800 7-13a7 7 0 0 0-7-7zm0 9.500a2.500 2.500 0 1 1 0-5 2.500 2.500 0 0 1 0 5z"/></svg>
+        <select id="f-mun"><option value="">Selecione o município</option></select></div>
+    </div>
+    <div class="cr-fld">
+      <label class="rot" for="f-ev">Evento</label>
+      <div class="caixa"><svg viewBox="0 0 24 24" fill="#0F6B2E" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>
+        <select id="f-ev"><option value="">Selecione o evento</option></select></div>
+    </div>
+    <div class="cr-fld">
+      <label class="rot" for="f-per">Período</label>
+      <div class="caixa" {% if ignorando_mes_por_pendente %}style="opacity:.55"{% endif %}><svg viewBox="0 0 24 24" fill="#0F6B2E" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>
+        <select id="f-per" {% if ignorando_mes_por_pendente %}disabled{% endif %}><option value="">Todos os meses</option></select></div>
+    </div>
+    <div class="cr-fld">
+      <label class="rot" for="f-sit">Situação</label>
+      <div class="caixa"><svg viewBox="0 0 24 24" fill="#0F6B2E" aria-hidden="true"><path d="M9 16.200 4.800 12l-1.400 1.400L9 19 21 7l-1.400-1.400L9 16.200z"/></svg>
+        <select id="f-sit" name="status">
+          <option value="">Todas</option>
+          {% for chave, rotulo in status_label.items() %}<option value="{{ chave }}" {% if filtro_status == chave %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+        </select></div>
+    </div>
+  </div>
+
+  <button type="submit" class="cr-buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M15.500 14h-.8l-.3-.3A6.500 6.500 0 1 0 14 15.500l.3.3v.8l5 5 1.500-1.500-5-5zm-6 0a4.500 4.500 0 1 1 0-9 4.500 4.500 0 0 1 0 9z"/></svg>Buscar resultados</button>
+</form>
+
+<div class="cr-resbar">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" aria-hidden="true"><path d="M3 5h2v2H3V5zm4 0h14v2H7V5zM3 11h2v2H3v-2zm4 0h14v2H7v-2zM3 17h2v2H3v-2zm4 0h14v2H7v-2z"/></svg>
+  <h2>Resultados da Pesquisa</h2><span class="esp"></span>
+  <span class="cr-total"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff" aria-hidden="true"><path d="M5 9h3v10H5V9zm5.500-5h3v15h-3V4zM16 13h3v6h-3v-6z"/></svg>Total: <span id="cr-total-n">{{ solicitacoes|length }}</span> registros</span>
 </div>
 
 {% if not solicitacoes %}
-<p class="vazio">Nenhuma solicitação encontrada.</p>
+<div class="cr-vazio">Nenhuma solicitação encontrada.</div>
 {% else %}
 <div class="cr-tab"><table class="cr-t">
-  <colgroup><col style="width:16%"><col style="width:14%"><col style="width:26%"><col style="width:15%"><col style="width:10%"><col style="width:10%"><col style="width:9%"></colgroup>
+  <colgroup><col style="width:15%"><col style="width:14%"><col style="width:26%"><col style="width:16%"><col style="width:10%"><col style="width:10%"><col style="width:9%"></colgroup>
   <thead>
-    <tr>
-      <th>Programa</th><th>Município</th><th>Evento</th><th>Período</th><th>Solicitado em</th><th>Situação</th><th>Ações</th>
-    </tr>
+    <tr><th>Programa</th><th>Município</th><th>Evento</th><th>Período</th><th>Solicitado em</th><th>Situação</th><th>Ações</th></tr>
   </thead>
   <tbody>
     {% for s in solicitacoes %}
     <tr>
-      <td><span class="badge-programa {{ 'agro' if s.tipo_recurso == 'carreta_agro' else 'saude' }}">{{ tipos_recurso.get(s.tipo_recurso, s.tipo_recurso) }}</span></td>
+      <td>{{ tipos_recurso.get(s.tipo_recurso, s.tipo_recurso) }}</td>
       <td><a class="cr-mun" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}">{{ s.municipio_nome }}</a></td>
       <td>{{ s.evento }}</td>
       <td>{{ s.data_inicio.strftime('%d/%m/%Y') }} a {{ s.data_fim.strftime('%d/%m/%Y') }}</td>
-      <td style="white-space:nowrap;color:var(--ink-faint);font-size:.85rem;">{{ s.criado_em|so_data_brasil }}</td>
+      <td style="white-space:nowrap">{{ s.criado_em|so_data_brasil }}</td>
       <td>
-        <span class="cr-sit {% if s.status == 'aprovada' %}ap{% elif s.status == 'realizada' %}re{% elif s.status == 'recusada' %}ca{% else %}pe{% endif %}">
-          {{ status_label.get(s.status, s.status) }}
-        </span>
+        <span class="cr-sit {% if s.status == 'aprovada' %}ap{% elif s.status == 'realizada' %}re{% elif s.status == 'recusada' %}ca{% else %}pe{% endif %}">{% if s.status == 'aprovada' %}✓ {% endif %}{{ status_label.get(s.status, s.status) }}</span>
       </td>
       <td>
         <div class="cr-acoes">
-          <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}" title="Ver"><svg viewBox="0 0 24 24" width="18" height="18" fill="#176B31" aria-hidden="true"><path d="M12 5c-5 0-9 4.500-10 7 1 2.500 5 7 10 7s9-4.500 10-7c-1-2.500-5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg></a>
-          <a href="{{ url_for('admin_carreta_editar', solicitacao_id=s.id) }}" title="Editar"><svg viewBox="0 0 24 24" width="18" height="18" fill="#E8590C" aria-hidden="true"><path d="M3 17.200V21h3.800L18 9.800 14.200 6 3 17.200zM20.700 7a1 1 0 0 0 0-1.400l-2.300-2.300a1 1 0 0 0-1.400 0l-1.800 1.800 3.800 3.800L20.700 7z"/></svg></a>
-          <form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=s.id) }}" style="display:inline;" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
-            <button type="submit" title="Remover"><svg viewBox="0 0 24 24" width="18" height="18" fill="#B3261E" aria-hidden="true"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.500l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
+          <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}" title="Ver"><svg viewBox="0 0 24 24" fill="#176B31" aria-hidden="true"><path d="M12 5c-5 0-9 4.500-10 7 1 2.500 5 7 10 7s9-4.500 10-7c-1-2.500-5-7-10-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg></a>
+          <a href="{{ url_for('admin_carreta_editar', solicitacao_id=s.id) }}" title="Editar"><svg viewBox="0 0 24 24" fill="#F08C00" aria-hidden="true"><path d="M3 17.200V21h3.800L18 9.800 14.200 6 3 17.200zM20.700 7a1 1 0 0 0 0-1.400l-2.300-2.300a1 1 0 0 0-1.400 0l-1.800 1.800 3.800 3.800L20.700 7z"/></svg></a>
+          <form method="post" action="{{ url_for('admin_carreta_excluir', solicitacao_id=s.id) }}" onsubmit="return confirm('Remover esta solicitação de vez? Isso também apaga os ofícios anexados. Não tem como desfazer.');">
+            <button type="submit" title="Remover"><svg viewBox="0 0 24 24" fill="#C62828" aria-hidden="true"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.500l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
           </form>
         </div>
       </td>
@@ -200,34 +168,55 @@
   </div>
   <div class="cpag-bt" id="cp-bt"></div>
 </div>
-<style>
-  .cpag{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 4px 28px;color:var(--ink-soft);font-size:.9rem}
-  .cpag-info{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-  .cpag-por{display:inline-flex;align-items:center;gap:8px;margin:0;font-weight:600;color:#2C5137;font-size:.9rem}
-  .cpag-por select{width:auto;height:36px;margin:0;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:#fff}
-  .cpag-bt{display:flex;gap:6px;flex-wrap:wrap}
-  .cpag-bt button{width:auto;min-width:38px;height:38px;margin:0;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:#2C5137;font:inherit;font-weight:700;cursor:pointer}
-  .cpag-bt button:hover:not(:disabled){background:#EEF4E8}
-  .cpag-bt button.on{background:#2C5137;border-color:#2C5137;color:#fff}
-  .cpag-bt button:disabled{opacity:.4;cursor:default}
-  .cpag-bt .pt{align-self:center;padding:0 4px}
-</style>
+<div class="cr-rodape"><span>Capacitação que transforma vidas.</span></div>
+{% endif %}
+</div>
+
 <script>
 (function(){
-  var tb=document.querySelector('table tbody'); if(!tb) return;
-  var linhas=Array.prototype.slice.call(tb.querySelectorAll('tr'));
-  var sel=document.getElementById('cp-por'), info=document.getElementById('cp-info'), bts=document.getElementById('cp-bt'), caixa=document.getElementById('cp-pag');
-  var pagina=1;
+  var MESES=['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var form=document.getElementById('cr-form');
+  var per=document.getElementById('f-per');
+  var anoSel=parseInt(form.dataset.ano,10)||0, mesSel=parseInt(form.dataset.mes,10)||0;
+  var hoje=new Date(), anoBase=anoSel||hoje.getFullYear();
+  for(var a=anoBase-1;a<=anoBase+1;a++){ for(var m=1;m<=12;m++){
+    var o=document.createElement('option'); o.value=a+'-'+m; o.textContent=MESES[m]+' de '+a;
+    if(a===anoSel&&m===mesSel) o.selected=true; per.appendChild(o); } }
+  form.addEventListener('submit',function(){
+    var v=per.disabled?'':per.value, hm=document.getElementById('cr-mes'), ha=document.getElementById('cr-ano');
+    if(!per.disabled){ if(v){ var p=v.split('-'); ha.value=p[0]; hm.value=p[1]; } else { ha.value=''; hm.value=''; } }
+    ['f-mun','f-ev'].forEach(function(id){ var s=document.getElementById(id);
+      if(s.value){ var h=document.createElement('input'); h.type='hidden'; h.name=(id==='f-mun'?'m':'ev'); h.value=s.value; form.appendChild(h);} });
+  });
+
+  var tb=document.querySelector('table.cr-t tbody'); if(!tb) return;
+  var todas=Array.prototype.slice.call(tb.querySelectorAll('tr'));
+  var selMun=document.getElementById('f-mun'), selEv=document.getElementById('f-ev');
+  function unicos(i){ var s={}; todas.forEach(function(tr){ var t=tr.children[i].textContent.trim(); if(t) s[t]=1; }); return Object.keys(s).sort(function(a,b){return a.localeCompare(b,'pt');}); }
+  unicos(1).forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; selMun.appendChild(o); });
+  unicos(2).forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; selEv.appendChild(o); });
+  var qs=new URLSearchParams(location.search);
+  if(qs.get('m')) selMun.value=qs.get('m'); if(qs.get('ev')) selEv.value=qs.get('ev');
+
+  var sel=document.getElementById('cp-por'), info=document.getElementById('cp-info'), bts=document.getElementById('cp-bt'), totalN=document.getElementById('cr-total-n');
+  var pagina=1, linhas=todas;
+  function filtra(){
+    var m=selMun.value, e=selEv.value;
+    linhas=todas.filter(function(tr){ return (!m||tr.children[1].textContent.trim()===m)&&(!e||tr.children[2].textContent.trim()===e); });
+    todas.forEach(function(tr){ tr.style.display='none'; });
+    totalN.textContent=linhas.length; pagina=1; desenha();
+  }
   function botao(txt,alvo,opts){ var b=document.createElement('button'); b.type='button'; b.textContent=txt;
     if(opts&&opts.off) b.disabled=true; if(opts&&opts.on) b.className='on';
-    b.addEventListener('click',function(){ pagina=alvo; desenha(); window.scrollTo({top:0,behavior:'smooth'}); }); return b; }
+    b.addEventListener('click',function(){ pagina=alvo; desenha(); }); return b; }
   function desenha(){
     var por=parseInt(sel.value,10)||0, total=linhas.length;
     var paginas=por?Math.max(1,Math.ceil(total/por)):1;
     if(pagina>paginas) pagina=paginas; if(pagina<1) pagina=1;
     var ini=por?(pagina-1)*por:0, fim=por?ini+por:total;
+    todas.forEach(function(tr){ tr.style.display='none'; });
     linhas.forEach(function(tr,i){ tr.style.display=(i>=ini&&i<fim)?'':'none'; });
-    info.textContent=total?('Mostrando '+(ini+1)+'–'+Math.min(fim,total)+' de '+total):'';
+    info.textContent=total?('Mostrando '+(ini+1)+'–'+Math.min(fim,total)+' de '+total):'Nenhum resultado';
     bts.innerHTML='';
     if(paginas<=1){ bts.style.display='none'; return; } bts.style.display='';
     bts.appendChild(botao('‹',pagina-1,{off:pagina===1}));
@@ -235,11 +224,9 @@
     var ult=0; mostrar.forEach(function(n){ if(n-ult>1){ var sp=document.createElement('span'); sp.className='pt'; sp.textContent='…'; bts.appendChild(sp);} bts.appendChild(botao(String(n),n,{on:n===pagina})); ult=n; });
     bts.appendChild(botao('›',pagina+1,{off:pagina===paginas}));
   }
+  selMun.addEventListener('change',filtra); selEv.addEventListener('change',filtra);
   sel.addEventListener('change',function(){ pagina=1; desenha(); });
-  desenha();
+  filtra();
 })();
 </script>
-<div class="cr-rodape"><span>Juntos pelo fortalecimento do agro cearense!</span></div>
-{% endif %}
-</div>
 {% endblock %}
