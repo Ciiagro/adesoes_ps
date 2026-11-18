@@ -199,3 +199,11 @@ button:hover,.btn:hover{background:#0F6B2E}
 a.btn-vp{display:inline-flex !important;align-items:center;gap:8px;background:#176B31 !important;color:#fff !important;border:0 !important;border-radius:999px !important;padding:10px 20px !important;font-weight:700 !important;text-decoration:none !important;box-shadow:0 3px 10px rgba(23,107,49,.3) !important}
 a.btn-vp:hover{background:#0F5A28 !important;color:#fff !important;transform:translateY(-1px)}
 a.btn-vp svg{flex:none}
+
+/* Botões de ação: mesmo padrão (altura, raio, fonte) */
+.acoes-row{overflow:visible !important;flex-wrap:wrap !important}
+.acoes-row a,a.btn-vp{display:inline-flex !important;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px !important;border-radius:10px !important;font-size:.88rem !important;font-weight:700 !important;line-height:1;white-space:nowrap;text-decoration:none !important;box-sizing:border-box}
+.acoes-row a:not(.btn-vp){background:#fff !important;color:#176B31 !important;border:1.5px solid #176B31 !important;box-shadow:none !important}
+.acoes-row a:not(.btn-vp):hover{background:#EAF6EC !important}
+a.btn-vp{background:#176B31 !important;color:#fff !important;border:1.5px solid #176B31 !important;box-shadow:none !important}
+.lista-fixo .acoes-row a{height:42px;padding:0 18px !important;font-size:.88rem !important}
