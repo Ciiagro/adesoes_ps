@@ -757,72 +757,129 @@ _cal_impresso_style = ParagraphStyle(
 )
 
 
-def _cal_celula_dia(dia, ocupado, bloqueio_dia, tipos_recurso):
-    """Monta o conteúdo (lista de Flowables) de uma célula do calendário
-    em PDF: número do dia + um bloco por bloqueio/solicitação daquele dia,
-    igual ao que a tela admin mostra."""
-    # Obs.: a fonte Helvetica usada no PDF não tem os glifos de emoji
-    # (🚫/⏳) do template HTML — aqui a informação é passada por texto
-    # (\"Bloqueio:\", \"*\") em vez de ícone, já que emoji vira um
-    # quadrado vazio (.notdef) ao ser desenhado com essa fonte.
-    conteudo = [Paragraph(str(dia.day), _cal_dia_style)]
+# --- visual novo do PDF do calendário (mais cor, letra maior, cartões por evento) ---
+_PDF_VERDE_ESCURO = colors.HexColor("#0F5A28")
+_PDF_VERDE = colors.HexColor("#0F6B30")
+_PDF_VERDE_CLARO = colors.HexColor("#7BC043")
+_PDF_TEXTO = colors.HexColor("#14301E")
+_PDF_TEXTO_SUAVE = colors.HexColor("#3A4F40")
+_PDF_GRADE = colors.HexColor("#CFE0D2")
+_PDF_FIM_SEMANA = colors.HexColor("#F3F8F3")
+_PDF_CORES = {
+    "agro": (colors.HexColor("#1E8A3D"), colors.HexColor("#E0F3E4")),
+    "saude": (colors.HexColor("#2F6FB5"), colors.HexColor("#DDEBFA")),
+    "pendente": (colors.HexColor("#E8890C"), colors.HexColor("#FDE9CC")),
+    "realizada": (colors.HexColor("#8A938B"), colors.HexColor("#ECEEEC")),
+    "bloqueio": (colors.HexColor("#A68A3C"), colors.HexColor("#EFE5C2")),
+}
+_pdf_dia_style = ParagraphStyle("PdfDia", fontName="Helvetica-Bold", fontSize=11, leading=12, textColor=_PDF_VERDE_ESCURO)
+_pdf_ev_t = ParagraphStyle("PdfEvT", fontName="Helvetica-Bold", fontSize=8, leading=9, textColor=_PDF_TEXTO)
+_pdf_ev_s = ParagraphStyle("PdfEvS", fontName="Helvetica", fontSize=6.8, leading=7.8, textColor=_PDF_TEXTO_SUAVE)
+_pdf_leg_style = ParagraphStyle("PdfLeg", fontName="Helvetica-Bold", fontSize=8, leading=9, textColor=_PDF_TEXTO)
+_pdf_nota_style = ParagraphStyle("PdfNota", fontName="Helvetica", fontSize=7.8, leading=10, textColor=_PDF_TEXTO_SUAVE)
+
+
+def _pdf_cartao(largura, chave, linhas_pars):
+    """Cartãozinho colorido (fundo claro + faixa na lateral) de um evento/bloqueio."""
+    cor, fundo = _PDF_CORES[chave]
+    caixa = Table([[linhas_pars]], colWidths=[largura])
+    caixa.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), fundo),
+        ("LINEBEFORE", (0, 0), (0, -1), 3, cor),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5), ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+        ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+    ]))
+    return caixa
+
+
+def _cal_celula_dia(dia, ocupado, bloqueio_dia, tipos_recurso, largura=None, altura=None):
+    """Conteúdo de uma célula do calendário em PDF: número do dia + um cartão
+    colorido por bloqueio/solicitação. Helvetica não tem emoji — pendente é
+    marcado com * e bloqueio com o texto "Bloqueio:"."""
+    from reportlab.platypus import KeepInFrame
+    largura_cartao = (largura or 120) - 8
+    conteudo = [Paragraph(str(dia.day), _pdf_dia_style), Spacer(1, 1.5)]
+    qtd = len(ocupado or []) + len(bloqueio_dia or [])
 
     for b in (bloqueio_dia or []):
         rotulo_tipo = f" ({tipos_recurso.get(b.tipo_recurso)})" if b.tipo_recurso else ""
-        conteudo.append(Paragraph(f"<b>Bloqueio:</b> {b.motivo}{rotulo_tipo}", _cal_sub_style))
+        conteudo.append(_pdf_cartao(largura_cartao, "bloqueio", [Paragraph(f"Bloqueio: {b.motivo}{rotulo_tipo}", _pdf_ev_t)]))
+        conteudo.append(Spacer(1, 1.5))
 
     for s in (ocupado or []):
-        eh_agro = s.tipo_recurso == "carreta_agro"
-        eh_realizada = s.status == "realizada"
-        eh_pendente = s.status == "pendente"
-        cor = _CAL_ROTULO if eh_realizada else (_CAL_VERDE if eh_agro else _CAL_AZUL)
-        prefixo = "* " if eh_pendente else ""
-        estilo_evento = ParagraphStyle(
-            "CalEventoCor", parent=_cal_evento_style, textColor=cor,
-        )
-        conteudo.append(Paragraph(f"{prefixo}{s.evento}", estilo_evento))
-        conteudo.append(Paragraph(
-            f"{s.municipio_nome} \u00b7 {tipos_recurso.get(s.tipo_recurso, s.tipo_recurso)}",
-            _cal_sub_style,
-        ))
-        conteudo.append(Paragraph(s.responsavel_nome or "sem respons\u00e1vel", _cal_sub_style))
+        if s.status == "realizada":
+            chave = "realizada"
+        elif s.status == "pendente":
+            chave = "pendente"
+        else:
+            chave = "agro" if s.tipo_recurso == "carreta_agro" else "saude"
+        prefixo = "* " if s.status == "pendente" else ""
+        programa = "Agro" if s.tipo_recurso == "carreta_agro" else "Saúde"
+        pars = [
+            Paragraph(f"{prefixo}{s.evento}", _pdf_ev_t),
+            Paragraph(f"{s.municipio_nome} · {programa}", _pdf_ev_s),
+        ]
+        if qtd <= 1:
+            pars.append(Paragraph(s.responsavel_nome or "sem responsável", _pdf_ev_s))
+        conteudo.append(_pdf_cartao(largura_cartao, chave, pars))
+        conteudo.append(Spacer(1, 1.5))
 
+    if largura and altura:
+        return KeepInFrame(largura - 6, altura - 4, conteudo, mode="shrink")
     return conteudo
 
 
 def gerar_pdf_calendario(ano, mes, tipo_recurso, semanas, calendario, bloqueados, tipos_recurso, meses_nomes):
-    """Gera em PDF (paisagem, uma página) o mesmo calendário mensal mostrado
-    em /admin/carreta/calendario. Retorna bytes prontos para download —
-    mesmo padrão das outras fichas/relatórios do projeto (reportlab puro,
-    sem weasyprint, para rodar sem configuração extra no Vercel)."""
+    """Gera em PDF (paisagem, uma página) o calendário mensal mostrado em
+    /admin/carreta/calendario. Retorna bytes (reportlab puro, sem weasyprint,
+    para rodar sem configuração extra no Vercel)."""
     largura_pagina, altura_pagina = landscape(A4)
-    margem = 10 * mm
+    margem = 9 * mm
     largura_util = largura_pagina - 2 * margem
-
     story = []
 
+    # --- cabeçalho verde ---
+    est_titulo = ParagraphStyle("PdfTit", fontName="Helvetica-Bold", fontSize=21, leading=23, textColor=colors.white)
+    est_mes = ParagraphStyle("PdfMes", fontName="Helvetica-Bold", fontSize=13, leading=15, textColor=colors.HexColor("#CFEAC0"))
+    est_dir = ParagraphStyle("PdfDir", fontName="Helvetica-Bold", fontSize=10.5, leading=13, textColor=colors.white, alignment=2)
     cabecalho = Table(
-        [[Paragraph(
-            f"CALEND\u00c1RIO \u2014 {tipos_recurso.get(tipo_recurso, tipo_recurso).upper()}"
-            f"<br/><font size=10>{meses_nomes[mes]} de {ano}</font>",
-            _cal_titulo_style,
-        )]],
-        colWidths=[largura_util],
+        [[[Paragraph("CALENDÁRIO DA CARRETA", est_titulo), Paragraph(f"{meses_nomes[mes]} de {ano}", est_mes)],
+          Paragraph("Carreta do Agro / Carreta da Saúde<br/><font size=8 color='#CFEAC0'>Sistema de Adesões · SENAR</font>", est_dir)]],
+        colWidths=[largura_util * 0.62, largura_util * 0.38],
     )
     cabecalho.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), _CAL_VERDE if tipo_recurso == "carreta_agro" else _CAL_AZUL),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("BACKGROUND", (0, 0), (-1, -1), _PDF_VERDE_ESCURO),
+        ("LINEBELOW", (0, 0), (-1, -1), 4, _PDF_VERDE_CLARO),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (0, 0), 12), ("RIGHTPADDING", (1, 0), (1, 0), 12),
+        ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
     ]))
     story.append(cabecalho)
     story.append(Spacer(1, 2.5 * mm))
 
-    # Espaço reservado (em mm) para cabeçalho + espaçamentos + legenda no
-    # rodapé, medido com folga — o que sobrar é dividido entre as linhas
-    # de semana da grade, para a tabela nunca vazar para uma 2ª página.
-    ALTURA_RESERVADA_MM = 46
+    # --- legenda colorida ---
+    itens = [("agro", "Carreta do Agro"), ("saude", "Carreta da Saúde"), ("pendente", "Pendente (*)"),
+             ("realizada", "Realizada"), ("bloqueio", "Data bloqueada")]
+    cel, larguras = [], []
+    for chave, rotulo in itens:
+        cel += ["", Paragraph(rotulo, _pdf_leg_style)]
+        larguras += [4 * mm, 34 * mm]
+    leg = Table([cel], colWidths=larguras, rowHeights=[5 * mm])
+    est_leg = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LEFTPADDING", (0, 0), (-1, -1), 2), ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+               ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]
+    for k, (chave, _r) in enumerate(itens):
+        est_leg.append(("BACKGROUND", (k * 2, 0), (k * 2, 0), _PDF_CORES[chave][0]))
+    leg.setStyle(TableStyle(est_leg))
+    leg.hAlign = "LEFT"
+    story.append(leg)
+    story.append(Spacer(1, 2.5 * mm))
 
-    dias_semana = ["Seg", "Ter", "Qua", "Qui", "Sex", "S\u00e1b", "Dom"]
+    # --- grade ---
+    ALTURA_RESERVADA_MM = 62
+    largura_coluna = largura_util / 7
+    altura_linha_dias = (altura_pagina - 2 * margem - ALTURA_RESERVADA_MM * mm) / len(semanas)
+    est_cab_dia = ParagraphStyle("PdfDiaSem", fontName="Helvetica-Bold", fontSize=10, leading=12, textColor=colors.white, alignment=1)
+    dias_semana = [Paragraph(d, est_cab_dia) for d in ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]]
     linhas = [dias_semana]
     for semana in semanas:
         linha = []
@@ -830,56 +887,48 @@ def gerar_pdf_calendario(ano, mes, tipo_recurso, semanas, calendario, bloqueados
             if dia is None:
                 linha.append("")
             else:
-                ocupado = calendario.get(dia)
-                bloqueio_dia = bloqueados.get(dia)
-                linha.append(_cal_celula_dia(dia, ocupado, bloqueio_dia, tipos_recurso))
+                linha.append(_cal_celula_dia(dia, calendario.get(dia), bloqueados.get(dia), tipos_recurso,
+                                             largura=largura_coluna, altura=altura_linha_dias))
         linhas.append(linha)
 
-    largura_coluna = largura_util / 7
-    altura_linha_dias = (altura_pagina - 2 * margem - ALTURA_RESERVADA_MM * mm) / len(semanas)
-
-    tabela = Table(linhas, colWidths=[largura_coluna] * 7, rowHeights=[7 * mm] + [altura_linha_dias] * len(semanas))
-    estilo_tabela = [
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F1EFE3")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), _CAL_ROTULO),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, 0), 7),
-        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
-        ("GRID", (0, 0), (-1, -1), 0.5, _CAL_LINHA),
+    tabela = Table(linhas, colWidths=[largura_coluna] * 7, rowHeights=[8 * mm] + [altura_linha_dias] * len(semanas))
+    estilo = [
+        ("BACKGROUND", (0, 0), (-1, 0), _PDF_VERDE),
+        ("VALIGN", (0, 0), (-1, 0), "MIDDLE"),
+        ("GRID", (0, 0), (-1, -1), 0.5, _PDF_GRADE),
+        ("BOX", (0, 0), (-1, -1), 1.2, _PDF_VERDE),
         ("VALIGN", (0, 1), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 1), (-1, -1), 3),
-        ("RIGHTPADDING", (0, 1), (-1, -1), 3),
-        ("TOPPADDING", (0, 1), (-1, -1), 3),
+        ("LEFTPADDING", (0, 1), (-1, -1), 3), ("RIGHTPADDING", (0, 1), (-1, -1), 3),
+        ("TOPPADDING", (0, 1), (-1, -1), 2), ("BOTTOMPADDING", (0, 1), (-1, -1), 1),
     ]
     for linha_idx, semana in enumerate(semanas, start=1):
         for col_idx, dia in enumerate(semana):
             if dia is None:
-                continue
-            if bloqueados.get(dia):
-                estilo_tabela.append(("BACKGROUND", (col_idx, linha_idx), (col_idx, linha_idx), _CAL_BEGE_BLOQUEIO))
-            elif calendario.get(dia):
-                estilo_tabela.append(("BACKGROUND", (col_idx, linha_idx), (col_idx, linha_idx), _CAL_ROSA_OCUPADO))
-    tabela.setStyle(TableStyle(estilo_tabela))
+                estilo.append(("BACKGROUND", (col_idx, linha_idx), (col_idx, linha_idx), colors.HexColor("#FAFCFA")))
+            elif bloqueados.get(dia):
+                estilo.append(("BACKGROUND", (col_idx, linha_idx), (col_idx, linha_idx), colors.HexColor("#F6F0DA")))
+            elif col_idx >= 5:
+                estilo.append(("BACKGROUND", (col_idx, linha_idx), (col_idx, linha_idx), _PDF_FIM_SEMANA))
+    tabela.setStyle(TableStyle(estilo))
     story.append(tabela)
 
     story.append(Spacer(1, 2 * mm))
     story.append(Paragraph(
-        "Dias em bege s\u00e3o bloqueios cadastrados em Bloqueio de Datas. "
-        "Eventos com * ainda aguardam aprova\u00e7\u00e3o; eventos em cinza j\u00e1 aconteceram. "
-        "O mesmo motorista/ve\u00edculo atende Carreta do Agro e Carreta da Sa\u00fade, "
-        "por isso o calend\u00e1rio mostra os dois programas juntos.",
-        _cal_legenda_style,
+        "As duas carretas usam o mesmo motorista e veículo: um dia ocupado por uma bloqueia a outra, "
+        "por isso o calendário mostra os dois programas juntos. Eventos com * aguardam aprovação; "
+        "eventos em cinza já aconteceram; datas em bege estão bloqueadas.",
+        _pdf_nota_style,
     ))
     story.append(Paragraph(
-        f"Impresso em {datetime.now(FUSO_BRASIL):%d/%m/%Y \u00e0s %H:%M}",
-        _cal_impresso_style,
+        f"Impresso em {datetime.now(FUSO_BRASIL):%d/%m/%Y às %H:%M}",
+        ParagraphStyle("PdfImp", parent=_pdf_nota_style, fontName="Helvetica-Oblique", fontSize=7, textColor=_PDF_VERDE),
     ))
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer, pagesize=landscape(A4),
         topMargin=margem, bottomMargin=margem, leftMargin=margem, rightMargin=margem,
-        title=f"Calend\u00e1rio Carreta - {meses_nomes[mes]} de {ano}",
+        title=f"Calendário Carreta - {meses_nomes[mes]} de {ano}",
     )
     doc.build(story)
     buffer.seek(0)

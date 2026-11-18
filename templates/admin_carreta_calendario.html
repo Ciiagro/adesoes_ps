@@ -53,18 +53,30 @@
   .cl-blq{display:block;margin-top:.3em;padding:.3em .5em;border-radius:8px;background:#E6DAB4;color:#5C4A1E;font-size:.76em;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cl-deco{position:absolute;right:.6em;bottom:.4em;width:15em;height:7em;pointer-events:none;opacity:.55}
   @media (max-width:1100px){.cl-leg{display:none}}
+
+  /* ===== tamanhos uniformes dos controles ===== */
+  .cl-info{font-size:.86em;padding:.55em 1em;margin-bottom:.8em;border-radius:12px}
+  .cl-info svg{width:1.5em;height:1.5em}
+  .cl-barra{gap:.55em;margin-bottom:.8em;flex-wrap:nowrap}
+  .cl-pill,.cl-pdf{height:2.3em;font-size:.88em;padding:0 1.1em}
+  .cl-pill svg,.cl-pdf svg{width:1.1em;height:1.1em}
+  .cl-leg{font-size:.88em;gap:.7em;flex-wrap:nowrap}
+  .cl-leg a,.cl-leg span{white-space:nowrap}
+  .cl-sep{height:1.8em}
+  .cl-mes{font-size:1.45em;margin-bottom:.5em}
+  table.cl-t th{font-size:.95em;padding:.65em 0}
+  @media (max-width:1350px){.cl-barra{flex-wrap:wrap}}
 </style>
 
 <div class="cl">
 {% call cr_head('Calendário', 'Dias já ocupados pelas solicitações pendentes ou aprovadas da Carreta do Agro e da Carreta da Saúde.') %}{% endcall %}
 
 <div class="cl-info"><svg viewBox="0 0 24 24" fill="#0F6B30" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14zM7 12v2h2v-2H7zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z"/></svg>
-  <span>As duas carretas usam o mesmo motorista e veículo: um dia ocupado por uma bloqueia a outra. Clique em um evento para ver os detalhes. Datas bloqueadas ficam em bege (veja em <a href="{{ url_for('admin_carreta_bloqueios') }}" style="color:#0F5A28;font-weight:700">Bloqueio de Datas</a>).</span></div>
+  <span>As duas carretas usam o mesmo motorista e veículo: um dia ocupado por uma bloqueia a outra. Clique em um evento para ver os detalhes. Datas bloqueadas ficam em bege (<a href="{{ url_for('admin_carreta_bloqueios') }}" style="color:#0F5A28;font-weight:700">Bloqueio de Datas</a>).</span></div>
 
 <div class="cl-barra">
   <a class="cl-pill" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_anterior, mes=mes_anterior) }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Mês anterior</a>
   <a class="cl-pill" href="{{ url_for('admin_carreta_calendario', ver=ver or None) }}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>Calendário hoje</a>
-  <span class="cl-pill on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>{{ MESES_NOMES[mes] }} de {{ ano }}</span>
   <a class="cl-pill" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_proximo, mes=mes_proximo) }}">Próximo mês<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a>
   <span class="cl-esp"></span>
   <div class="cl-leg" title="Clique para destacar um programa">
