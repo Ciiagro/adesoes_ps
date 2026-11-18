@@ -23,9 +23,8 @@
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
 <a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
-{% call cr_head('Detalhe da solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome ~ ' — ' ~ solicitacao.data_inicio.strftime('%d/%m/%Y') ~ ' a ' ~ solicitacao.data_fim.strftime('%d/%m/%Y')) %}
-{% if pode_editar_carreta %}<a class="cr-nova" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">Editar</a>{% endif %}
-{% endcall %}
+{% call cr_head('Detalhe da solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome ~ ' — ' ~ solicitacao.data_inicio.strftime('%d/%m/%Y') ~ ' a ' ~ solicitacao.data_fim.strftime('%d/%m/%Y')) %}{% endcall %}
+{% if pode_editar_carreta %}<div class="cr-barra"><a class="cr-btn" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">Editar</a></div>{% endif %}
 
 {% if solicitacao.status == 'pendente' %}
 <div class="secao-card" style="margin-bottom:16px;background:#FBF7EC;border-color:#EEDCB4;">

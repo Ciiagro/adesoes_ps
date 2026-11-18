@@ -2,7 +2,7 @@
 {% macro cr_head(pagina, sub='', ico='lista') -%}
 <style>
   .cr-head{font-size:clamp(13px,.95vw,17px);position:relative;overflow:hidden;display:flex;align-items:center;min-height:9.5em;padding:1.1em 1.6em 2.4em;margin:0 0 1em;background:linear-gradient(90deg,#fff 0,#F1F8F2 55%,#E6F3E8 100%);border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10)}
-  .cr-head .cr-art{position:relative;flex:none;height:7.6em;width:auto;aspect-ratio:470/160;margin-left:2.2em;z-index:1}
+  .cr-head .cr-art{position:relative;flex:none;height:8em;width:auto;aspect-ratio:470/160;margin-left:auto;z-index:1}
   .cr-head>*{position:relative;z-index:1}
   .cr-head .cr-tx{flex:0 1 auto}
   .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:2em;line-height:1.12}
@@ -11,6 +11,9 @@
   .cr-head .sub b{font-style:normal;color:#0F5A28}
   .cr-head .cr-nova{display:inline-flex;align-items:center;gap:.5em;margin-top:.8em;background:#176B31;color:#fff !important;border-radius:999px;padding:.55em 1.3em;font-weight:700;font-size:.95em;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
   .cr-head .cr-nova:hover{background:#0F5A28}
+  .cr-barra{display:flex;justify-content:flex-end;gap:.6em;margin:0 0 .9em;font-size:clamp(13px,.95vw,17px)}
+  .cr-barra .cr-btn{display:inline-flex;align-items:center;gap:.5em;background:#176B31;color:#fff !important;border-radius:999px;padding:.55em 1.4em;font-weight:700;font-size:.95em;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
+  .cr-barra .cr-btn:hover{background:#0F5A28}
   .cr-head .cr-acoes-cab{display:flex;gap:.6em;flex-wrap:wrap}
 </style>
 <div class="cr-head">
