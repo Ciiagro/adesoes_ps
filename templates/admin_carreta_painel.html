@@ -1,7 +1,8 @@
 {% extends 'admin_base.html' %}
 {% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}</style>
+<style>.conteudo{max-width:none !important}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   .pn{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);color:#14301E;width:100%}
@@ -81,6 +82,38 @@
   .pn-rodape::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 140' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%230F5A28'/%3E%3Cstop offset='.55' stop-color='%2325933F'/%3E%3Cstop offset='1' stop-color='%237BC043'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 140V50C200 25 430 85 720 100C940 111 1090 100 1200 88V140Z' fill='url(%23g)'/%3E%3Cpath d='M0 140V92C220 78 450 118 720 122C940 125 1090 118 1200 112V140Z' fill='%23fff' fill-opacity='.18'/%3E%3C/svg%3E") center bottom/100% 100% no-repeat}
   .pn-rodape span{position:relative;font-style:italic;font-weight:800;font-size:1.4em;color:#0F5A28;border-bottom:3px solid #7BC043;padding-bottom:.15em;align-self:flex-start}
   @media (max-width:1100px){.pn-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pn-l1,.pn-l2,.pn-l3{grid-template-columns:1fr}}
+  /* ===== versão compacta: mais dados na tela, menos enfeite ===== */
+  .pn .cr-head{min-height:0 !important;padding:.55em 1.4em 1.9em !important;margin-bottom:-1.5em !important}
+  .pn .cr-head h1{font-size:1.5em !important}
+  .pn .cr-head .cr-pg{font-size:1.1em !important;margin-top:.1em !important}
+  .pn .cr-head .sub{font-size:.82em !important;margin-top:.2em !important}
+  .pn .cr-head .cr-art{height:5.4em !important}
+  .pn-filtros{padding:.55em 1.1em;margin-bottom:.8em}
+  .pn-filtros .tt{font-size:1.05em}.pn-filtros .tt .ic{width:2em;height:2em}
+  .pn-sel{height:2.2em}
+  .pn-kpis{grid-template-columns:repeat(8,minmax(0,1fr));gap:.7em;margin-bottom:.8em}
+  .pn-kpi{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"i v" "i r" "i d";column-gap:.7em;align-items:center;padding:.7em .8em}
+  .pn-kpi .ico{grid-area:i;width:2.4em;height:2.4em;margin:0}
+  .pn-kpi .v{grid-area:v;font-size:1.55em}
+  .pn-kpi .r{grid-area:r;margin:.1em 0 0;font-size:.82em;line-height:1.15}
+  .pn-kpi .d{grid-area:d;margin:0;font-size:.7em;line-height:1.2}
+  .pn-kpi::after{display:none}
+  .pn-linha{gap:.8em;margin-bottom:.8em}
+  .pn-l1{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+  .pn-l2{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pn-l3{grid-template-columns:1fr}
+  .pn-card{padding:.8em 1.1em .9em}
+  .pn-card h3{font-size:1.05em}.pn-card .sub{margin-bottom:.5em;font-size:.8em}
+  .pn-barras{height:11em;padding-top:1.2em}
+  .pn-leg{margin-top:.4em}
+  .pn-donut svg{width:9em;height:9em}
+  .pn-rank{gap:.35em}.pn-rk{font-size:.88em;grid-template-columns:1.5em minmax(0,8em) 1fr 1.8em}
+  .pn-oc{grid-template-columns:repeat(12,minmax(0,1fr));gap:.5em}
+  .pn-oc div{padding:.45em .3em .55em}.pn-oc .p{font-size:1.05em}
+  .pn-prox{gap:.4em}.pn-pr{padding:.4em .6em}.pn-pr .ev{font-size:.9em}.pn-pr .dt{width:2.9em}
+  .pn-rodape{display:none}
+  @media (max-width:1500px){.pn-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.pn-oc{grid-template-columns:repeat(6,minmax(0,1fr))}}
+  @media (max-width:1100px){.pn-l2{grid-template-columns:1fr}}
 </style>
 
 <div class="pn">
@@ -157,15 +190,6 @@
       <div class="pn-rk"><span class="n">{{ loop.index }}</span><span class="nome" title="{{ r.nome }}">{{ r.nome }}</span><span class="trilho"><i style="width:{{ r.pct }}%"></i></span><span class="q">{{ r.n }}</span></div>
     {% endfor %}</div>{% else %}<div class="pn-vazio">Sem dados neste período.</div>{% endif %}
   </div>
-</div>
-
-<div class="pn-linha pn-l3">
-  <div class="pn-card">
-    <h3>Ocupação do calendário</h3><p class="sub">Percentual dos dias de cada mês com a carreta em uso.</p>
-    <div class="pn-oc">{% for o in ocupacao %}
-      <div><div class="m">{{ o.rotulo }}</div><div class="p">{{ o.pct }}%</div><div class="t"><i class="{{ 'alto' if o.pct >= 70 else '' }}" style="width:{{ o.pct }}%"></i></div></div>
-    {% endfor %}</div>
-  </div>
   <div class="pn-card">
     <h3>Próximos eventos</h3><p class="sub">Aprovados ou pendentes, a partir de hoje.</p>
     {% if futuros %}<div class="pn-prox">{% for s in futuros %}
@@ -176,6 +200,15 @@
         <span class="st {{ 'ap' if s.status == 'aprovada' else 'pe' }}">{{ 'Aprovada' if s.status == 'aprovada' else 'Pendente' }}</span>
       </div>
     {% endfor %}</div>{% else %}<div class="pn-vazio">Nenhum evento futuro cadastrado.</div>{% endif %}
+  </div>
+</div>
+
+<div class="pn-linha pn-l3">
+  <div class="pn-card">
+    <h3>Ocupação do calendário</h3><p class="sub">Percentual dos dias de cada mês com a carreta em uso.</p>
+    <div class="pn-oc">{% for o in ocupacao %}
+      <div><div class="m">{{ o.rotulo }}</div><div class="p">{{ o.pct }}%</div><div class="t"><i class="{{ 'alto' if o.pct >= 70 else '' }}" style="width:{{ o.pct }}%"></i></div></div>
+    {% endfor %}</div>
   </div>
 </div>
 
