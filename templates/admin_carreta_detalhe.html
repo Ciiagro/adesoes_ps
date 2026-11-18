@@ -1,4 +1,5 @@
 {% extends 'admin_base.html' %}
+{% from '_cr_head.html' import cr_head %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -22,15 +23,9 @@
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
 <a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
-<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
-  <div>
-    <h1>{{ solicitacao.evento }}</h1>
-    <p class="sub">{{ solicitacao.municipio_nome }} — {{ solicitacao.data_inicio.strftime('%d/%m/%Y') }} a {{ solicitacao.data_fim.strftime('%d/%m/%Y') }}</p>
-  </div>
-  {% if pode_editar_carreta %}
-  <a class="btn secundario" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">✏️ Editar</a>
-  {% endif %}
-</div>
+{% call cr_head('Detalhe da solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome ~ ' — ' ~ solicitacao.data_inicio.strftime('%d/%m/%Y') ~ ' a ' ~ solicitacao.data_fim.strftime('%d/%m/%Y')) %}
+{% if pode_editar_carreta %}<a class="cr-nova" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">Editar</a>{% endif %}
+{% endcall %}
 
 {% if solicitacao.status == 'pendente' %}
 <div class="secao-card" style="margin-bottom:16px;background:#FBF7EC;border-color:#EEDCB4;">

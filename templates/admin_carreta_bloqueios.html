@@ -1,16 +1,9 @@
 {% extends 'admin_base.html' %}
+{% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
-<div class="page-head">
-  <h1>Bloqueio de Datas</h1>
-  <p class="sub">
-    Datas em que a carreta NÃO pode ser usada (feriado, manutenção do veículo, motorista de
-    férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir aquela carreta nessas
-    datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua: o sistema
-    nunca bloqueia data nenhuma sozinho. Diga se o bloqueio vale só pra uma das carretas (ex.: ela
-    quebrou e foi pra oficina) ou pras duas juntas (ex.: o motorista está de férias).
-  </p>
-</div>
+{% call cr_head('Bloqueio de Datas', 'Datas em que a carreta não pode ser usada.', 'bloqueio') %}{% endcall %}
+<p class="sub" style="margin:0 0 16px;max-width:none;">Datas em que a carreta NÃO pode ser usada (feriado, manutenção do veículo, motorista de férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir aquela carreta nessas datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua: o sistema nunca bloqueia data nenhuma sozinho. Diga se o bloqueio vale só pra uma das carretas (ex.: ela quebrou e foi pra oficina) ou pras duas juntas (ex.: o motorista está de férias).</p>
 
 <div class="secao-card" style="margin-bottom:16px;">
   <h2>Novo bloqueio</h2>

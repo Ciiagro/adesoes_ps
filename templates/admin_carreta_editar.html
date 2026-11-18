@@ -1,10 +1,8 @@
 {% extends 'admin_base.html' %}
+{% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
 <a class="link-voltar" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=solicitacao.id) }}">← Voltar para o detalhe</a>
-<div class="page-head">
-  <h1>Editar solicitação</h1>
-  <p class="sub">{{ solicitacao.evento }} — {{ solicitacao.municipio_nome }}</p>
-</div>
+{% call cr_head('Editar solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome) %}{% endcall %}
 
 <form method="post" enctype="multipart/form-data" class="secao-card">
   <h2>Programa e local</h2>

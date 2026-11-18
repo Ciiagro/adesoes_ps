@@ -1,0 +1,31 @@
+{# Cabeçalho padrão das telas da Carreta: ícone, título, subtítulo, ação e foto do campo à direita. #}
+{% macro cr_head(pagina, sub='', ico='lista') -%}
+<style>
+  .cr-head{font-size:clamp(13px,.95vw,17px);position:relative;overflow:hidden;display:flex;align-items:center;gap:1em;min-height:0;padding:.9em 1.3em;margin:0 0 1em;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10)}
+  .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:38%;background:url('{{ url_for("static", filename="img/banner_carreta.jpg") }}') right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%);z-index:0}
+  .cr-head>*{position:relative;z-index:1}
+  .cr-head .cr-ico{flex:none;width:3.2em;height:3.2em;padding-right:1em;border-right:2px solid #BFD6C3;box-sizing:content-box}
+  .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:1.7em;line-height:1.1}
+  .cr-head h1 em{display:block;font-weight:700;font-size:.62em;margin-top:.15em;color:#14301E}
+  .cr-head .sub{margin:.3em 0 0;color:#23382A;font-size:.9em;font-style:italic;max-width:none}
+  .cr-head .cr-nova{display:inline-flex;align-items:center;gap:.5em;margin-top:.7em;background:#176B31;color:#fff !important;border-radius:999px;padding:.55em 1.3em;font-weight:700;font-size:.95em;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
+  .cr-head .cr-nova:hover{background:#0F5A28}
+  .cr-head .cr-acoes-cab{display:flex;gap:.6em;flex-wrap:wrap}
+</style>
+<div class="cr-head">
+  {% if ico == 'calendario' %}
+  <svg class="cr-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="12" width="48" height="44" rx="6" fill="#fff" stroke="#176B31" stroke-width="4"/><path d="M8 26h48" stroke="#176B31" stroke-width="4"/><path d="M20 6v12M44 6v12" stroke="#176B31" stroke-width="4" stroke-linecap="round"/><circle cx="46" cy="46" r="12" fill="#2E9E4F"/><path d="M40 46l4 4 8-9" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% elif ico == 'mapa' %}
+  <svg class="cr-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6C21 6 13 14 13 24c0 14 19 34 19 34s19-20 19-34C51 14 43 6 32 6z" fill="#fff" stroke="#176B31" stroke-width="4"/><circle cx="32" cy="24" r="7" fill="#2E9E4F"/></svg>
+  {% elif ico == 'bloqueio' %}
+  <svg class="cr-ico" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="#fff" stroke="#176B31" stroke-width="4"/><path d="M15 49L49 15" stroke="#E04B3A" stroke-width="5" stroke-linecap="round"/></svg>
+  {% else %}
+  <svg class="cr-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="38" height="48" rx="5" fill="#fff" stroke="#176B31" stroke-width="4"/><path d="M18 22h22M18 30h22M18 38h12" stroke="#176B31" stroke-width="3.5" stroke-linecap="round"/><circle cx="47" cy="46" r="13" fill="#2E9E4F"/><path d="M41 46l4 4 8-9" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  {% endif %}
+  <div>
+    <h1>Carreta do Agro / Carreta da Saúde<em>{{ pagina }}</em></h1>
+    {% if sub %}<p class="sub">{{ sub }}</p>{% endif %}
+    {% if caller is defined %}<div class="cr-acoes-cab">{{ caller() }}</div>{% endif %}
+  </div>
+</div>
+{%- endmacro %}
