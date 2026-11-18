@@ -1,0 +1,106 @@
+{% extends 'admin_base.html' %}
+{% block title %}Painel da Gestão · Sindicatos{% endblock %}
+{% block admin_content %}
+{% from '_cab_hero.html' import cab_hero %}
+<style>
+  .conteudo{max-width:none !important}
+  .gp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:0 0 16px}
+  .gp-kp{border-radius:14px;padding:16px 18px;border:1px solid;display:flex;flex-direction:column;gap:2px}
+  .gp-kp .nn{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:600;line-height:1.1}
+  .gp-kp .tt{font-weight:700;font-size:.9rem}
+  .gp-kp .ll{font-size:.8rem;opacity:.85}
+  .gp-kp.r{background:#FDECEA;border-color:#F3C5BE;color:#B3261E}
+  .gp-kp.a{background:#FEF3DC;border-color:#F3D9A4;color:#9A6817}
+  .gp-kp.b{background:#EAF1FB;border-color:#C8D8F0;color:#1F4E8C}
+  .gp-kp.v{background:#E8F4EA;border-color:#C5DFCB;color:#1f4a2f}
+  .gp-box{background:#fff;border-radius:14px;box-shadow:0 3px 14px rgba(15,107,46,.12);overflow:hidden;margin:0 0 18px}
+  .gp-topo{display:flex;align-items:center;gap:10px;background:#176B31;color:#fff;padding:12px 18px;font-weight:700;font-size:1.02rem}
+  .gp-topo small{margin-left:auto;font-weight:500;opacity:.85;font-size:.8rem}
+  .gp-box table{width:100%;border-collapse:collapse;font-size:.9rem}
+  .gp-box th{text-align:left;background:#EEF4EA;color:#1f4a2f;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;padding:10px 14px}
+  .gp-box td{padding:10px 14px;border-top:1px solid #EEF3EE;vertical-align:middle}
+  .gp-box td.n{text-align:center;font-weight:700}
+  .gp-tag{display:inline-block;border-radius:999px;padding:3px 12px;font-size:.74rem;font-weight:800;color:#fff;white-space:nowrap}
+  .gp-tag.r{background:#C62828}.gp-tag.a{background:#E08A00}.gp-tag.g{background:#9AA39A}
+  .gp-box details summary{cursor:pointer;color:#176B31;font-weight:600;font-size:.82rem;list-style:none}
+  .gp-box details[open] summary{margin-bottom:6px}
+  .gp-lst{display:flex;flex-direction:column;gap:3px;margin:4px 0 0;font-size:.82rem}
+  .gp-lst a{color:#14301E;text-decoration:none}.gp-lst a:hover{text-decoration:underline}
+  .gp-q{padding:14px 18px;display:grid;gap:12px}
+  .gp-q .lin{display:grid;grid-template-columns:200px 1fr 54px;gap:12px;align-items:center;font-size:.9rem}
+  .gp-q .bar{height:10px;background:#E4EBE3;border-radius:6px;overflow:hidden}
+  .gp-q .bar i{display:block;height:100%;background:#176B31}
+  .gp-q .bar i.baixo{background:#E08A00}.gp-q .bar i.crit{background:#C62828}
+  .gp-vazio{padding:16px 18px;color:#4F6354}
+</style>
+{{ cab_hero('Painel da Gestão', 'Mandatos, vencimentos e qualidade do cadastro dos sindicatos rurais em um só lugar.', 'cab') }}
+
+<div class="gp-kpis">
+  <div class="gp-kp r"><span class="nn">{{ totais.vencido }}</span><span class="tt">Mandatos vencidos</span><span class="ll">precisam de regularização</span></div>
+  <div class="gp-kp a"><span class="nn">{{ totais.m3 }}</span><span class="tt">Vencem em até 3 meses</span><span class="ll">agir agora</span></div>
+  <div class="gp-kp b"><span class="nn">{{ totais.m6 + totais.m12 }}</span><span class="tt">Vencem de 3 a 12 meses</span><span class="ll">{{ totais.m6 }} em até 6 meses</span></div>
+  <div class="gp-kp v"><span class="nn">{{ total }}</span><span class="tt">Sindicatos ativos</span><span class="ll">{{ totais.sem_data }} sem data de fim do mandato</span></div>
+</div>
+
+<div class="gp-box">
+  <div class="gp-topo">Calendário de vencimentos por região<small>clique em "ver" para listar os sindicatos</small></div>
+  <table>
+    <tr><th>Região</th><th style="text-align:center">Vencidos</th><th style="text-align:center">Até 3 meses</th><th style="text-align:center">3 a 6 meses</th><th style="text-align:center">6 a 12 meses</th><th style="text-align:center">Sem data</th></tr>
+    {% for c in calendario %}
+    <tr>
+      <td><b>{{ c.regiao }}</b></td>
+      {% for f in ['vencido','m3','m6','m12','sem_data'] %}
+      <td class="n" style="{% if f=='vencido' and c[f] %}color:#C62828{% elif f=='m3' and c[f] %}color:#9A6817{% endif %}">
+        {% if c[f] %}
+        <details><summary>{{ c[f]|length }} · ver</summary>
+          <div class="gp-lst" style="text-align:left;font-weight:500">
+            {% for it in c[f] %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }}{% if it.s.gestao_fim %} · {{ it.s.gestao_fim.strftime('%d/%m/%Y') }}{% endif %}</a>{% endfor %}
+          </div>
+        </details>
+        {% else %}<span style="color:#9AA39A">0</span>{% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="gp-box">
+  <div class="gp-topo">Fila de regularização<small>mandatos já vencidos, do mais atrasado ao menos</small></div>
+  {% if fila %}
+  <table>
+    <tr><th>Atraso</th><th>Sindicato</th><th>Região</th><th>Presidente</th><th>Contato</th><th>Venceu em</th></tr>
+    {% for it in fila %}
+    <tr>
+      <td><span class="gp-tag r">{{ -it.dias }} DIA{{ 'S' if -it.dias != 1 else '' }}</span></td>
+      <td><a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}" style="font-weight:700;color:#14301E;text-decoration:none">{{ it.s.nome }}</a></td>
+      <td>{{ it.regiao }}</td>
+      <td>{{ it.presidente or '—' }}</td>
+      <td>{% if it.telefone %}<a href="tel:{{ it.telefone }}">{{ it.telefone }}</a>{% endif %}{% if it.telefone and it.email %}<br>{% endif %}{% if it.email %}<a href="mailto:{{ it.email }}">{{ it.email }}</a>{% endif %}{% if not it.telefone and not it.email %}<span class="gp-tag g">sem contato</span>{% endif %}</td>
+      <td>{{ it.s.gestao_fim.strftime('%d/%m/%Y') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<div class="gp-vazio">Nenhum mandato vencido.</div>{% endif %}
+</div>
+
+<div class="gp-box">
+  <div class="gp-topo">Qualidade do cadastro<small>% dos {{ total }} sindicatos ativos com o dado preenchido</small></div>
+  <div class="gp-q">
+    {% for q in qualidade %}
+    <div>
+      <div class="lin">
+        <span>{{ q.campo }}</span>
+        <div class="bar"><i class="{{ 'crit' if q.pct < 50 else ('baixo' if q.pct < 80 else '') }}" style="width:{{ q.pct }}%"></i></div>
+        <b>{{ q.pct }}%</b>
+      </div>
+      {% if q.faltam %}
+      <details style="margin:4px 0 0 212px"><summary>{{ q.faltam|length }} sem {{ q.campo|lower }} · ver quais</summary>
+        <div class="gp-lst">{% for it in q.faltam %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }} <span style="color:#4F6354">({{ it.regiao }})</span></a>{% endfor %}</div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

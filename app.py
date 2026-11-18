@@ -1881,6 +1881,87 @@ def admin_sindicatos_lista():
     )
 
 
+@app.route("/admin/sindicatos/gestao")
+def admin_sindicatos_gestao():
+    """Painel da gestão: calendário de vencimentos por região, fila de
+    regularização (mandatos vencidos) e qualidade do cadastro."""
+    if not pode_ver_sindicatos():
+        return redirect(url_for("admin_login"))
+
+    from datetime import date as _date
+    db = SessionLocal()
+    hoje = _date.today()
+    sindicatos = [s for s in sind.listar_sindicatos(db) if s.ativo]
+    por_sind = {}
+    for m in sind.listar_municipios(db, "", "", None):
+        if m.sindicato:
+            por_sind.setdefault(m.sindicato.id, []).append(m)
+
+    itens = []
+    for sd in sindicatos:
+        muns = por_sind.get(sd.id, [])
+        ref = sind.melhor_referencia(muns)
+        regiao = sd.regiao_faec or (muns[0].regiao_faec if muns else "") or "Sem região"
+        dias = (sd.gestao_fim - hoje).days if sd.gestao_fim else None
+        itens.append({
+            "s": sd, "regiao": regiao, "dias": dias,
+            "presidente": (ref.presidente_nome if ref else None),
+            "telefone": (ref.telefone1 if ref else None),
+            "email": (ref.email1 if ref else None),
+            "endereco": sd.endereco, "coord": bool(sd.latitude and sd.longitude),
+            "n_muns": len(muns),
+        })
+
+    def faixa(d):
+        if d is None: return "sem_data"
+        if d < 0: return "vencido"
+        if d <= 90: return "m3"
+        if d <= 180: return "m6"
+        if d <= 365: return "m12"
+        return "ok"
+
+    for it in itens:
+        it["faixa"] = faixa(it["dias"])
+
+    faixas = ["vencido", "m3", "m6", "m12"]
+    regioes = sorted({it["regiao"] for it in itens})
+    calendario = []
+    for r in regioes:
+        linha = {"regiao": r}
+        for f in faixas:
+            linha[f] = sorted([it for it in itens if it["regiao"] == r and it["faixa"] == f],
+                              key=lambda x: x["dias"])
+        linha["sem_data"] = [it for it in itens if it["regiao"] == r and it["faixa"] == "sem_data"]
+        calendario.append(linha)
+    totais = {f: sum(1 for it in itens if it["faixa"] == f) for f in faixas + ["sem_data"]}
+
+    fila = sorted([it for it in itens if it["faixa"] == "vencido"], key=lambda x: x["dias"])
+
+    campos = [
+        ("Presidente", lambda it: bool(it["presidente"])),
+        ("Telefone", lambda it: bool(it["telefone"])),
+        ("E-mail", lambda it: bool(it["email"])),
+        ("Endereço", lambda it: bool(it["endereco"])),
+        ("Coordenada no mapa", lambda it: it["coord"]),
+        ("Data de fim do mandato", lambda it: it["dias"] is not None),
+    ]
+    qualidade = []
+    for nome, ok in campos:
+        faltam = [it for it in itens if not ok(it)]
+        qualidade.append({
+            "campo": nome, "faltam": faltam,
+            "pct": round(100 * (len(itens) - len(faltam)) / len(itens)) if itens else 0,
+        })
+
+    return render_template(
+        "admin_sindicatos_gestao.html",
+        pagina_ativa="sindicatos_gestao",
+        itens=itens, calendario=calendario, totais=totais, fila=fila,
+        qualidade=qualidade, total=len(itens), hoje=hoje,
+        apenas_sindicatos=True, pode_editar_sindicatos=gestao_sindicato_logado(),
+    )
+
+
 @app.route("/admin/sindicatos/grupo/<int:sindicato_id>/editar", methods=["GET", "POST"])
 def admin_sindicato_grupo_editar(sindicato_id):
     """Edita os dados de contato (presidente, vice-presidente, telefones,
