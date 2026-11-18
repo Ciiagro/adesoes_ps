@@ -207,3 +207,26 @@ a.btn-vp svg{flex:none}
 .acoes-row a:not(.btn-vp):hover{background:#EAF6EC !important}
 a.btn-vp{background:#176B31 !important;color:#fff !important;border:1.5px solid #176B31 !important;box-shadow:none !important}
 .lista-fixo .acoes-row a{height:42px;padding:0 18px !important;font-size:.88rem !important}
+
+/* Todos os botões de ação iguais: verde forte, texto branco */
+.acoes-row a:not(.btn-vp),.lista-fixo .acoes-row a:not(.btn-vp){background:#176B31 !important;color:#fff !important;border:1.5px solid #176B31 !important}
+.acoes-row a:not(.btn-vp):hover,a.btn-vp:hover{background:#0F5A28 !important;color:#fff !important}
+
+/* ===== Menu lateral no formato do modelo ===== */
+.sidebar{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 258 120' preserveAspectRatio='none'%3E%3Cpath d='M0 70C50 40 110 50 170 30S240 15 258 20V120H0z' fill='%2332A852' fill-opacity='.35'/%3E%3Cpath d='M0 85C60 60 120 75 180 55S240 45 258 48V120H0z' fill='%2341B45F' fill-opacity='.3'/%3E%3Cpath d='M0 98C70 80 130 95 190 78S240 72 258 74V120H0z' fill='%23072F17' fill-opacity='.35'/%3E%3Cpath d='M0 66C50 40 110 50 170 30S240 15 258 20' stroke='%2395E06A' stroke-width='3' fill='none' stroke-opacity='.8'/%3E%3C/svg%3E") no-repeat 0 118px/100% 120px,linear-gradient(180deg,#17692F 0%,#0A3F1E 100%) !important;border-right:0 !important;border-radius:0 18px 18px 0;padding:26px 14px 18px !important;width:278px !important}
+.sidebar .brand{gap:14px !important;margin-bottom:84px !important;padding:0 6px !important}
+.sidebar .brand .mark{width:50px !important;height:50px !important;border-radius:14px !important;background:linear-gradient(140deg,#2E9A4F,#176B31) !important;border:1.5px solid rgba(255,255,255,.7);font-family:'Inter',sans-serif !important;font-weight:800 !important;font-size:1.25rem !important;box-shadow:0 3px 10px rgba(0,0,0,.25) !important}
+.sidebar .brand .nome{font-family:'Inter',sans-serif !important;font-weight:800 !important;font-size:1.02rem !important;line-height:1.2 !important;padding-left:14px;border-left:1.5px solid rgba(255,255,255,.55)}
+.sidebar .brand .sub{color:#CFE8D2 !important;font-size:.62rem !important;letter-spacing:.14em !important;margin-top:3px}
+.sidebar .nav-sep{display:flex !important;align-items:center;gap:12px;justify-content:center;margin:22px 0 12px !important;color:#CFE8D2 !important;font-size:.8rem !important;letter-spacing:.2em !important;font-weight:600 !important}
+.sidebar .nav-sep::before,.sidebar .nav-sep::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.22)}
+.sidebar a.nav-item{gap:0 !important;padding:13px 16px 13px 10px !important;border-radius:14px !important;font-size:.98rem !important;font-weight:700 !important;color:#fff !important;margin:2px 0}
+.sidebar a.nav-item .ic{width:46px !important;height:26px;display:flex;align-items:center;justify-content:center;opacity:1 !important;font-size:1.1rem !important;padding-right:12px;margin-right:14px;border-right:1px solid rgba(255,255,255,.3);box-sizing:content-box}
+.sidebar a.nav-item::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2.5px solid currentColor;border-top:2.5px solid currentColor;transform:rotate(45deg);flex:none;margin-right:4px}
+.sidebar a.nav-item .contador{margin-left:auto;margin-right:12px}
+.sidebar a.nav-item.ativo{background:#F1F8F2 !important;color:#14301E !important;box-shadow:0 8px 18px -8px rgba(0,0,0,.55) !important}
+.sidebar a.nav-item.ativo .ic{color:#148A35;border-right-color:rgba(20,48,30,.25)}
+.sidebar a.nav-item.ativo::after{color:#148A35}
+.sidebar a.nav-item.ativo::before{content:"";position:absolute;left:-14px;top:0;bottom:0;width:7px;border-radius:0 6px 6px 0;background:#35D07F}
+.sidebar a.nav-item:hover{background:rgba(255,255,255,.12) !important}
+.sidebar a.nav-item.ativo:hover{background:#F1F8F2 !important}
