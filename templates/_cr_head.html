@@ -2,7 +2,7 @@
 {% macro cr_head(pagina, sub='', ico='lista') -%}
 <style>
   .cr-head{font-size:clamp(13px,.95vw,17px);position:relative;overflow:hidden;display:flex;align-items:center;gap:1em;min-height:0;padding:.9em 1.3em;margin:0 0 1em;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10)}
-  .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:38%;background:url('{{ url_for("static", filename="img/banner_carreta.jpg") }}') right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%);z-index:0}
+  .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:46%;background:url('{{ url_for("static", filename="img/banner_carreta_foto.jpg") }}') right center/auto 100% no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%);mask-image:linear-gradient(90deg,transparent 0,#000 12%);z-index:0}
   .cr-head>*{position:relative;z-index:1}
   .cr-head .cr-ico{flex:none;width:3.2em;height:3.2em;padding-right:1em;border-right:2px solid #BFD6C3;box-sizing:content-box}
   .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:1.7em;line-height:1.1}
@@ -10,6 +10,7 @@
   .cr-head .sub{margin:.3em 0 0;color:#23382A;font-size:.9em;font-style:italic;max-width:none}
   .cr-head .cr-nova{display:inline-flex;align-items:center;gap:.5em;margin-top:.7em;background:#176B31;color:#fff !important;border-radius:999px;padding:.55em 1.3em;font-weight:700;font-size:.95em;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
   .cr-head .cr-nova:hover{background:#0F5A28}
+  .cr-head>div:not(.x){max-width:54%}
   .cr-head .cr-acoes-cab{display:flex;gap:.6em;flex-wrap:wrap}
 </style>
 <div class="cr-head">

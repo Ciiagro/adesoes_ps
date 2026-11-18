@@ -4,7 +4,7 @@
 <style>
   .cr-wrap{font-size:clamp(15px,.3vw + 10px,18px);max-width:1760px;margin:0 auto}
   .cr-head{position:relative;overflow:hidden;display:flex;align-items:center;gap:22px;min-height:150px;padding:20px 30px 64px;margin:0 0 -34px;background:#fff;border-radius:0 0 0 0}
-  .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:48%;background:url('{{ url_for("static", filename="img/banner_carreta.jpg") }}') right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%);z-index:0}
+  .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:48%;background:url('{{ url_for("static", filename="img/banner_carreta_foto.jpg") }}') right center/auto 100% no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%);mask-image:linear-gradient(90deg,transparent 0,#000 12%);z-index:0}
   .cr-head>*{position:relative;z-index:1}
   .cr-ico{flex:none;width:80px;height:80px;padding-right:22px;border-right:2px solid #BFD6C3;box-sizing:content-box}
   .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:clamp(1.6em,2.6vw,2.4em);line-height:1.05}
@@ -53,7 +53,8 @@
   /* ===== proporção do modelo: tudo em em, escala única pelo wrapper ===== */
   .cr-wrap{font-size:clamp(13px,.95vw,17px) !important;max-width:none !important;margin:0 !important;width:100%}
   .cr-head{min-height:0 !important;padding:.9em 1.3em !important;margin:0 0 1em !important;border-radius:16px !important;box-shadow:0 4px 18px rgba(15,107,46,.10);gap:1em !important}
-  .cr-head::before{width:38% !important}
+  .cr-head::before{width:46% !important}
+  .cr-head>div{max-width:54%}
   .cr-ico{width:3.2em !important;height:3.2em !important;padding-right:1em !important}
   .cr-head h1{font-size:1.7em !important;line-height:1.1 !important}
   .cr-head h1 em{font-size:.62em !important;margin-top:.15em}

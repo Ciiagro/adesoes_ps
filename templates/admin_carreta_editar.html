@@ -1,6 +1,7 @@
 {% extends 'admin_base.html' %}
 {% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
+<style>.conteudo{max-width:none !important}</style>
 <a class="link-voltar" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=solicitacao.id) }}">← Voltar para o detalhe</a>
 {% call cr_head('Editar solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome) %}{% endcall %}
 

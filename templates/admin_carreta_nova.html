@@ -1,6 +1,7 @@
 {% extends 'admin_base.html' %}
 {% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
+<style>.conteudo{max-width:none !important}</style>
 <a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
 {% call cr_head('Nova solicitação', 'Cadastro direto — por exemplo, um pedido que chegou por telefone ou que você quer registrar depois de já ter acontecido.') %}{% endcall %}
 
