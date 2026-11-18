@@ -6,13 +6,22 @@
 {% call cr_head('Calendário', 'Dias já ocupados pelas solicitações pendentes ou aprovadas da Carreta do Agro e da Carreta da Saúde.', 'calendario') %}{% endcall %}
 <p class="sub" style="margin:0 0 16px;max-width:none;">Dias com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em bege (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>. Eventos com ⏳ ainda aguardam aprovação; eventos em cinza claro já aconteceram.</p>
 
-<div style="display:flex;justify-content:flex-end;margin-bottom:14px;"><a class="cr-btn-pdf" target="_blank" href="{{ url_for('admin_carreta_calendario_pdf', tipo=tipo, ano=ano, mes=mes) }}">Gerar PDF</a></div>
+<div class="secao-card" style="margin-bottom:16px;">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <a class="btn {{ '' if not ver else 'secundario' }}" href="{{ url_for('admin_carreta_calendario', ano=ano, mes=mes) }}">Os dois programas</a>
+    {% for chave, rotulo in tipos_recurso.items() %}
+    <a class="btn aba-programa {{ 'agro' if chave == 'carreta_agro' else 'saude' }} {{ 'secundario' if ver != chave else '' }}" href="{{ url_for('admin_carreta_calendario', ver=chave, ano=ano, mes=mes) }}">{{ rotulo }}</a>
+    {% endfor %}
+    <span style="color:var(--ink-faint);font-size:.85rem;">{% if ver %}Os eventos do outro programa ficam esmaecidos — a data continua ocupada.{% endif %}</span>
+    <a class="cr-btn-pdf" target="_blank" href="{{ url_for('admin_carreta_calendario_pdf', tipo=(ver or tipo), ano=ano, mes=mes) }}">Gerar PDF</a>
+  </div>
+</div>
 
 <div class="secao-card">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', tipo=tipo, ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
+    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
     <h2 style="margin:0;">{{ MESES_NOMES[mes] }} de {{ ano }}</h2>
-    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', tipo=tipo, ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
+    <a class="btn secundario" href="{{ url_for('admin_carreta_calendario', ver=ver or None, ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
   </div>
 
   <table style="text-align:center;">
@@ -39,7 +48,7 @@
           {% set eh_pendente = s.status == 'pendente' %}
           <a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=s.id) }}"
              title="{{ s.evento }} — {{ s.municipio_nome }} — Solicitante: {{ s.responsavel_nome or 'não informado' }} — {{ 'Já aconteceu' if eh_realizada else ('Aguardando aprovação' if eh_pendente else 'Aprovada') }}"
-             style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;text-decoration:none;
+             style="display:block;margin-top:4px;padding:2px 4px;border-radius:4px;text-decoration:none;{% if ver and s.tipo_recurso != ver %}opacity:.35;filter:grayscale(.6);{% endif %}
                     {% if eh_realizada %}
                     background:#EDEAE0;border-left:3px solid #B8AF98;opacity:.7;
                     {% else %}

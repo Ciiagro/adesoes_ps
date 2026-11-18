@@ -2510,12 +2510,16 @@ def admin_carreta_calendario():
     ano = request.args.get("ano", type=int) or datetime.now().year
     mes = request.args.get("mes", type=int) or datetime.now().month
     tipo = request.args.get("tipo") if request.args.get("tipo") in carr.TIPOS_RECURSO else "carreta_agro"
+    # `ver`: realce visual de um programa (os do outro ficam esmaecidos, mas
+    # continuam aparecendo — nunca escondemos conflito de data).
+    ver = request.args.get("ver") if request.args.get("ver") in carr.TIPOS_RECURSO else ""
     mes_anterior, ano_anterior = (12, ano - 1) if mes == 1 else (mes - 1, ano)
     mes_proximo, ano_proximo = (1, ano + 1) if mes == 12 else (mes + 1, ano)
     return render_template(
         "admin_carreta_calendario.html",
         pagina_ativa="carreta_calendario",
         ano=ano, mes=mes, tipo=tipo,
+        ver=ver,
         mes_anterior=mes_anterior, ano_anterior=ano_anterior,
         mes_proximo=mes_proximo, ano_proximo=ano_proximo,
         calendario=carr.dados_calendario(db, ano, mes, tipo_recurso=tipo),
