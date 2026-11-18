@@ -194,3 +194,8 @@ button:hover,.btn:hover{background:#0F6B2E}
 .cab-hero{justify-content:flex-start !important}
 .cab-hero .cab-txt{margin:0 auto 0 0 !important;text-align:left !important;flex:0 1 auto !important;max-width:calc(100% - 560px) !important;position:relative;z-index:2}
 .cab-hero .sub{max-width:none !important}
+
+/* Botão Vice-Presidência: verde forte, texto branco */
+a.btn-vp{display:inline-flex !important;align-items:center;gap:8px;background:#176B31 !important;color:#fff !important;border:0 !important;border-radius:999px !important;padding:10px 20px !important;font-weight:700 !important;text-decoration:none !important;box-shadow:0 3px 10px rgba(23,107,49,.3) !important}
+a.btn-vp:hover{background:#0F5A28 !important;color:#fff !important;transform:translateY(-1px)}
+a.btn-vp svg{flex:none}
