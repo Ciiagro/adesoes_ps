@@ -61,8 +61,8 @@
   .cf{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);color:#14301E}
   .cf .link-voltar{font-weight:700;color:#0F5A28}
   .cf .secao-card{position:relative;overflow:hidden;background:#fff;border:0;border-radius:18px;box-shadow:0 6px 24px rgba(15,107,46,.10);padding:1.4em 1.6em 1.6em;margin-bottom:1.1em}
-  .cf form.secao-card::after{content:"";position:absolute;right:-6em;bottom:-9em;width:34em;height:20em;border-radius:50%;background:linear-gradient(135deg,#DFF1E0,#B9E0BF);opacity:.55;pointer-events:none;z-index:0}
-  .cf form.secao-card::before{content:"";position:absolute;right:-2em;bottom:-11em;width:30em;height:18em;border-radius:50%;border:3px solid #7FC48A;opacity:.35;pointer-events:none;z-index:0}
+  .cf .secao-card::after{content:"";position:absolute;right:-6em;bottom:-9em;width:34em;height:20em;border-radius:50%;background:linear-gradient(135deg,#DFF1E0,#B9E0BF);opacity:.55;pointer-events:none;z-index:0}
+  .cf .secao-card::before{content:"";position:absolute;right:-2em;bottom:-11em;width:30em;height:18em;border-radius:50%;border:3px solid #7FC48A;opacity:.35;pointer-events:none;z-index:0}
   .cf .secao-card>*{position:relative;z-index:1}
   .cf .secao-card h2{display:flex;align-items:center;gap:.6em;font-family:inherit;font-size:1.12em;font-weight:800;color:#0F5A28;margin:0 0 .9em;padding:0;border:0}
   .cf .secao-card h2::before{content:"";width:.35em;height:1.3em;border-radius:6px;background:linear-gradient(#3DB65E,#0F6B30);flex:none}
@@ -79,8 +79,8 @@
   .cf input[type=file]::file-selector-button{margin-right:.8em;border:0;border-radius:999px;padding:.5em 1.1em;background:#176B31;color:#fff;font-weight:700;font:inherit;font-size:.95em;cursor:pointer}
   .cf input[type=file]::file-selector-button:hover{background:#0F5A28}
   .cf .hint,.cf label>span[style*="font-size:.8rem"]{font-size:.8em !important;color:#5E7565 !important}
-  .cf button[type=submit]{display:inline-flex;align-items:center;gap:.5em;border:0;border-radius:999px;padding:.8em 2em;background:linear-gradient(135deg,#2E9E4F,#0F6B30);color:#fff;font:inherit;font-weight:800;font-size:.98em;box-shadow:0 5px 14px rgba(15,90,40,.3);cursor:pointer}
-  .cf button[type=submit]:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .cf button[type=submit]:not(.secundario){display:inline-flex;align-items:center;gap:.5em;border:0;border-radius:999px;padding:.8em 2em;background:linear-gradient(135deg,#2E9E4F,#0F6B30);color:#fff;font:inherit;font-weight:800;font-size:.98em;box-shadow:0 5px 14px rgba(15,90,40,.3);cursor:pointer}
+  .cf button[type=submit]:not(.secundario):hover{filter:brightness(1.07);transform:translateY(-1px)}
   .cf .btn.secundario{border-radius:999px;border:1.5px solid #CFE0D2;background:#fff;color:#0F5A28;font-weight:700;padding:.7em 1.6em;box-shadow:0 2px 8px rgba(15,107,46,.08)}
   .cf .btn.aba-programa{border-radius:999px;font-weight:700;padding:.55em 1.3em}
   .cf .btn.aba-programa.agro:not(.secundario){background:#2E9E4F;color:#fff;border:0}
@@ -88,6 +88,15 @@
   .cf table{border-collapse:separate;border-spacing:0;width:100%;border-radius:12px;overflow:hidden}
   .cf table th{background:#0F6B30;color:#fff;font-weight:700;text-transform:uppercase;font-size:.8em;letter-spacing:.04em;padding:.7em 0;text-align:center;border:0}
   .cf table td{padding:.7em 0;font-weight:600;border:0;border-bottom:1px solid #EAF3EB;border-right:1px solid #EAF3EB}
+  .cf button.btn.secundario{display:inline-flex;align-items:center;gap:.4em;font:inherit;font-weight:700;font-size:.95em;cursor:pointer}
+  .cf button.btn.secundario:hover{background:#F1F8F2}
+  .cf fieldset{position:relative;border:1.5px solid #EEDCB4;background:#FFF6E0;border-radius:14px;padding:.8em 1.2em 1em;margin:1em 0}
+  .cf fieldset legend{font-weight:800;color:#8A5A00;padding:0 .5em}
+  .cf fieldset a{color:#0F5A28;font-weight:600}
+  .cf .kv td{border-right:0;text-align:left;padding:.8em .6em;font-weight:600;color:#14301E}
+  .cf .kv td:first-child{width:14em;color:#5E7565 !important;font-weight:600;font-size:.9em}
+  .cf .kv{border-radius:0}
+  .cf .badge,.cf .badge-programa{font-family:inherit;font-weight:700}
   @media (max-width:1100px){.cf .info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 {%- endmacro %}
