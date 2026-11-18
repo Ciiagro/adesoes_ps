@@ -41,9 +41,13 @@
   .mp-filtro .btn-f:hover{background:#245530}
   .legenda-regioes{background:#fff;border:1px solid #E7EBDD;border-radius:999px;padding:11px 22px;margin:0 0 14px;box-shadow:0 1px 8px rgba(44,81,55,.06)}
   .legenda-regioes .item{font-size:.8rem;font-weight:500;color:#2d3a30}
+  .rot-mun{pointer-events:none}
+  .rot-mun span{display:inline-block;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#10230F;white-space:nowrap;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 4px #fff}
   .mr-painel{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(44,81,55,.10);overflow:hidden;margin:14px 0}
   .mr-painel .mr-topo{display:flex;align-items:center;gap:10px;background:#176B31;color:#fff;padding:11px 18px;font-weight:700}
   .mr-painel .mr-topo .qt{margin-left:auto;background:rgba(255,255,255,.2);border-radius:999px;padding:3px 12px;font-size:.8rem}
+  .mr-leg{display:flex;flex-wrap:wrap;gap:8px 18px;padding:12px 18px 0;font-size:.82rem;color:#2d3a30}
+  .mr-leg i{display:inline-block;width:13px;height:13px;border-radius:50%;margin-right:6px;vertical-align:-2px}
   .mr-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;padding:14px 18px}
   .mr-item{display:flex;flex-direction:column;gap:2px;padding:9px 12px;border-radius:10px;background:#F3F9F3;border-left:5px solid var(--cor,#176B31)}
   .mr-item b{color:#14301E}
@@ -101,9 +105,14 @@
     Municípios da região {{ regiao_filtro }}
     <span class="qt">{{ municipios_regiao|length }} município(s)</span>
   </div>
+  <div class="mr-leg">
+    {% for sid, cor in cor_sind.items() %}{% set nm = (municipios_regiao|selectattr('sindicato')|selectattr('sindicato.id','equalto',sid)|first).sindicato.nome %}
+    <span><i style="background:{{ cor }}"></i>{{ nm }}</span>{% endfor %}
+    <span><i style="background:#B9BFB5"></i>Sem sindicato</span>
+  </div>
   <div class="mr-lista">
     {% for m in municipios_regiao %}
-    <div class="mr-item {{ '' if m.sindicato else 'sem' }}" style="--cor:{{ dados_mapa.cor_por_regiao.get(regiao_filtro, '#176B31') }}">
+    <div class="mr-item {{ '' if m.sindicato else 'sem' }}" style="--cor:{{ mun_cor.get(m.cod_ibge|string, '#E08A00') }}">
       <b>{{ m.nome }}</b>
       <span>{{ m.sindicato.nome if m.sindicato else 'Sem sindicato' }}</span>
     </div>
@@ -132,6 +141,9 @@
   const CENTRO_CEARA = [-5.2, -39.3];
   const COR_SEM_REGIAO = '#C9CFC4';
   const REGIAO_SEL = {{ (regiao_filtro or '')|tojson }};
+  const CORES_SIND = {{ cor_sind|tojson }};   // {id do sindicato: cor} (só com região selecionada)
+  const COR_MUN = {{ mun_cor|tojson }};       // {cod_ibge: cor do sindicato do município}
+  if (REGIAO_SEL) { sindicatos.forEach(s => { if (CORES_SIND[s.id]) s.cor = CORES_SIND[s.id]; }); }
   // "999999" é só um placeholder pra poder trocar pelo id de cada sindicato lá embaixo
   const URL_EDITAR_TEMPLATE = "{{ url_for('admin_sindicato_grupo_editar', sindicato_id=999999) }}";
   const URL_FICHA_TEMPLATE = "{{ url_for('admin_sindicato_ficha_individual', sindicato_id=999999) }}";
@@ -190,6 +202,9 @@
           if (REGIAO_SEL && regiao !== REGIAO_SEL) {
             return { fillColor: '#D9DDD6', fillOpacity: 0.55, color: '#fff', weight: 0.8 };
           }
+          if (REGIAO_SEL) {
+            return { fillColor: COR_MUN[feature.properties.id] || '#B9BFB5', fillOpacity: 0.9, color: '#fff', weight: 1.6 };
+          }
           return {
             fillColor: regiao ? corPorRegiao[regiao] : COR_SEM_REGIAO,
             fillOpacity: 0.9, color: '#fff', weight: REGIAO_SEL ? 1.6 : 1.4,
@@ -209,6 +224,26 @@
         },
       }).addTo(mapaRegioes);
 
+      // nomes dos municípios no mapa: sempre visíveis na região selecionada;
+      // sem região selecionada, aparecem ao aproximar o zoom
+      const rotulos = [];
+      camada.eachLayer(l => {
+        const reg = regiaoPorCodIbge[l.feature.properties.id];
+        if (REGIAO_SEL && reg !== REGIAO_SEL) return;
+        const c = l.getBounds().getCenter();
+        rotulos.push(L.marker(c, {
+          interactive: false, keyboard: false,
+          icon: L.divIcon({ className: 'rot-mun', html: '<span>' + l.feature.properties.name + '</span>', iconSize: [0, 0] })
+        }));
+      });
+      const grupoRotulos = L.layerGroup(rotulos);
+      function atualizaRotulos() {
+        const mostrar = REGIAO_SEL ? true : mapaRegioes.getZoom() >= 9;
+        if (mostrar && !mapaRegioes.hasLayer(grupoRotulos)) grupoRotulos.addTo(mapaRegioes);
+        if (!mostrar && mapaRegioes.hasLayer(grupoRotulos)) mapaRegioes.removeLayer(grupoRotulos);
+      }
+      mapaRegioes.on('zoomend', atualizaRotulos);
+
       // pins pequenos marcando onde tem sindicato, por cima das regiões
       sindicatos.forEach(s => {
         const iconePinPequeno = L.divIcon({
@@ -226,6 +261,7 @@
           .addTo(mapaRegioes);
       });
 
+      atualizaRotulos();
       if (REGIAO_SEL) {
         const sel = L.featureGroup();
         camada.eachLayer(l => {

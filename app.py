@@ -1458,10 +1458,22 @@ def admin_sindicatos_mapa():
             sind.listar_municipios(db, regiao_faec=regiao_filtro),
             key=lambda m: m.nome,
         )
+    cor_sind, mun_cor = {}, {}
+    if regiao_filtro:
+        import colorsys
+        ids = sorted({m.sindicato.id for m in municipios_regiao if m.sindicato},
+                     key=lambda i: next(m.sindicato.nome for m in municipios_regiao if m.sindicato and m.sindicato.id == i))
+        for k, sid in enumerate(ids):
+            r, g, b = colorsys.hls_to_rgb(((k * 137.508) % 360) / 360, 0.42, 0.72)
+            cor_sind[sid] = "#%02x%02x%02x" % (int(r * 255), int(g * 255), int(b * 255))
+        for m in municipios_regiao:
+            if m.sindicato:
+                mun_cor[str(m.cod_ibge)] = cor_sind[m.sindicato.id]
 
     return render_template(
         "admin_sindicatos_mapa.html",
         municipios_regiao=municipios_regiao,
+        cor_sind=cor_sind, mun_cor=mun_cor,
         pagina_ativa="mapa_sindicatos",
         apenas_sindicatos=(gestao_sindicato_logado() and not admin_logado()),
         dados_mapa=dados,
