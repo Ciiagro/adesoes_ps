@@ -78,7 +78,7 @@
 {% if dados_mapa.regioes %}
 <div class="legenda-regioes">
   {% for r in dados_mapa.regioes %}
-  <span class="item"><span class="bolinha" style="background:{{ r.cor }};"></span>{{ r.nome }}</span>
+  <a class="item" href="{{ url_for('admin_sindicatos_mapa', regiao=r.nome) }}" title="Ver os municípios desta região" style="text-decoration:none;cursor:pointer;{% if regiao_filtro == r.nome %}font-weight:800;{% endif %}"><span class="bolinha" style="background:{{ r.cor }};"></span>{{ r.nome }}</a>
   {% endfor %}
 </div>
 {% endif %}
@@ -197,7 +197,15 @@
         },
         onEachFeature: (feature, layer) => {
           const regiao = regiaoPorCodIbge[feature.properties.id];
-          layer.bindPopup(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}`);
+          layer.bindTooltip(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}` + (regiao && regiao !== REGIAO_SEL ? '<br><i>clique para ver a região</i>' : ''), { sticky: true });
+          if (regiao) {
+            layer.on('click', () => {
+              if (regiao !== REGIAO_SEL) {
+                window.location = window.location.pathname + '?regiao=' + encodeURIComponent(regiao);
+              }
+            });
+            layer.on('mouseover', () => { layer.getElement && layer.getElement() && (layer.getElement().style.cursor = 'pointer'); });
+          }
         },
       }).addTo(mapaRegioes);
 
