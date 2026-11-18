@@ -2,54 +2,62 @@
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
 <style>
+  .cr-wrap{font-size:clamp(15px,.45vw + 10px,20px)}
   .cr-head{position:relative;overflow:hidden;display:flex;align-items:center;gap:22px;min-height:150px;padding:20px 30px 64px;margin:0 0 -34px;background:#fff;border-radius:0 0 0 0}
   .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:48%;background:url('{{ url_for("static", filename="img/banner_carreta.jpg") }}') right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%);z-index:0}
   .cr-head>*{position:relative;z-index:1}
   .cr-ico{flex:none;width:80px;height:80px;padding-right:22px;border-right:2px solid #BFD6C3;box-sizing:content-box}
-  .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:clamp(1.6rem,2.6vw,2.4rem);line-height:1.05}
+  .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:clamp(1.6em,2.6vw,2.4em);line-height:1.05}
   .cr-head h1 em{display:block;font-weight:700;font-size:.78em;color:#14301E}
-  .cr-head .sub{margin:6px 0 0;color:#23382A;font-size:.98rem;font-style:italic}
+  .cr-head .sub{margin:6px 0 0;color:#23382A;font-size:.98em;font-style:italic}
   .cr-nova{display:inline-flex;align-items:center;gap:8px;margin:0 0 0 0;background:#176B31;color:#fff !important;border-radius:999px;padding:11px 24px;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
   .cr-nova:hover{background:#0F5A28}
   .cr-filtros{position:relative;z-index:2;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.14);padding:18px 24px 20px;margin:0 0 18px}
-  .cr-ft{display:flex;align-items:center;gap:12px;margin-bottom:14px;color:#176B31;font-weight:800;font-size:1.1rem}
+  .cr-ft{display:flex;align-items:center;gap:12px;margin-bottom:14px;color:#176B31;font-weight:800;font-size:1.1em}
   .cr-ft::after{content:"";flex:1;height:1px;background:#CFE3D2}
-  .cr-limpar{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #176B31;color:#176B31 !important;border-radius:999px;padding:8px 20px;font-weight:700;font-size:.92rem;text-decoration:none;background:#fff}
+  .cr-limpar{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #176B31;color:#176B31 !important;border-radius:999px;padding:8px 20px;font-weight:700;font-size:.92em;text-decoration:none;background:#fff}
   .cr-limpar:hover{background:#EAF6EC}
   .cr-busca{display:flex;gap:10px;margin-bottom:14px}
-  .cr-busca input{flex:1;height:44px;border:1px solid #D5E3D6;border-radius:999px;padding:0 18px;font-size:.93rem;margin:0}
+  .cr-busca input{flex:1;height:44px;border:1px solid #D5E3D6;border-radius:999px;padding:0 18px;font-size:.93em;margin:0}
   .cr-pills{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-  .cr-pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #D5E3D6;background:#fff;color:#14301E !important;border-radius:999px;padding:9px 20px;font-weight:700;font-size:.92rem;text-decoration:none}
+  .cr-pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #D5E3D6;background:#fff;color:#14301E !important;border-radius:999px;padding:9px 20px;font-weight:700;font-size:.92em;text-decoration:none}
   .cr-pill:hover{background:#F1F8F2}
   .cr-pill.on{background:#176B31;border-color:#176B31;color:#fff !important;box-shadow:0 3px 10px rgba(23,107,49,.28)}
   .cr-per{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .cr-sel{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #D5E3D6;border-radius:999px;padding:0 14px;height:44px;background:#fff;font-weight:700;color:#14301E}
   .cr-sel select,.cr-sel input{border:0;outline:0;background:transparent;font-weight:500;height:40px;margin:0;padding:0 4px;box-shadow:none;width:auto}
   .cr-sel input{width:70px}
-  .cr-bt{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;border:1.5px solid #176B31;background:#fff;color:#176B31 !important;font-weight:700;text-decoration:none;cursor:pointer;font-size:.92rem;margin:0}
+  .cr-bt{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;border:1.5px solid #176B31;background:#fff;color:#176B31 !important;font-weight:700;text-decoration:none;cursor:pointer;font-size:.92em;margin:0}
   .cr-bt:hover{background:#EAF6EC}
   .cr-tab{background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.12);overflow:hidden}
-  table.cr-t{width:100%;border-collapse:separate;border-spacing:0;font-size:.92rem}
-  table.cr-t th{background:#176B31;color:#fff;text-align:left;font-size:.82rem;letter-spacing:.03em;padding:15px 16px;font-weight:700}
-  table.cr-t td{padding:13px 16px;border-bottom:1px solid #EEF3EE;vertical-align:middle}
+  table.cr-t{width:100%;border-collapse:separate;border-spacing:0;font-size:.92em}
+  table.cr-t th{background:#176B31;color:#fff;text-align:left;font-size:.85em;letter-spacing:.03em;padding:1.05em 1.1em;font-weight:700}
+  table.cr-t td{padding:.95em 1.1em;border-bottom:1px solid #EEF3EE;vertical-align:middle}
   table.cr-t tbody tr:hover{background:#F3F9F3}
   table.cr-t tbody tr:last-child td{border-bottom:0}
   .cr-mun{font-weight:800;color:#176B31;text-decoration:none}.cr-mun:hover{text-decoration:underline}
-  .cr-sit{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 14px;font-weight:700;font-size:.84rem}
+  .cr-sit{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 14px;font-weight:700;font-size:.84em}
   .cr-sit.ap{background:#DFF3E3;color:#1F6B3A}.cr-sit.re{background:#DCEBFA;color:#1F4E8C}.cr-sit.pe{background:#FDEBC8;color:#8A5300}.cr-sit.ca{background:#FBE3E0;color:#B3261E}
   .cr-acoes{display:flex;gap:8px;white-space:nowrap}
   .cr-acoes a,.cr-acoes button{width:38px;height:38px;border-radius:10px;border:1.5px solid #D5E3D6;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;text-decoration:none}
   .cr-acoes a:hover,.cr-acoes button:hover{background:#F1F8F2}
   .cr-acoes form{display:inline;margin:0}
   .cr-rodape{display:flex;align-items:flex-end;justify-content:flex-end;min-height:90px;padding:10px 30px;margin-top:10px;background:linear-gradient(180deg,transparent 40%,#E3F1E3 100%);border-radius:0 0 16px 16px}
-  .cr-rodape span{font-family:'Fraunces',serif;font-style:italic;font-weight:600;font-size:1.25rem;color:#176B31;border-bottom:3px solid #7BC043;padding-bottom:4px}
+  .cr-rodape span{font-family:'Fraunces',serif;font-style:italic;font-weight:600;font-size:1.25em;color:#176B31;border-bottom:3px solid #7BC043;padding-bottom:4px}
+  table.cr-t{table-layout:fixed}
+  .cr-pill{padding:.6em 1.3em}
+  .cr-head .cr-nova{margin-top:14px}
+  .cr-ft .cr-limpar{margin-left:auto}
+  .cr-pag{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #EEF3EE;background:#F7FAF6;font-size:.92em;color:#2d3a30}
 </style>
 
+<div class="cr-wrap">
 <div class="cr-head">
   <svg class="cr-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="38" height="48" rx="5" fill="#fff" stroke="#176B31" stroke-width="4"/><path d="M18 22h22M18 30h22M18 38h12" stroke="#176B31" stroke-width="3.5" stroke-linecap="round"/><circle cx="47" cy="46" r="13" fill="#2E9E4F"/><path d="M41 46l4 4 8-9" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
   <div>
     <h1>Carreta do Agro / Carreta da Saúde<em>Solicitações</em></h1>
     <p class="sub">Pesquise, acompanhe e gerencie as solicitações da Carreta do Agro e da Carreta da Saúde.</p>
+    {% if pode_editar_carreta %}<a class="cr-nova" href="{{ url_for('admin_carreta_nova') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>Nova solicitação</a>{% endif %}
   </div>
 </div>
 
@@ -57,7 +65,6 @@
   <div class="cr-ft">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="#176B31" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5z"/></svg>Filtros de pesquisa
     <a class="cr-limpar" href="{{ url_for('admin_carreta') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#176B31" aria-hidden="true"><path d="M17.600 6.400A8 8 0 1 0 19.400 14h-2.100a6 6 0 1 1-1.400-6.200L13 11h7V4l-2.400 2.400z"/></svg>Limpar</a>
-    {% if pode_editar_carreta %}<a class="cr-nova" href="{{ url_for('admin_carreta_nova') }}"><svg viewBox="0 0 24 24" width="16" height="16" fill="#fff" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg>Nova solicitação</a>{% endif %}
   </div>
 
   <form method="get" class="cr-busca">
@@ -111,6 +118,7 @@
 <p class="vazio">Nenhuma solicitação encontrada.</p>
 {% else %}
 <div class="cr-tab"><table class="cr-t">
+  <colgroup><col style="width:15%"><col style="width:14%"><col style="width:24%"><col style="width:17%"><col style="width:11%"><col style="width:10%"><col style="width:9%"></colgroup>
   <thead>
     <tr>
       <th>Programa</th><th>Município</th><th>Evento</th><th>Período</th><th>Solicitado em</th><th>Situação</th><th>Ações</th>
@@ -192,4 +200,5 @@
 </script>
 <div class="cr-rodape"><span>Juntos pelo fortalecimento do agro cearense!</span></div>
 {% endif %}
+</div>
 {% endblock %}
