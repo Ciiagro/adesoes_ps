@@ -857,25 +857,8 @@ def gerar_pdf_calendario(ano, mes, tipo_recurso, semanas, calendario, bloqueados
     story.append(cabecalho)
     story.append(Spacer(1, 2.5 * mm))
 
-    # --- legenda colorida ---
-    itens = [("agro", "Carreta do Agro"), ("saude", "Carreta da Saúde"), ("pendente", "Pendente (*)"),
-             ("realizada", "Realizada"), ("bloqueio", "Data bloqueada")]
-    cel, larguras = [], []
-    for chave, rotulo in itens:
-        cel += ["", Paragraph(rotulo, _pdf_leg_style)]
-        larguras += [4 * mm, 34 * mm]
-    leg = Table([cel], colWidths=larguras, rowHeights=[5 * mm])
-    est_leg = [("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LEFTPADDING", (0, 0), (-1, -1), 2), ("RIGHTPADDING", (0, 0), (-1, -1), 2),
-               ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0)]
-    for k, (chave, _r) in enumerate(itens):
-        est_leg.append(("BACKGROUND", (k * 2, 0), (k * 2, 0), _PDF_CORES[chave][0]))
-    leg.setStyle(TableStyle(est_leg))
-    leg.hAlign = "LEFT"
-    story.append(leg)
-    story.append(Spacer(1, 2.5 * mm))
-
     # --- grade ---
-    ALTURA_RESERVADA_MM = 62
+    ALTURA_RESERVADA_MM = 54
     largura_coluna = largura_util / 7
     altura_linha_dias = (altura_pagina - 2 * margem - ALTURA_RESERVADA_MM * mm) / len(semanas)
     est_cab_dia = ParagraphStyle("PdfDiaSem", fontName="Helvetica-Bold", fontSize=10, leading=12, textColor=colors.white, alignment=1)
