@@ -2,15 +2,16 @@
 {% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
+<style>.cr-btn-pdf{margin-left:auto;display:inline-flex;align-items:center;background:#176B31;color:#fff !important;border-radius:999px;padding:.6em 1.5em;font-weight:700;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}.cr-btn-pdf:hover{background:#0F5A28}</style>
 {% call cr_head('Calendário', tipos_recurso.get(tipo, tipo) ~ ' — dias já ocupados pelas solicitações pendentes ou aprovadas dos dois programas.', 'calendario') %}{% endcall %}
-<div class="cr-barra"><a class="cr-btn" target="_blank" href="{{ url_for('admin_carreta_calendario_pdf', tipo=tipo, ano=ano, mes=mes) }}">Gerar PDF</a></div>
 <p class="sub" style="margin:0 0 16px;max-width:none;">Dias com solicitação pendente ou aprovada — dos DOIS programas juntos, porque o mesmo motorista/veículo atende Carreta do Agro e Carreta da Saúde. Dias em bege (🚫) são bloqueios cadastrados em <a href="{{ url_for('admin_carreta_bloqueios') }}">Bloqueio de Datas</a>. Eventos com ⏳ ainda aguardam aprovação; eventos em cinza claro já aconteceram.</p>
 
 <div class="secao-card" style="margin-bottom:16px;">
-  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
     {% for chave, rotulo in tipos_recurso.items() %}
     <a class="btn aba-programa {{ 'agro' if chave == 'carreta_agro' else 'saude' }} {{ 'secundario' if tipo != chave else '' }}" href="{{ url_for('admin_carreta_calendario', tipo=chave, ano=ano, mes=mes) }}">{{ rotulo }}</a>
     {% endfor %}
+    <a class="cr-btn-pdf" target="_blank" href="{{ url_for('admin_carreta_calendario_pdf', tipo=tipo, ano=ano, mes=mes) }}">Gerar PDF</a>
   </div>
 </div>
 
