@@ -1,7 +1,14 @@
 {% extends 'admin_base.html' %}
 {% from '_cr_head.html' import cr_head %}
 {% block admin_content %}
-<style>.conteudo{max-width:none !important;padding-left:1.2vw !important;padding-right:1.2vw !important}</style>
+<style>.conteudo{max-width:none !important;padding-left:1.2vw !important;padding-right:1.2vw !important}  /* controles do topo: menores e iguais */
+  .cl-info{font-size:.74em;padding:.5em .9em;margin-bottom:.7em}
+  .cl-info svg{width:1.4em;height:1.4em}
+  .cl-pill,.cl-pdf{height:2.2em;font-size:.76em;padding:0 1em;white-space:nowrap}
+  .cl-pill svg,.cl-pdf svg{width:1em;height:1em}
+  .cl-leg{font-size:.76em;gap:.6em}
+  .cl-pdf{line-height:1}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   .cl{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(14px,1.08vw,20px);color:#14301E;width:100%}
