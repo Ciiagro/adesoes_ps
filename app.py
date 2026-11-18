@@ -1458,7 +1458,7 @@ def admin_sindicatos_mapa():
             sind.listar_municipios(db, regiao_faec=regiao_filtro),
             key=lambda m: m.nome,
         )
-    cor_sind, mun_cor = {}, {}
+    cor_sind, mun_cor, mun_nome_sind = {}, {}, {}
     if regiao_filtro:
         import colorsys
         ids = sorted({m.sindicato.id for m in municipios_regiao if m.sindicato},
@@ -1469,11 +1469,12 @@ def admin_sindicatos_mapa():
         for m in municipios_regiao:
             if m.sindicato:
                 mun_cor[str(m.cod_ibge)] = cor_sind[m.sindicato.id]
+                mun_nome_sind[str(m.cod_ibge)] = m.sindicato.nome
 
     return render_template(
         "admin_sindicatos_mapa.html",
         municipios_regiao=municipios_regiao,
-        cor_sind=cor_sind, mun_cor=mun_cor,
+        cor_sind=cor_sind, mun_cor=mun_cor, mun_nome_sind=mun_nome_sind,
         pagina_ativa="mapa_sindicatos",
         apenas_sindicatos=(gestao_sindicato_logado() and not admin_logado()),
         dados_mapa=dados,

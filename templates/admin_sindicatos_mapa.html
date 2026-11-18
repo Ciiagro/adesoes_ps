@@ -42,7 +42,9 @@
   .legenda-regioes{background:#fff;border:1px solid #E7EBDD;border-radius:999px;padding:11px 22px;margin:0 0 14px;box-shadow:0 1px 8px rgba(44,81,55,.06)}
   .legenda-regioes .item{font-size:.8rem;font-weight:500;color:#2d3a30}
   .rot-mun{pointer-events:none}
-  .rot-mun span{display:inline-block;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#10230F;white-space:nowrap;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 4px #fff}
+  .rot-mun span b{font-weight:800}
+  .rot-mun span em{font-style:normal;font-weight:600;font-size:9.5px;color:#2b4a30;margin-top:1px}
+  .rot-mun span{display:inline-flex;flex-direction:column;align-items:center;text-align:center;line-height:1.15;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#10230F;white-space:nowrap;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 4px #fff}
   .mr-painel{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(44,81,55,.10);overflow:hidden;margin:14px 0}
   .mr-painel .mr-topo{display:flex;align-items:center;gap:10px;background:#176B31;color:#fff;padding:11px 18px;font-weight:700}
   .mr-painel .mr-topo .qt{margin-left:auto;background:rgba(255,255,255,.2);border-radius:999px;padding:3px 12px;font-size:.8rem}
@@ -142,6 +144,7 @@
   const COR_SEM_REGIAO = '#C9CFC4';
   const REGIAO_SEL = {{ (regiao_filtro or '')|tojson }};
   const CORES_SIND = {{ cor_sind|tojson }};   // {id do sindicato: cor} (só com região selecionada)
+  const NOME_SIND = {{ mun_nome_sind|tojson }}; // {cod_ibge: nome do sindicato responsável}
   const COR_MUN = {{ mun_cor|tojson }};       // {cod_ibge: cor do sindicato do município}
   if (REGIAO_SEL) { sindicatos.forEach(s => { if (CORES_SIND[s.id]) s.cor = CORES_SIND[s.id]; }); }
   // "999999" é só um placeholder pra poder trocar pelo id de cada sindicato lá embaixo
@@ -212,7 +215,7 @@
         },
         onEachFeature: (feature, layer) => {
           const regiao = regiaoPorCodIbge[feature.properties.id];
-          layer.bindTooltip(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}` + (regiao && regiao !== REGIAO_SEL ? '<br><i>clique para ver a região</i>' : ''), { sticky: true });
+          layer.bindTooltip(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}` + (REGIAO_SEL && NOME_SIND[feature.properties.id] ? '<br>Sindicato: ' + NOME_SIND[feature.properties.id] : '') + (regiao && regiao !== REGIAO_SEL ? '<br><i>clique para ver a região</i>' : ''), { sticky: true });
           if (regiao) {
             layer.on('click', () => {
               if (regiao !== REGIAO_SEL) {
@@ -233,7 +236,7 @@
         const c = l.getBounds().getCenter();
         rotulos.push(L.marker(c, {
           interactive: false, keyboard: false,
-          icon: L.divIcon({ className: 'rot-mun', html: '<span>' + l.feature.properties.name + '</span>', iconSize: [0, 0] })
+          icon: L.divIcon({ className: 'rot-mun', html: '<span><b>' + l.feature.properties.name + '</b>' + (REGIAO_SEL ? '<em>' + (NOME_SIND[l.feature.properties.id] || 'sem sindicato') + '</em>' : '') + '</span>', iconSize: [0, 0] })
         }));
       });
       const grupoRotulos = L.layerGroup(rotulos);
