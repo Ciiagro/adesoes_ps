@@ -23,6 +23,35 @@
 {% block admin_content %}
 {{ cr_form_css() }}
 <div class="cf">
+<style>
+  .cf .dt-bar{display:flex;align-items:center;gap:.7em;background:linear-gradient(90deg,#0F5A28,#137A38);color:#fff;padding:.85em 1.4em;position:relative;z-index:1}
+  .cf .dt-bar h2{margin:0 !important;color:#fff !important;font-size:1.2em !important}
+  .cf .dt-bar h2::before{display:none !important}
+  .cf .dt-bar svg{width:1.4em;height:1.4em;fill:#fff;flex:none}
+  .cf .dt-bar .esp{flex:1}
+  .cf .dt-corpo{padding:1.2em 1.4em 1.4em}
+  .cf .dt-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9em;margin-top:.4em}
+  .cf .dt-it{display:flex;align-items:center;gap:.8em;background:#F6FBF6;border:1px solid #E1EFE2;border-radius:14px;padding:.8em 1em;min-width:0}
+  .cf .dt-it.s2{grid-column:span 2}.cf .dt-it.s4{grid-column:1/-1}
+  .cf .dt-ic{flex:none;width:2.5em;height:2.5em;border-radius:50%;background:#DFF1E0;display:grid;place-items:center}
+  .cf .dt-ic svg{width:1.25em;height:1.25em;fill:#176B31}
+  .cf .dt-it .l{font-size:.74em;font-weight:700;color:#5E7565;text-transform:uppercase;letter-spacing:.04em}
+  .cf .dt-it .v{font-weight:700;color:#14301E;overflow-wrap:anywhere;margin-top:.1em}
+  .cf .dt-sub{display:flex;align-items:center;gap:.6em;font-size:1.05em;font-weight:800;color:#0F5A28;margin:1.4em 0 .7em}
+  .cf .dt-sub::before{content:"";width:.35em;height:1.2em;border-radius:6px;background:linear-gradient(#3DB65E,#0F6B30)}
+  .cf .dt-docs{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.6em}
+  .cf .dt-docs li{background:#F6FBF6;border:1px solid #E1EFE2;border-radius:999px;padding:.5em 1.1em}
+  .cf .dt-docs a{color:#0F5A28;font-weight:700}
+  .cf .dt-form{display:flex;gap:1em;flex-wrap:wrap;margin-bottom:1em}
+  .cf .dt-form label{flex:1 1 18em;max-width:none !important;margin:0 !important}
+  .cf .dt-card .vazio{color:#5E7565}
+  .cr-sit{display:inline-flex;align-items:center;gap:.35em;border-radius:999px;padding:.3em 1em;font-weight:800;font-size:.9em}
+  .cr-sit.ap{background:#CFEFC5;color:#1B6E2E}.cr-sit.re{background:#D6EAFB;color:#1F5FA8}.cr-sit.pe{background:#FDEBC8;color:#8A5300}.cr-sit.ca{background:#FFD9D6;color:#C62828}
+  @media (max-width:1100px){.cf .dt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cf .dt-it.s2{grid-column:span 2}}
+</style>
+{% macro it(rotulo, icone, cls='') -%}
+<div class="dt-it {{ cls }}"><div class="dt-ic"><svg viewBox="0 0 24 24"><path d="{{ icone }}"/></svg></div><div style="min-width:0"><div class="l">{{ rotulo }}</div><div class="v">{{ caller() }}</div></div></div>
+{%- endmacro %}
 <a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
 {% call cr_head('Detalhe da solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome ~ ' — ' ~ solicitacao.data_inicio.strftime('%d/%m/%Y') ~ ' a ' ~ solicitacao.data_fim.strftime('%d/%m/%Y')) %}{% endcall %}
 {% if pode_editar_carreta %}<div class="cr-barra"><a class="cr-btn" href="{{ url_for('admin_carreta_editar', solicitacao_id=solicitacao.id) }}">Editar</a></div>{% endif %}
@@ -51,14 +80,10 @@
 </div>
 {% endif %}
 
-<div class="secao-card" style="margin-bottom:16px;">
-  <h2>Situação atual:
-    <span class="badge {% if solicitacao.status == 'aprovada' %}concluida{% elif solicitacao.status == 'realizada' %}realizada{% elif solicitacao.status == 'recusada' %}rascunho{% else %}aguardando{% endif %}">
-      {{ status_label.get(solicitacao.status, solicitacao.status) }}
-    </span>
-  </h2>
-
-  {% if solicitacao.status == 'recusada' and solicitacao.motivo_recusa %}
+<div class="secao-card dt-card" style="padding:0;margin-bottom:16px;">
+  <div class="dt-bar"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM9 12h8v1.6H9V12zm0 3.5h8v1.6H9v-1.6z"/></svg><h2>Dados da solicitação</h2><span class="esp"></span><span class="cr-sit {% if solicitacao.status == 'aprovada' %}ap{% elif solicitacao.status == 'realizada' %}re{% elif solicitacao.status == 'recusada' %}ca{% else %}pe{% endif %}">{% if solicitacao.status == 'aprovada' %}✓ {% endif %}{{ status_label.get(solicitacao.status, solicitacao.status) }}</span></div>
+  <div class="dt-corpo">
+{% if solicitacao.status == 'recusada' and solicitacao.motivo_recusa %}
   <p style="color:var(--danger);">Motivo: {{ solicitacao.motivo_recusa }}</p>
   {% endif %}
 
@@ -91,22 +116,23 @@
   </fieldset>
   {% endif %}
 
-  <table class="kv" style="margin-top:16px;">
-    <tbody>
-      <tr><td style="width:200px;color:var(--ink-faint);">Programa</td><td><span class="badge-programa {{ 'agro' if solicitacao.tipo_recurso == 'carreta_agro' else 'saude' }}">{{ tipos_recurso.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso) }}</span></td></tr>
-      <tr><td style="color:var(--ink-faint);">Sindicato</td><td>{{ solicitacao.sindicato_nome or '—' }}</td></tr>
-      <tr><td style="color:var(--ink-faint);">Nº do ofício</td><td>{{ solicitacao.numero_oficio or '—' }}</td></tr>
-      <tr><td style="color:var(--ink-faint);">Data do ofício</td><td>{{ solicitacao.data_oficio.strftime('%d/%m/%Y') if solicitacao.data_oficio else '—' }}</td></tr>
-      <tr><td style="color:var(--ink-faint);">Responsável</td><td>{{ solicitacao.responsavel_nome or '—' }}</td></tr>
-      <tr><td style="color:var(--ink-faint);">Telefone</td><td>{{ solicitacao.responsavel_telefone or '—' }}</td></tr>
-      <tr><td style="color:var(--ink-faint);">E-mail</td><td>{{ solicitacao.responsavel_email or '—' }}</td></tr>
-      <tr><td style="color:var(--ink-faint);">Observações</td><td>{{ solicitacao.observacoes or '—' }}</td></tr>
-    </tbody>
-  </table>
 
-  <h2 style="margin-top:1.4em;">Documentos anexados</h2>
+    <div class="dt-grid">
+      {% call it('Evento', 'M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM9 12h8v1.6H9V12zm0 3.5h8v1.6H9v-1.6z', '') %}{{ solicitacao.evento }}{% endcall %}
+      {% call it('Município', 'M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z', '') %}{{ solicitacao.municipio_nome }}{% endcall %}
+      {% call it('Período', 'M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z', '') %}{{ solicitacao.data_inicio.strftime('%d/%m/%Y') }} a {{ solicitacao.data_fim.strftime('%d/%m/%Y') }}{% endcall %}
+      {% call it('Programa', 'M3 6h11v9h-1.2a2.5 2.5 0 0 0-4.6 0H6.7a2.5 2.5 0 0 0-4.7 0H1V8a2 2 0 0 1 2-2zm11 3h4l3 3v3h-1a2.5 2.5 0 0 0-4.5 0H14V9z', '') %}<span class="badge-programa {{ 'agro' if solicitacao.tipo_recurso == 'carreta_agro' else 'saude' }}">{{ tipos_recurso.get(solicitacao.tipo_recurso, solicitacao.tipo_recurso) }}</span>{% endcall %}
+      {% call it('Sindicato', 'M4 22V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v6h4a1 1 0 0 1 1 1v11H4zm3-15v2h2V7H7zm0 4v2h2v-2H7zm0 4v2h2v-2H7zm5-8v2h2V7h-2zm0 4v2h2v-2h-2z', 's2') %}{{ solicitacao.sindicato_nome or '—' }}{% endcall %}
+      {% call it('Nº do ofício', 'M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM9 12h8v1.6H9V12zm0 3.5h8v1.6H9v-1.6z', '') %}{{ solicitacao.numero_oficio or '—' }}{% endcall %}
+      {% call it('Data do ofício', 'M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z', '') %}{{ solicitacao.data_oficio.strftime('%d/%m/%Y') if solicitacao.data_oficio else '—' }}{% endcall %}
+      {% call it('Responsável', 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4 0-8 2-8 5v3h16v-3c0-3-4-5-8-5z', '') %}{{ solicitacao.responsavel_nome or '—' }}{% endcall %}
+      {% call it('Telefone', 'M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.3.2 2.5.57 3.6a1 1 0 0 1-.25 1l-2.2 2.2z', '') %}{{ solicitacao.responsavel_telefone or '—' }}{% endcall %}
+      {% call it('E-mail', 'M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z', 's2') %}{{ solicitacao.responsavel_email or '—' }}{% endcall %}
+      {% call it('Observações', 'M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM9 12h8v1.6H9V12zm0 3.5h8v1.6H9v-1.6z', 's4') %}{{ solicitacao.observacoes or '—' }}{% endcall %}
+    </div>
+    <div class="dt-sub">Documentos anexados</div>
   {% if solicitacao.arquivos %}
-  <ul>
+  <ul class="dt-docs">
     {% for arq in solicitacao.arquivos %}
     <li>
       <span style="display:inline-block;font-size:.75rem;font-weight:700;color:var(--ink-faint);margin-right:6px;">[{{ CATEGORIA_ARQUIVO_LABEL.get(arq.categoria, 'Ofício') }}]</span>
@@ -123,12 +149,16 @@
   {% else %}
   <p class="vazio">Nenhum arquivo anexado.</p>
   {% endif %}
+
+  </div>
 </div>
 
-<div class="secao-card">
-  <h2>Alterar situação</h2>
+<div class="secao-card dt-card" style="padding:0;">
+  <div class="dt-bar"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.2 14.5L6.5 12.2l1.4-1.4 2.9 2.9 5.3-5.3 1.4 1.4-6.7 6.7z"/></svg><h2>Alterar situação</h2></div>
+  <div class="dt-corpo">
   {% if pode_editar_carreta %}
   <form method="post" action="{{ url_for('admin_carreta_status', solicitacao_id=solicitacao.id) }}" id="form-alterar-status">
+    <div class="dt-form">
     <label style="display:block;max-width:340px;margin-bottom:14px;">
       <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
       <input type="text" name="alterado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
@@ -137,6 +167,7 @@
       <span class="rot" style="display:block;margin-bottom:5px;">Motivo do cancelamento <span id="motivo-recusa-obrigatorio" style="display:none;color:var(--danger);font-weight:700;">* obrigatório</span></span>
       <input type="text" name="motivo_recusa" id="input-motivo-recusa" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
     </label>
+    </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button type="submit" name="status" value="aprovada">✅ Aprovar</button>
       {% if solicitacao.status in ('aprovada', 'realizada') %}
@@ -153,6 +184,7 @@
   {% else %}
   <p class="vazio">Esse login é só de visualização — não é possível alterar a situação.</p>
   {% endif %}
+  </div>
 </div>
 
 {% if pode_editar_carreta %}
