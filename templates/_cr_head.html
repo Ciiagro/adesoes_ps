@@ -53,3 +53,41 @@
   </svg>
 </div>
 {%- endmacro %}
+
+{% macro cr_form_css() -%}
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  .conteudo{max-width:none !important;padding-left:1.2vw !important;padding-right:1.2vw !important}
+  .cf{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);color:#14301E}
+  .cf .link-voltar{font-weight:700;color:#0F5A28}
+  .cf .secao-card{position:relative;overflow:hidden;background:#fff;border:0;border-radius:18px;box-shadow:0 6px 24px rgba(15,107,46,.10);padding:1.4em 1.6em 1.6em;margin-bottom:1.1em}
+  .cf form.secao-card::after{content:"";position:absolute;right:-6em;bottom:-9em;width:34em;height:20em;border-radius:50%;background:linear-gradient(135deg,#DFF1E0,#B9E0BF);opacity:.55;pointer-events:none;z-index:0}
+  .cf form.secao-card::before{content:"";position:absolute;right:-2em;bottom:-11em;width:30em;height:18em;border-radius:50%;border:3px solid #7FC48A;opacity:.35;pointer-events:none;z-index:0}
+  .cf .secao-card>*{position:relative;z-index:1}
+  .cf .secao-card h2{display:flex;align-items:center;gap:.6em;font-family:inherit;font-size:1.12em;font-weight:800;color:#0F5A28;margin:0 0 .9em;padding:0;border:0}
+  .cf .secao-card h2::before{content:"";width:.35em;height:1.3em;border-radius:6px;background:linear-gradient(#3DB65E,#0F6B30);flex:none}
+  .cf .info-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1em 1.2em}
+  .cf .info-grid>label{grid-column:span 1 !important;min-width:0}
+  .cf .info-grid>label[style*="1/-1"]{grid-column:span 2 !important}
+  .cf .info-grid>label:has(textarea),.cf .info-grid>label:has(input[type=file]){grid-column:span 2 !important}
+  .cf .info-grid>label:has(textarea){grid-column:1/-1 !important}
+  .cf .rot{display:block;margin:0 0 .4em !important;font-size:.82em;font-weight:700;color:#0F5A28;letter-spacing:.01em}
+  .cf input[type=text],.cf input[type=email],.cf input[type=date],.cf select,.cf textarea{width:100%;box-sizing:border-box;height:2.9em;padding:0 1em !important;border:1.5px solid #CFE0D2 !important;border-radius:12px !important;background:#fff;color:#14301E;font:inherit;font-size:.95em;box-shadow:0 1px 4px rgba(15,107,46,.06);transition:border-color .15s,box-shadow .15s}
+  .cf textarea{height:auto;padding:.8em 1em !important}
+  .cf input:focus,.cf select:focus,.cf textarea:focus{outline:0;border-color:#2E9E4F !important;box-shadow:0 0 0 3px rgba(46,158,79,.18)}
+  .cf input[type=file]{width:100%;box-sizing:border-box;padding:.45em;border:1.5px dashed #9CCBA4;border-radius:12px;background:#F4FAF5;font:inherit;font-size:.88em;color:#3A4F40}
+  .cf input[type=file]::file-selector-button{margin-right:.8em;border:0;border-radius:999px;padding:.5em 1.1em;background:#176B31;color:#fff;font-weight:700;font:inherit;font-size:.95em;cursor:pointer}
+  .cf input[type=file]::file-selector-button:hover{background:#0F5A28}
+  .cf .hint,.cf label>span[style*="font-size:.8rem"]{font-size:.8em !important;color:#5E7565 !important}
+  .cf button[type=submit]{display:inline-flex;align-items:center;gap:.5em;border:0;border-radius:999px;padding:.8em 2em;background:linear-gradient(135deg,#2E9E4F,#0F6B30);color:#fff;font:inherit;font-weight:800;font-size:.98em;box-shadow:0 5px 14px rgba(15,90,40,.3);cursor:pointer}
+  .cf button[type=submit]:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .cf .btn.secundario{border-radius:999px;border:1.5px solid #CFE0D2;background:#fff;color:#0F5A28;font-weight:700;padding:.7em 1.6em;box-shadow:0 2px 8px rgba(15,107,46,.08)}
+  .cf .btn.aba-programa{border-radius:999px;font-weight:700;padding:.55em 1.3em}
+  .cf .btn.aba-programa.agro:not(.secundario){background:#2E9E4F;color:#fff;border:0}
+  .cf .btn.aba-programa.saude:not(.secundario){background:#3B82C4;color:#fff;border:0}
+  .cf table{border-collapse:separate;border-spacing:0;width:100%;border-radius:12px;overflow:hidden}
+  .cf table th{background:#0F6B30;color:#fff;font-weight:700;text-transform:uppercase;font-size:.8em;letter-spacing:.04em;padding:.7em 0;text-align:center;border:0}
+  .cf table td{padding:.7em 0;font-weight:600;border:0;border-bottom:1px solid #EAF3EB;border-right:1px solid #EAF3EB}
+  @media (max-width:1100px){.cf .info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+{%- endmacro %}

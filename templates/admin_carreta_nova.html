@@ -1,7 +1,8 @@
 {% extends 'admin_base.html' %}
-{% from '_cr_head.html' import cr_head %}
+{% from '_cr_head.html' import cr_head, cr_form_css %}
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}</style>
+{{ cr_form_css() }}
+<div class="cf">
 <a class="link-voltar" href="{{ url_for('admin_carreta') }}">← Voltar para a lista</a>
 {% call cr_head('Nova solicitação', 'Cadastro direto — por exemplo, um pedido que chegou por telefone ou que você quer registrar depois de já ter acontecido.') %}{% endcall %}
 
@@ -141,7 +142,8 @@
   </div>
 
   <div style="margin-top:22px;">
-    <button type="submit">💾 Cadastrar solicitação</button>
+    <button type="submit">Cadastrar solicitação</button>
   </div>
 </form>
+</div>
 {% endblock %}

@@ -1,7 +1,8 @@
 {% extends 'admin_base.html' %}
-{% from '_cr_head.html' import cr_head %}
+{% from '_cr_head.html' import cr_head, cr_form_css %}
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}</style>
+{{ cr_form_css() }}
+<div class="cf">
 <a class="link-voltar" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=solicitacao.id) }}">← Voltar para o detalhe</a>
 {% call cr_head('Editar solicitação', solicitacao.evento ~ ' — ' ~ solicitacao.municipio_nome) %}{% endcall %}
 
@@ -92,8 +93,9 @@
   </p>
 
   <div style="margin-top:22px;display:flex;gap:10px;">
-    <button type="submit">💾 Salvar alterações</button>
+    <button type="submit">Salvar alterações</button>
     <a class="btn secundario" href="{{ url_for('admin_carreta_detalhe', solicitacao_id=solicitacao.id) }}">Cancelar</a>
   </div>
 </form>
+</div>
 {% endblock %}
