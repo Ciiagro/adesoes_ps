@@ -36,6 +36,26 @@
   .gp-box summary:hover .ch{filter:brightness(.95);outline:1.5px solid currentColor}
   .gp-box details summary{list-style:none}.gp-box details summary::-webkit-details-marker{display:none}
   .gp-box tr:hover td{background:#F6FAF4}
+  .cv-geral{padding:16px 18px 6px}
+  .cv-leg{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:.85rem;color:#2d3a30;margin-bottom:10px}
+  .cv-leg b{margin-left:4px}
+  .d{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:#9AA39A}
+  .d.vencido{background:#C62828}.d.m3{background:#F08C00}.d.m6{background:#E4C200}.d.m12{background:#2E9E4F}.d.sem_data{background:#9AA39A}
+  .cv-bar{display:flex;gap:3px;height:10px}
+  .cv-bar i{display:block;border-radius:5px;font-style:normal;color:#fff;font-size:.72rem;font-weight:800;text-align:center;line-height:10px}
+  .cv-bar.big{height:34px}.cv-bar.big i{line-height:34px;font-size:.9rem;border-radius:8px}
+  .cv-bar i.vencido{background:#C62828}.cv-bar i.m3{background:#F08C00}.cv-bar i.m6{background:#E4C200;color:#4a3d00}.cv-bar i.m12{background:#2E9E4F}.cv-bar i.sem_data{background:#9AA39A}
+  .cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:14px 18px 18px}
+  .cv-card{border:1px solid #E4EBE3;border-radius:14px;padding:14px 16px;background:#fff}
+  .cv-card.critica{border-color:#F3C5BE;background:linear-gradient(180deg,#FFF6F5,#fff 60%)}
+  .cv-nome{font-weight:800;color:#14301E;font-size:1rem;margin-bottom:8px}
+  .cv-num{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .cv-num .gr{font-family:'Fraunces',serif;font-size:2.6rem;font-weight:700;line-height:1}
+  .cv-num .gr.verm{color:#C62828}.cv-num .gr.ok{color:#2E9E4F}
+  .cv-num .tx{font-size:.9rem;font-weight:700;color:#14301E;line-height:1.2}.cv-num small{font-weight:500;color:#4F6354}
+  .cv-card details{margin-top:10px}
+  .cv-card .gp-lst a{display:flex;align-items:center;gap:0;padding:3px 0}
+  .cv-card .gp-lst a span{margin-left:auto;color:#4F6354;padding-left:8px}
   .gp-vazio{padding:16px 18px;color:#4F6354}
 </style>
 {{ cab_hero('Painel da Gestão', 'Mandatos, vencimentos e qualidade do cadastro dos sindicatos rurais em um só lugar.', 'cab') }}
@@ -48,32 +68,41 @@
 </div>
 
 <div class="gp-box">
-  <div class="gp-topo">Calendário de vencimentos por região<small>clique no número para listar os sindicatos</small></div>
-  <table>
-    <tr><th>Região</th><th style="text-align:center">Vencidos</th><th style="text-align:center">Até 3 meses</th><th style="text-align:center">3 a 6 meses</th><th style="text-align:center">6 a 12 meses</th><th style="text-align:center">Sem data</th><th style="text-align:center">Total</th></tr>
-    {% for c in calendario %}
-    <tr>
-      <td><b>{{ c.exib }}</b></td>
-      {% for f in ['vencido','m3','m6','m12','sem_data'] %}
-      <td class="n">
-        {% if c[f] %}
-        <details><summary><span class="ch {{ f }}">{{ c[f]|length }}</span></summary>
-          <div class="gp-lst" style="text-align:left;font-weight:500">
-            {% for it in c[f] %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }}{% if it.s.gestao_fim %} · {{ it.s.gestao_fim.strftime('%d/%m/%Y') }}{% endif %}</a>{% endfor %}
-          </div>
-        </details>
-        {% else %}<span style="color:#C3CBC2">–</span>{% endif %}
-      </td>
-      {% endfor %}
-      <td class="n">{{ c.vencido|length + c.m3|length + c.m6|length + c.m12|length + c.sem_data|length }}</td>
-    </tr>
+  <div class="gp-topo">Calendário de vencimentos por região<small>regiões mais críticas primeiro</small></div>
+  <div class="cv-geral">
+    <div class="cv-leg">
+      <span><i class="d vencido"></i>Vencidos <b>{{ totais.vencido }}</b></span>
+      <span><i class="d m3"></i>Até 3 meses <b>{{ totais.m3 }}</b></span>
+      <span><i class="d m6"></i>3 a 6 meses <b>{{ totais.m6 }}</b></span>
+      <span><i class="d m12"></i>6 a 12 meses <b>{{ totais.m12 }}</b></span>
+      <span><i class="d sem_data"></i>Sem data <b>{{ totais.sem_data }}</b></span>
+    </div>
+    <div class="cv-bar big">
+      {% for f in ['vencido','m3','m6','m12','sem_data'] %}{% if totais[f] %}<i class="{{ f }}" style="flex:{{ totais[f] }}">{{ totais[f] }}</i>{% endif %}{% endfor %}
+    </div>
+  </div>
+  <div class="cv-grid">
+    {% for c in calendario|sort(attribute='ordem') %}
+    <div class="cv-card {{ 'critica' if c.vencido|length else '' }}">
+      <div class="cv-nome">{{ c.exib }}</div>
+      <div class="cv-num">
+        <span class="gr {{ 'verm' if c.vencido|length else 'ok' }}">{{ c.vencido|length }}</span>
+        <span class="tx">vencido{{ 's' if c.vencido|length != 1 else '' }}<br><small>de {{ c.total }} sindicato{{ 's' if c.total != 1 else '' }}</small></span>
+      </div>
+      <div class="cv-bar">
+        {% for f in ['vencido','m3','m6','m12','sem_data'] %}{% if c[f] %}<i class="{{ f }}" style="flex:{{ c[f]|length }}" title="{{ c[f]|length }}"></i>{% endif %}{% endfor %}
+      </div>
+      <details>
+        <summary>ver sindicatos</summary>
+        <div class="gp-lst">
+          {% for f in ['vencido','m3','m6','m12','sem_data'] %}{% for it in c[f] %}
+          <a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}"><i class="d {{ f }}"></i>{{ it.s.nome }}<span>{% if it.s.gestao_fim %}{{ it.s.gestao_fim.strftime('%d/%m/%Y') }}{% else %}sem data{% endif %}</span></a>
+          {% endfor %}{% endfor %}
+        </div>
+      </details>
+    </div>
     {% endfor %}
-    <tr style="background:#F3F9F3">
-      <td><b>Total</b></td>
-      <td class="n">{{ totais.vencido }}</td><td class="n">{{ totais.m3 }}</td><td class="n">{{ totais.m6 }}</td><td class="n">{{ totais.m12 }}</td><td class="n">{{ totais.sem_data }}</td>
-      <td class="n">{{ total }}</td>
-    </tr>
-  </table>
+  </div>
 </div>
 
 <div class="gp-box">

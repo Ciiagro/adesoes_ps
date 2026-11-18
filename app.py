@@ -1934,6 +1934,8 @@ def admin_sindicatos_gestao():
             linha[f] = sorted([it for it in itens if it["regiao"] == r and it["faixa"] == f],
                               key=lambda x: x["dias"])
         linha["sem_data"] = [it for it in itens if it["regiao"] == r and it["faixa"] == "sem_data"]
+        linha["total"] = sum(len(linha[k]) for k in faixas + ["sem_data"])
+        linha["ordem"] = (-len(linha["vencido"]), -len(linha["m3"]), r)
         calendario.append(linha)
     totais = {f: sum(1 for it in itens if it["faixa"] == f) for f in faixas + ["sem_data"]}
 
