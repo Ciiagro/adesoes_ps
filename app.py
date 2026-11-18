@@ -2555,6 +2555,115 @@ def admin_carreta_calendario_pdf():
     )
 
 
+@app.route("/admin/carreta/painel")
+def admin_carreta_painel():
+    """Painel de estatísticas da Carreta (Agro + Saúde): números do ano,
+    por mês, por situação, municípios e eventos mais atendidos, ocupação
+    do calendário e próximos eventos. Tudo calculado das solicitações."""
+    if not pode_ver_carreta():
+        return redirect(url_for("admin_login"))
+
+    import calendar as _cal
+    from collections import Counter
+    from datetime import date as _date, timedelta as _td
+
+    db = SessionLocal()
+    hoje = datetime.now().date()
+    todas = carr.listar_solicitacoes(db)
+    anos = sorted({s.data_inicio.year for s in todas}, reverse=True) or [hoje.year]
+    ano = request.args.get("ano", type=int) or (hoje.year if hoje.year in anos else anos[0])
+    if ano not in anos:
+        anos = sorted(set(anos) | {ano}, reverse=True)
+    prog = request.args.get("programa", "")
+    if prog not in carr.TIPOS_RECURSO:
+        prog = ""
+
+    sol = [s for s in todas if s.data_inicio.year == ano and (not prog or s.tipo_recurso == prog)]
+    ativas = [s for s in sol if s.status != "recusada"]
+
+    # ---- situação (donut) ----
+    ordem = [("aprovada", "#2E9E4F"), ("realizada", "#3B82C4"), ("pendente", "#F2A93B"), ("recusada", "#D9534F")]
+    cont = Counter(s.status for s in sol)
+    total = len(sol)
+    situacao, acum = [], 0.0
+    for chave, cor in ordem:
+        n = cont.get(chave, 0)
+        pct = (n * 100.0 / total) if total else 0
+        situacao.append({"chave": chave, "rotulo": carr.STATUS_LABEL[chave], "cor": cor, "n": n,
+                         "pct": round(pct, 1), "dash": round(pct, 2), "off": round(25 - acum, 2)})
+        acum += pct
+
+    # ---- por mês ----
+    meses_abrev = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+    por_mes = []
+    for m in range(1, 13):
+        ag = sum(1 for s in ativas if s.data_inicio.month == m and s.tipo_recurso == "carreta_agro")
+        sa = sum(1 for s in ativas if s.data_inicio.month == m and s.tipo_recurso == "carreta_saude")
+        por_mes.append({"rotulo": meses_abrev[m - 1], "agro": ag, "saude": sa})
+    maxmes = max([max(x["agro"], x["saude"]) for x in por_mes] + [1])
+    for x in por_mes:
+        x["h_agro"] = round(x["agro"] * 100.0 / maxmes, 1)
+        x["h_saude"] = round(x["saude"] * 100.0 / maxmes, 1)
+    tot_agro = sum(x["agro"] for x in por_mes)
+    tot_saude = sum(x["saude"] for x in por_mes)
+
+    # ---- rankings ----
+    def _rank(contador, n):
+        itens = contador.most_common(n)
+        mx = itens[0][1] if itens else 1
+        return [{"nome": nome, "n": q, "pct": round(q * 100.0 / mx, 1)} for nome, q in itens]
+    top_mun = _rank(Counter((s.municipio_nome or "").strip() for s in ativas if s.municipio_nome), 10)
+    top_ev = _rank(Counter((s.evento or "").strip() for s in ativas if s.evento), 8)
+
+    # ---- ocupação do calendário ----
+    dias = set()
+    for s in ativas:
+        d = max(s.data_inicio, _date(ano, 1, 1))
+        fim = min(s.data_fim, _date(ano, 12, 31))
+        while d <= fim:
+            dias.add(d)
+            d += _td(days=1)
+    ocupacao = []
+    for m in range(1, 13):
+        dm = _cal.monthrange(ano, m)[1]
+        usados = sum(1 for d in dias if d.month == m)
+        ocupacao.append({"rotulo": meses_abrev[m - 1], "dias": usados, "pct": round(usados * 100.0 / dm)})
+    dias_ano = 366 if _cal.isleap(ano) else 365
+    pct_ano = round(len(dias) * 100.0 / dias_ano, 1)
+
+    # ---- médias ----
+    durs = [(s.data_fim - s.data_inicio).days + 1 for s in ativas]
+    dur_media = round(sum(durs) / len(durs), 1) if durs else 0
+    antec = []
+    for s in ativas:
+        if getattr(s, "criado_em", None):
+            a = (s.data_inicio - s.criado_em.date()).days
+            if a >= 0:
+                antec.append(a)
+    antec_media = round(sum(antec) / len(antec)) if antec else 0
+
+    realizadas_aprov = cont.get("aprovada", 0) + cont.get("realizada", 0)
+    decididas = realizadas_aprov + cont.get("recusada", 0)
+    taxa_aprov = round(realizadas_aprov * 100.0 / decididas) if decididas else 0
+    municipios_atendidos = len({(s.municipio_nome or "").strip() for s in sol
+                                if s.status in ("aprovada", "realizada") and s.municipio_nome})
+
+    # ---- próximos eventos ----
+    futuros = sorted([s for s in todas if s.status in ("aprovada", "pendente") and s.data_fim >= hoje
+                      and (not prog or s.tipo_recurso == prog)], key=lambda s: s.data_inicio)[:6]
+
+    return render_template(
+        "admin_carreta_painel.html",
+        pagina_ativa="carreta_painel",
+        ano=ano, anos=anos, prog=prog, tipos_recurso=carr.TIPOS_RECURSO,
+        total=total, situacao=situacao, por_mes=por_mes, tot_agro=tot_agro, tot_saude=tot_saude,
+        top_mun=top_mun, top_ev=top_ev, ocupacao=ocupacao, pct_ano=pct_ano, dias_uso=len(dias),
+        dur_media=dur_media, antec_media=antec_media, taxa_aprov=taxa_aprov,
+        aprovadas_total=realizadas_aprov, pendentes=cont.get("pendente", 0),
+        municipios_atendidos=municipios_atendidos, futuros=futuros,
+    )
+
+
 @app.route("/admin/carreta/<int:solicitacao_id>")
 def admin_carreta_detalhe(solicitacao_id):
     """Detalhe de uma solicitação: dados, ofícios anexados, e ações de

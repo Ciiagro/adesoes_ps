@@ -281,6 +281,7 @@
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_bloqueios' else '' }}" href="{{ url_for('admin_carreta_bloqueios') }}"><span class="ic">🚫</span> Bloqueio de Datas</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_painel' else '' }}" href="{{ url_for('admin_carreta_painel') }}"><span class="ic">📊</span> Painel</a>
       {% endif %}
 
       {% if apenas_sindicatos %}
@@ -299,6 +300,7 @@
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_bloqueios' else '' }}" href="{{ url_for('admin_carreta_bloqueios') }}"><span class="ic">🚫</span> Bloqueio de Datas</a>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_painel' else '' }}" href="{{ url_for('admin_carreta_painel') }}"><span class="ic">📊</span> Painel</a>
       {% endif %}
     </nav>
     <div class="rodape-sidebar"><a href="{{ url_for('admin_logout') }}"><span class="ic">🚪</span> Sair</a></div>

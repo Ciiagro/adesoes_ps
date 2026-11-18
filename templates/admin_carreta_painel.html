@@ -1,0 +1,184 @@
+{% extends 'admin_base.html' %}
+{% from '_cr_head.html' import cr_head %}
+{% block admin_content %}
+<style>.conteudo{max-width:none !important}</style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  .pn{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);color:#14301E;width:100%}
+  .pn .cr-head{margin-bottom:-1.6em !important}
+  .pn-filtros{position:relative;z-index:2;display:flex;align-items:center;gap:1em;flex-wrap:wrap;background:#fff;border-radius:16px;box-shadow:0 6px 22px rgba(15,107,46,.14);padding:.9em 1.3em;margin:0 0 1.2em}
+  .pn-filtros .tt{display:flex;align-items:center;gap:.7em;font-weight:800;font-size:1.2em;color:#0F5A28;margin-right:auto}
+  .pn-filtros .tt .ic{width:2.4em;height:2.4em;border-radius:50%;background:#0F6B2E;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(15,107,46,.3)}
+  .pn-sel{display:flex;align-items:center;gap:.6em;border:1.5px solid #D9E6DB;border-radius:12px;padding:0 .9em;height:2.6em;background:#fff;font-weight:700;color:#0F5A28}
+  .pn-sel select{appearance:none;-webkit-appearance:none;border:0;outline:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%2314301E' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right center no-repeat;font:inherit;font-weight:600;color:#3A4F40;padding:0 1.5em 0 0;margin:0;height:100%;width:auto;box-shadow:none;cursor:pointer}
+
+  .pn-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1em;margin-bottom:1.1em}
+  .pn-kpi{position:relative;overflow:hidden;background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10);padding:1em 1.2em 1.05em}
+  .pn-kpi::after{content:"";position:absolute;right:-1.2em;bottom:-1.2em;width:5em;height:5em;border-radius:50%;background:var(--c,#2E9E4F);opacity:.10}
+  .pn-kpi .ico{width:2.6em;height:2.6em;border-radius:12px;background:var(--c,#2E9E4F);display:flex;align-items:center;justify-content:center;margin-bottom:.7em;box-shadow:0 4px 10px rgba(0,0,0,.12)}
+  .pn-kpi .ico svg{width:1.4em;height:1.4em}
+  .pn-kpi .v{font-size:2.1em;font-weight:800;line-height:1;color:#0F5A28;letter-spacing:-.02em}
+  .pn-kpi .v small{font-size:.5em;font-weight:700;color:#5E7565;margin-left:.2em}
+  .pn-kpi .r{margin-top:.4em;font-weight:700;color:#14301E}
+  .pn-kpi .d{margin-top:.15em;font-size:.85em;color:#5E7565}
+
+  .pn-linha{display:grid;gap:1em;margin-bottom:1.1em}
+  .pn-l1{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+  .pn-l2,.pn-l3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pn-card{background:#fff;border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10);padding:1.1em 1.3em 1.2em}
+  .pn-card h3{margin:0 0 .15em;font-size:1.15em;font-weight:800;color:#0F5A28;display:flex;align-items:center;gap:.5em}
+  .pn-card h3::before{content:"";width:.35em;height:1.1em;border-radius:4px;background:linear-gradient(180deg,#2E9E4F,#7BC043)}
+  .pn-card .sub{margin:0 0 .9em;font-size:.85em;color:#5E7565}
+
+  .pn-barras{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.5em;align-items:end;height:14em;padding-top:1.4em;border-bottom:2px solid #E3ECE4}
+  .pn-mes{display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+  .pn-par{display:flex;align-items:flex-end;gap:.18em;height:100%;width:100%;justify-content:center}
+  .pn-b{position:relative;width:38%;max-width:1.6em;min-height:3px;border-radius:6px 6px 0 0}
+  .pn-b.ag{background:linear-gradient(180deg,#3FB265,#1E8A3D)}
+  .pn-b.sa{background:linear-gradient(180deg,#5AA0DC,#2F6FB5)}
+  .pn-b span{position:absolute;left:50%;top:-1.35em;transform:translateX(-50%);font-size:.78em;font-weight:800;color:#3A4F40}
+  .pn-rot{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:.5em;margin-top:.5em;text-align:center;font-size:.8em;font-weight:700;color:#5E7565}
+  .pn-leg{display:flex;gap:1.2em;margin-top:.8em;font-size:.88em;font-weight:700}
+  .pn-leg i{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:.4em;vertical-align:-1px}
+
+  .pn-donut{display:flex;align-items:center;gap:1.2em;flex-wrap:wrap;justify-content:center}
+  .pn-donut svg{width:11em;height:11em;flex:none}
+  .pn-donut .centro{font-weight:800;fill:#0F5A28}
+  .pn-dl{display:grid;gap:.5em;font-size:.92em;min-width:9em}
+  .pn-dl div{display:flex;align-items:center;gap:.5em;font-weight:600}
+  .pn-dl i{width:.8em;height:.8em;border-radius:50%;flex:none}
+  .pn-dl b{margin-left:auto;padding-left:.8em}
+
+  .pn-rank{display:grid;gap:.6em}
+  .pn-rk{display:grid;grid-template-columns:1.6em minmax(0,11em) 1fr 2.2em;align-items:center;gap:.6em;font-size:.93em}
+  .pn-rk .n{width:1.6em;height:1.6em;border-radius:50%;background:#E6F3E8;color:#0F5A28;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.85em}
+  .pn-rk .nome{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pn-rk .trilho{height:.8em;border-radius:999px;background:#EAF3EB;overflow:hidden}
+  .pn-rk .trilho i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#1E8A3D,#7BC043)}
+  .pn-rk .q{font-weight:800;text-align:right}
+  .pn-vazio{color:#5E7565;padding:1em 0}
+
+  .pn-oc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.7em}
+  .pn-oc div{background:#F4FAF5;border-radius:12px;padding:.6em .5em .7em;text-align:center}
+  .pn-oc .m{font-size:.8em;font-weight:700;color:#5E7565}
+  .pn-oc .p{font-size:1.25em;font-weight:800;color:#0F5A28;margin:.1em 0 .35em}
+  .pn-oc .t{height:.45em;border-radius:999px;background:#DCEBDE;overflow:hidden}
+  .pn-oc .t i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2E9E4F,#7BC043)}
+  .pn-oc .t i.alto{background:linear-gradient(90deg,#F2A93B,#E8590C)}
+
+  .pn-prox{display:grid;gap:.6em}
+  .pn-pr{display:flex;align-items:center;gap:.9em;border:1px solid #E3ECE4;border-radius:12px;padding:.6em .8em}
+  .pn-pr .dt{flex:none;width:3.3em;text-align:center;border-radius:10px;background:#0F6B2E;color:#fff;padding:.3em 0;line-height:1.05}
+  .pn-pr .dt b{display:block;font-size:1.25em}
+  .pn-pr .dt small{font-size:.7em;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.9}
+  .pn-pr .ev{font-weight:800;line-height:1.2}
+  .pn-pr .lc{font-size:.85em;color:#5E7565}
+  .pn-pr .st{margin-left:auto;flex:none;font-size:.78em;font-weight:800;border-radius:999px;padding:.2em .8em}
+  .pn-pr .st.ap{background:#CFEFC5;color:#1B6E2E}.pn-pr .st.pe{background:#FDEBC8;color:#8A5300}
+  .pn-pr .pg{flex:none;width:.7em;height:.7em;border-radius:50%}
+
+  .pn-rodape{position:relative;display:flex;justify-content:flex-end;min-height:6em;padding:.8em 2em;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,0),#EAF5EC)}
+  .pn-rodape::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 140' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%230F5A28'/%3E%3Cstop offset='.55' stop-color='%2325933F'/%3E%3Cstop offset='1' stop-color='%237BC043'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 140V50C200 25 430 85 720 100C940 111 1090 100 1200 88V140Z' fill='url(%23g)'/%3E%3Cpath d='M0 140V92C220 78 450 118 720 122C940 125 1090 118 1200 112V140Z' fill='%23fff' fill-opacity='.18'/%3E%3C/svg%3E") center bottom/100% 100% no-repeat}
+  .pn-rodape span{position:relative;font-style:italic;font-weight:800;font-size:1.4em;color:#0F5A28;border-bottom:3px solid #7BC043;padding-bottom:.15em;align-self:flex-start}
+  @media (max-width:1100px){.pn-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pn-l1,.pn-l2,.pn-l3{grid-template-columns:1fr}}
+</style>
+
+<div class="pn">
+{% call cr_head('Painel', 'Números das solicitações da Carreta do Agro e da Carreta da Saúde em ' ~ ano ~ '.') %}{% endcall %}
+
+<form method="get" class="pn-filtros">
+  <div class="tt"><span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="#fff" aria-hidden="true"><path d="M5 9h3v10H5V9zm5.500-5h3v15h-3V4zM16 13h3v6h-3v-6z"/></svg></span>Painel de estatísticas</div>
+  <label class="pn-sel">Ano
+    <select name="ano" onchange="this.form.submit()">{% for a in anos %}<option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></label>
+  <label class="pn-sel">Programa
+    <select name="programa" onchange="this.form.submit()">
+      <option value="">Os dois</option>
+      {% for chave, rotulo in tipos_recurso.items() %}<option value="{{ chave }}" {% if prog == chave %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select></label>
+</form>
+
+<div class="pn-kpis">
+  <div class="pn-kpi" style="--c:#2E9E4F"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M6 2h9l5 5v15H6V2zm8 1.500V8h4.500L14 3.500zM9 12h8v1.600H9V12zm0 3.500h8v1.600H9v-1.600z"/></svg></div>
+    <div class="v">{{ total }}</div><div class="r">Solicitações</div><div class="d">recebidas em {{ ano }}</div></div>
+  <div class="pn-kpi" style="--c:#3B82C4"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M9 16.200 4.800 12l-1.400 1.400L9 19 21 7l-1.400-1.400L9 16.200z"/></svg></div>
+    <div class="v">{{ aprovadas_total }}</div><div class="r">Aprovadas / realizadas</div><div class="d">taxa de aprovação: <b>{{ taxa_aprov }}%</b></div></div>
+  <div class="pn-kpi" style="--c:#F2A93B"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v5.400l4 2.300-.8 1.300L11 13V7h2z"/></svg></div>
+    <div class="v">{{ pendentes }}</div><div class="r">Pendentes</div><div class="d">aguardando decisão</div></div>
+  <div class="pn-kpi" style="--c:#8E5BD6"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a7 7 0 0 0-7 7c0 5.200 7 13 7 13s7-7.800 7-13a7 7 0 0 0-7-7zm0 9.500a2.500 2.500 0 1 1 0-5 2.500 2.500 0 0 1 0 5z"/></svg></div>
+    <div class="v">{{ municipios_atendidos }}</div><div class="r">Municípios atendidos</div><div class="d">com solicitação aprovada ou realizada</div></div>
+  <div class="pn-kpi" style="--c:#E8590C"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg></div>
+    <div class="v">{{ dias_uso }}<small>dias</small></div><div class="r">Carreta em uso</div><div class="d">{{ pct_ano }}% dos dias do ano</div></div>
+  <div class="pn-kpi" style="--c:#14A39A"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M11 2h2v2.100A8 8 0 0 1 20 12a8 8 0 1 1-9-7.900V2zm1 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm.8 2v4.200l3 1.800-.8 1.300-3.800-2.300V8h1.600z"/></svg></div>
+    <div class="v">{{ dur_media }}<small>dias</small></div><div class="r">Duração média</div><div class="d">de cada evento</div></div>
+  <div class="pn-kpi" style="--c:#D9534F"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg></div>
+    <div class="v">{{ antec_media }}<small>dias</small></div><div class="r">Antecedência média</div><div class="d">entre o pedido e o evento</div></div>
+  <div class="pn-kpi" style="--c:#1E8A3D"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-5h2v17h-2V3zm4 8h2v9h-2v-9zm4-3h2v12h-2V8z"/></svg></div>
+    <div class="v">{{ tot_agro }}<small>Agro</small> {{ tot_saude }}<small>Saúde</small></div><div class="r">Por programa</div><div class="d">solicitações não canceladas</div></div>
+</div>
+
+<div class="pn-linha pn-l1">
+  <div class="pn-card">
+    <h3>Solicitações por mês</h3><p class="sub">Pelo mês de início do evento, sem contar as canceladas.</p>
+    <div class="pn-barras">
+      {% for m in por_mes %}
+      <div class="pn-mes"><div class="pn-par">
+        <div class="pn-b ag" style="height:{{ m.h_agro }}%">{% if m.agro %}<span>{{ m.agro }}</span>{% endif %}</div>
+        <div class="pn-b sa" style="height:{{ m.h_saude }}%">{% if m.saude %}<span>{{ m.saude }}</span>{% endif %}</div>
+      </div></div>
+      {% endfor %}
+    </div>
+    <div class="pn-rot">{% for m in por_mes %}<div>{{ m.rotulo }}</div>{% endfor %}</div>
+    <div class="pn-leg"><span><i style="background:#2E9E4F"></i>Carreta do Agro</span><span><i style="background:#3B82C4"></i>Carreta da Saúde</span></div>
+  </div>
+  <div class="pn-card">
+    <h3>Situação das solicitações</h3><p class="sub">Todas as solicitações de {{ ano }}.</p>
+    <div class="pn-donut">
+      <svg viewBox="0 0 42 42" aria-hidden="true">
+        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#EAF3EB" stroke-width="5.5"/>
+        {% for s in situacao %}{% if s.n %}<circle cx="21" cy="21" r="15.9155" fill="none" stroke="{{ s.cor }}" stroke-width="5.5" stroke-dasharray="{{ s.dash }} {{ 100 - s.dash }}" stroke-dashoffset="{{ s.off }}"/>{% endif %}{% endfor %}
+        <text x="21" y="22.500" text-anchor="middle" class="centro" font-size="7.500">{{ total }}</text>
+        <text x="21" y="28" text-anchor="middle" font-size="3.200" fill="#5E7565" font-weight="700">solicitações</text>
+      </svg>
+      <div class="pn-dl">{% for s in situacao %}<div><i style="background:{{ s.cor }}"></i>{{ s.rotulo }}<b>{{ s.n }}</b></div>{% endfor %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="pn-linha pn-l2">
+  <div class="pn-card">
+    <h3>Municípios mais atendidos</h3><p class="sub">Os 10 que mais receberam solicitações em {{ ano }}.</p>
+    {% if top_mun %}<div class="pn-rank">{% for r in top_mun %}
+      <div class="pn-rk"><span class="n">{{ loop.index }}</span><span class="nome" title="{{ r.nome }}">{{ r.nome }}</span><span class="trilho"><i style="width:{{ r.pct }}%"></i></span><span class="q">{{ r.n }}</span></div>
+    {% endfor %}</div>{% else %}<div class="pn-vazio">Sem dados neste período.</div>{% endif %}
+  </div>
+  <div class="pn-card">
+    <h3>Eventos mais comuns</h3><p class="sub">Quais eventos mais pedem a carreta.</p>
+    {% if top_ev %}<div class="pn-rank">{% for r in top_ev %}
+      <div class="pn-rk"><span class="n">{{ loop.index }}</span><span class="nome" title="{{ r.nome }}">{{ r.nome }}</span><span class="trilho"><i style="width:{{ r.pct }}%"></i></span><span class="q">{{ r.n }}</span></div>
+    {% endfor %}</div>{% else %}<div class="pn-vazio">Sem dados neste período.</div>{% endif %}
+  </div>
+</div>
+
+<div class="pn-linha pn-l3">
+  <div class="pn-card">
+    <h3>Ocupação do calendário</h3><p class="sub">Percentual dos dias de cada mês com a carreta em uso.</p>
+    <div class="pn-oc">{% for o in ocupacao %}
+      <div><div class="m">{{ o.rotulo }}</div><div class="p">{{ o.pct }}%</div><div class="t"><i class="{{ 'alto' if o.pct >= 70 else '' }}" style="width:{{ o.pct }}%"></i></div></div>
+    {% endfor %}</div>
+  </div>
+  <div class="pn-card">
+    <h3>Próximos eventos</h3><p class="sub">Aprovados ou pendentes, a partir de hoje.</p>
+    {% if futuros %}<div class="pn-prox">{% for s in futuros %}
+      <div class="pn-pr">
+        <div class="dt"><b>{{ s.data_inicio.strftime('%d') }}</b><small>{{ ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][s.data_inicio.month - 1] }}</small></div>
+        <div><div class="ev">{{ s.evento }}</div><div class="lc">{{ s.municipio_nome }} · {{ s.data_inicio.strftime('%d/%m') }} a {{ s.data_fim.strftime('%d/%m') }}</div></div>
+        <span class="pg" style="background:{{ '#2E9E4F' if s.tipo_recurso == 'carreta_agro' else '#3B82C4' }}" title="{{ tipos_recurso.get(s.tipo_recurso) }}"></span>
+        <span class="st {{ 'ap' if s.status == 'aprovada' else 'pe' }}">{{ 'Aprovada' if s.status == 'aprovada' else 'Pendente' }}</span>
+      </div>
+    {% endfor %}</div>{% else %}<div class="pn-vazio">Nenhum evento futuro cadastrado.</div>{% endif %}
+  </div>
+</div>
+
+<div class="pn-rodape"><span>Capacitação que transforma vidas.</span></div>
+</div>
+{% endblock %}
