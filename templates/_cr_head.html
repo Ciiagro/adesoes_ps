@@ -6,6 +6,7 @@
   .cr-head>*{position:relative;z-index:1}
   .cr-head .cr-tx{max-width:50%}
   .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:2em;line-height:1.12}
+  .cr-head .cr-pg{margin:.3em 0 0;font-size:1.35em;font-weight:800;font-style:italic;color:#14301E;line-height:1.1}
   .cr-head .sub{margin:.45em 0 0;color:#14301E;font-size:.9em;font-style:italic;max-width:none}
   .cr-head .sub b{font-style:normal;color:#0F5A28}
   .cr-head .cr-nova{display:inline-flex;align-items:center;gap:.5em;margin-top:.8em;background:#176B31;color:#fff !important;border-radius:999px;padding:.55em 1.3em;font-weight:700;font-size:.95em;text-decoration:none;box-shadow:0 3px 10px rgba(23,107,49,.3)}
@@ -13,7 +14,7 @@
   .cr-head .cr-acoes-cab{display:flex;gap:.6em;flex-wrap:wrap}
 </style>
 <div class="cr-head">
-  <svg class="cr-art" viewBox="0 0 900 230" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
+  <svg class="cr-art" viewBox="0 0 900 230" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">
     <defs>
       <linearGradient id="crSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3C9"/><stop offset=".55" stop-color="#E7F4D2"/><stop offset="1" stop-color="#CBE9C2"/></linearGradient>
       <radialGradient id="crSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFFBE3"/><stop offset=".35" stop-color="#FFE28A"/><stop offset="1" stop-color="#FFE28A" stop-opacity="0"/></radialGradient>
@@ -55,7 +56,8 @@
   </svg>
   <div class="cr-tx">
     <h1>Carreta do Agro /<br>Carreta da Saúde</h1>
-    <p class="sub">{% if pagina != 'Solicitações' %}<b>{{ pagina }}</b>{% if sub %} — {% endif %}{% endif %}{{ sub }}</p>
+    <div class="cr-pg">{{ pagina }}</div>
+    <p class="sub">{{ sub }}</p>
     {% if caller is defined %}<div class="cr-acoes-cab">{{ caller() }}</div>{% endif %}
   </div>
 </div>
