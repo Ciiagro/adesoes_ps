@@ -116,3 +116,30 @@ button:hover,.btn:hover{background:#0F6B2E}
 .mapa-bloco h2{background:#0F6B2E !important}
 .mp-filtro,.legenda-regioes{border:2px solid #7FBF8F !important}
 .mp-filtro .btn-f{background:#168A38 !important}
+
+/* ==========================================================================
+   CABEÇALHO PADRÃO (folha + título forte + paisagem) e SEM BORDAS GROSSAS
+   ========================================================================== */
+.cab-hero{position:relative;overflow:hidden;display:flex !important;align-items:center;gap:20px;min-height:120px;padding:14px 28px 14px 26px !important;margin-bottom:14px;border-radius:20px !important;border:0 !important;background:linear-gradient(100deg,#FFFFFF 0%,#F4FAF3 60%,#EAF6EC 100%) !important;box-shadow:0 3px 14px rgba(15,107,46,.14) !important}
+.cab-hero::before{display:none !important}
+.cab-hero>*{position:relative;z-index:2}
+.cab-hero .cab-fotobox{position:absolute;z-index:0;top:0;right:0;height:100%;aspect-ratio:988/124;background:url('../img/banner_paisagem.jpg') right center/100% 100% no-repeat;max-width:none !important}
+.cab-hero .cab-folha{flex:none;width:78px;height:78px;filter:drop-shadow(0 4px 6px rgba(15,107,46,.25))}
+.cab-hero .cab-txt{max-width:none !important}
+.cab-hero h1{margin:0 !important;font-family:'Inter',system-ui,sans-serif !important;font-weight:800 !important;letter-spacing:-.02em;color:#0F6B2E !important;line-height:1.1;font-size:clamp(1.6rem,2.6vw,2.5rem)}
+.cab-hero .sub{margin:6px 0 0 !important;color:#23382A !important;font-size:.95rem;font-weight:500;max-width:62ch;white-space:normal !important}
+.cab-hero .mig{display:none !important}
+.lista-fixo.compacto .cab-hero{min-height:62px !important;padding:6px 20px !important}
+.lista-fixo.compacto .cab-hero .cab-folha{width:40px;height:40px}
+.lista-fixo.compacto .cab-hero h1{font-size:clamp(1.2rem,1.8vw,1.6rem)}
+.lista-fixo.compacto .cab-hero .sub{display:none !important}
+@media (max-width:1000px){.cab-hero .cab-fotobox{display:none}}
+
+/* tirar as bordas grossas: só sombra suave */
+.filtro-card,.lista-fixo .filtro-card,.mapa-bloco,.mp-filtro,.legenda-regioes,.mp-head{border:0 !important;box-shadow:0 3px 14px rgba(15,107,46,.14) !important}
+.mapa-bloco{overflow:hidden}
+.sl .chips .mais,.sl .chips span.mais{border-width:1.5px !important}
+
+/* cabeçalho: cantos retos e sem borda */
+.cab-hero,.lista-fixo .cab.cab-hero,.lista-fixo .cab{border-radius:0 !important;border:0 !important;outline:0 !important}
+.cab-hero{box-shadow:none !important}
