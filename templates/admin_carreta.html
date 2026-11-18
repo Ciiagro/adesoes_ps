@@ -2,7 +2,7 @@
 {% block admin_content %}
 <style>.conteudo{max-width:none !important}</style>
 <style>
-  .cr-wrap{font-size:clamp(15px,.45vw + 10px,20px)}
+  .cr-wrap{font-size:clamp(15px,.3vw + 10px,18px);max-width:1760px;margin:0 auto}
   .cr-head{position:relative;overflow:hidden;display:flex;align-items:center;gap:22px;min-height:150px;padding:20px 30px 64px;margin:0 0 -34px;background:#fff;border-radius:0 0 0 0}
   .cr-head::before{content:"";position:absolute;right:0;top:0;bottom:0;width:48%;background:url('{{ url_for("static", filename="img/banner_carreta.jpg") }}') right center/cover no-repeat;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 30%);mask-image:linear-gradient(90deg,transparent 0,#000 30%);z-index:0}
   .cr-head>*{position:relative;z-index:1}
@@ -118,7 +118,7 @@
 <p class="vazio">Nenhuma solicitação encontrada.</p>
 {% else %}
 <div class="cr-tab"><table class="cr-t">
-  <colgroup><col style="width:15%"><col style="width:14%"><col style="width:24%"><col style="width:17%"><col style="width:11%"><col style="width:10%"><col style="width:9%"></colgroup>
+  <colgroup><col style="width:16%"><col style="width:14%"><col style="width:26%"><col style="width:15%"><col style="width:10%"><col style="width:10%"><col style="width:9%"></colgroup>
   <thead>
     <tr>
       <th>Programa</th><th>Município</th><th>Evento</th><th>Período</th><th>Solicitado em</th><th>Situação</th><th>Ações</th>
