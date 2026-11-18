@@ -1,0 +1,91 @@
+{% extends 'admin_base.html' %}
+{% block title %}Qualidade do Cadastro · Sindicatos{% endblock %}
+{% block admin_content %}
+{% from '_cab_hero.html' import cab_hero %}
+<style>
+  .conteudo{max-width:none !important}
+  .gp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:0 0 16px}
+  .gp-kp{border-radius:14px;padding:16px 18px;border:1px solid;display:flex;flex-direction:column;gap:2px}
+  .gp-kp .nn{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:600;line-height:1.1}
+  .gp-kp .tt{font-weight:700;font-size:.9rem}
+  .gp-kp .ll{font-size:.8rem;opacity:.85}
+  .gp-kp.r{background:#FDECEA;border-color:#F3C5BE;color:#B3261E}
+  .gp-kp.a{background:#FEF3DC;border-color:#F3D9A4;color:#9A6817}
+  .gp-kp.b{background:#EAF1FB;border-color:#C8D8F0;color:#1F4E8C}
+  .gp-kp.v{background:#E8F4EA;border-color:#C5DFCB;color:#1f4a2f}
+  .gp-box{background:#fff;border-radius:14px;box-shadow:0 3px 14px rgba(15,107,46,.12);overflow:hidden;margin:0 0 18px}
+  .gp-topo{display:flex;align-items:center;gap:10px;background:#176B31;color:#fff;padding:12px 18px;font-weight:700;font-size:1.02rem}
+  .gp-topo small{margin-left:auto;font-weight:500;opacity:.85;font-size:.8rem}
+  .gp-box table{width:100%;border-collapse:collapse;font-size:.9rem}
+  .gp-box th{text-align:left;background:#EEF4EA;color:#1f4a2f;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;padding:10px 14px}
+  .gp-box td{padding:10px 14px;border-top:1px solid #EEF3EE;vertical-align:middle}
+  .gp-box td.n{text-align:center;font-weight:700}
+  .gp-tag{display:inline-block;border-radius:999px;padding:3px 12px;font-size:.74rem;font-weight:800;color:#fff;white-space:nowrap}
+  .gp-tag.r{background:#C62828}.gp-tag.a{background:#E08A00}.gp-tag.g{background:#9AA39A}
+  .gp-box details summary{cursor:pointer;color:#176B31;font-weight:600;font-size:.82rem;list-style:none}
+  .gp-box details[open] summary{margin-bottom:6px}
+  .gp-lst{display:flex;flex-direction:column;gap:3px;margin:4px 0 0;font-size:.82rem}
+  .gp-lst a{color:#14301E;text-decoration:none}.gp-lst a:hover{text-decoration:underline}
+  .gp-q{padding:14px 18px;display:grid;gap:12px}
+  .gp-q .lin{display:grid;grid-template-columns:200px 1fr 54px;gap:12px;align-items:center;font-size:.9rem}
+  .gp-q .bar{height:10px;background:#E4EBE3;border-radius:6px;overflow:hidden}
+  .gp-q .bar i{display:block;height:100%;background:#176B31}
+  .gp-q .bar i.baixo{background:#E08A00}.gp-q .bar i.crit{background:#C62828}
+  .ch{display:inline-block;min-width:44px;padding:5px 12px;border-radius:8px;font-weight:700;font-size:.95rem;color:#14301E;background:#EEF2EE}
+  .ch.vencido{background:#FBE3E0;color:#B3261E}.ch.m3{background:#FDEBC8;color:#8A5300}.ch.m6{background:#FBF3C4;color:#6F5B00}.ch.m12{background:#DDF0E1;color:#1F6B3A}.ch.sem_data{background:#ECEEEC;color:#5B665D}
+  .gp-box summary:hover .ch{filter:brightness(.95);outline:1.5px solid currentColor}
+  .gp-box details summary{list-style:none}.gp-box details summary::-webkit-details-marker{display:none}
+  .gp-box tr:hover td{background:#F6FAF4}
+  .cv-geral{padding:16px 18px 6px}
+  .cv-leg{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:.85rem;color:#2d3a30;margin-bottom:10px}
+  .cv-leg b{margin-left:4px}
+  .d{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:#9AA39A}
+  .d.vencido{background:#C62828}.d.m3{background:#F08C00}.d.m6{background:#E4C200}.d.m12{background:#2E9E4F}.d.sem_data{background:#9AA39A}
+  .cv-bar{display:flex;gap:3px;height:10px}
+  .cv-bar i{display:block;border-radius:5px;font-style:normal;color:#fff;font-size:.72rem;font-weight:800;text-align:center;line-height:10px}
+  .cv-bar.big{height:34px}.cv-bar.big i{line-height:34px;font-size:.9rem;border-radius:8px}
+  .cv-bar i.vencido{background:#C62828}.cv-bar i.m3{background:#F08C00}.cv-bar i.m6{background:#E4C200;color:#4a3d00}.cv-bar i.m12{background:#2E9E4F}.cv-bar i.sem_data{background:#9AA39A}
+  .cv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;padding:14px 18px 18px}
+  .cv-card{border:1px solid #E4EBE3;border-radius:14px;padding:14px 16px;background:#fff}
+  .cv-card.critica{border-color:#F3C5BE;background:linear-gradient(180deg,#FFF6F5,#fff 60%)}
+  .cv-nome{font-weight:800;color:#14301E;font-size:1rem;margin-bottom:8px}
+  .cv-num{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .cv-num .gr{font-family:'Fraunces',serif;font-size:2.6rem;font-weight:700;line-height:1}
+  .cv-num .gr.verm{color:#C62828}.cv-num .gr.ok{color:#2E9E4F}
+  .cv-num .tx{font-size:.9rem;font-weight:700;color:#14301E;line-height:1.2}.cv-num small{font-weight:500;color:#4F6354}
+  .cv-card details{margin-top:10px}
+  .cv-card .gp-lst a{display:flex;align-items:center;gap:0;padding:3px 0}
+  .cv-card .gp-lst a span{margin-left:auto;color:#4F6354;padding-left:8px}
+  .gp-atalhos{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:0 0 18px}
+  .gp-at{display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:14px;text-decoration:none;border:1px solid;color:#14301E}
+  .gp-at .nn{font-family:'Fraunces',serif;font-size:2.4rem;font-weight:700;line-height:1}
+  .gp-at .seta{margin-left:auto;font-size:1.5rem;font-weight:700}
+  .gp-at.r{background:#FDECEA;border-color:#F3C5BE}.gp-at.r .nn,.gp-at.r .seta{color:#B3261E}
+  .gp-at.v{background:#E8F4EA;border-color:#C5DFCB}.gp-at.v .nn,.gp-at.v .seta{color:#1F6B3A}
+  .gp-at:hover{filter:brightness(.97)}
+  .gp-vazio{padding:16px 18px;color:#4F6354}
+</style>
+{{ cab_hero('Qualidade do Cadastro', 'Veja o que falta preencher nos sindicatos rurais e cobre a atualização com números.', 'cab') }}
+<div class="gp-kpis">
+  <div class="gp-kp v"><span class="nn">{{ pct_medio }}%</span><span class="tt">Preenchimento médio</span><span class="ll">de {{ total }} sindicatos ativos</span></div>
+</div>
+<div class="gp-box">
+  <div class="gp-topo">Qualidade do cadastro<small>% dos {{ total }} sindicatos ativos com o dado preenchido</small></div>
+  <div class="gp-q">
+    {% for q in qualidade %}
+    <div>
+      <div class="lin">
+        <span>{{ q.campo }}</span>
+        <div class="bar"><i class="{{ 'crit' if q.pct < 50 else ('baixo' if q.pct < 80 else '') }}" style="width:{{ q.pct }}%"></i></div>
+        <b>{{ q.pct }}%</b>
+      </div>
+      {% if q.faltam %}
+      <details style="margin:4px 0 0 212px"><summary>{{ q.faltam|length }} sem {{ q.campo|lower }} · ver quais</summary>
+        <div class="gp-lst">{% for it in q.faltam %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }} <span style="color:#4F6354">({{ it.regiao_exib }})</span></a>{% endfor %}</div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

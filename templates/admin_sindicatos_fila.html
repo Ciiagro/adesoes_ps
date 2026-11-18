@@ -1,0 +1,150 @@
+{% extends 'admin_base.html' %}
+{% block title %}Fila de Regularização · Sindicatos{% endblock %}
+{% block admin_content %}
+<style>
+  .conteudo{max-width:none !important}
+  .fr-head{position:relative;overflow:hidden;display:flex;align-items:center;gap:18px;min-height:128px;padding:16px 26px;margin:0 0 16px;background:#fff;border-radius:0}
+  .fr-head::after{content:"";position:absolute;right:-60px;top:-40%;width:42%;height:190%;background:linear-gradient(120deg,#2E9E4F,#0F5A28);border-radius:60% 0 0 60%/50% 0 0 50%;z-index:0}
+  .fr-head::before{content:"";position:absolute;right:30%;top:-20%;width:14%;height:150%;background:#9BD35A;opacity:.55;transform:rotate(18deg);border-radius:50%;z-index:0}
+  .fr-head>*{position:relative;z-index:1}
+  .fr-ico{flex:none;width:84px;height:84px;padding-right:18px;border-right:2px solid #BFD6C3;box-sizing:content-box}
+  .fr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:clamp(1.8rem,3vw,2.8rem);line-height:1.05}
+  .fr-head .sub{margin:6px 0 0;color:#23382A;font-size:1rem}
+  .fr-badge{margin-left:auto;display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.88);border-radius:16px;padding:12px 22px;color:#0F5A28}
+  .fr-badge b{font-family:'Fraunces',serif;font-size:2.8rem;line-height:1;font-weight:700}
+  .fr-badge span{display:block;font-weight:700;font-size:1.05rem}
+  .fr-bar{display:flex;gap:12px;margin:0 0 14px;flex-wrap:wrap}
+  .fr-bar .busca{flex:1 1 320px;display:flex;align-items:center;gap:10px;background:#fff;border-radius:999px;padding:0 18px;box-shadow:0 2px 8px rgba(15,107,46,.12);height:46px}
+  .fr-bar input{border:0;outline:0;flex:1;font-size:.95rem;background:transparent;height:44px;margin:0;padding:0}
+  .fr-bar select{height:46px;border-radius:999px;border:0;background:#fff;box-shadow:0 2px 8px rgba(15,107,46,.12);padding:0 18px;font-weight:600;margin:0}
+  .fr-tab{background:#fff;border-radius:14px;box-shadow:0 3px 14px rgba(15,107,46,.12);overflow:hidden;margin:0 0 16px}
+  .fr-tab table{width:100%;border-collapse:collapse;font-size:.92rem}
+  .fr-tab th{background:#176B31;color:#fff;text-align:left;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;padding:12px 14px}
+  .fr-tab td{padding:9px 14px;border-top:1px solid #EEF3EE;vertical-align:middle}
+  .fr-tab tbody tr:nth-child(even){background:#F7FAF6}
+  .fr-tab tbody tr:hover{background:#EAF6EC}
+  .fr-pill{display:inline-block;background:#D32F2F;color:#fff;border-radius:999px;padding:4px 16px;font-weight:800;font-size:.8rem;white-space:nowrap;min-width:92px;text-align:center}
+  .fr-nome{font-weight:800;color:#14301E;text-decoration:none}.fr-nome:hover{text-decoration:underline}
+  .fr-ct a{display:flex;align-items:center;gap:6px;color:#176B31;font-weight:600;font-size:.82rem;text-decoration:none;line-height:1.5}
+  .fr-ct svg{flex:none}
+  .fr-sem{display:inline-block;background:#ECEEEC;color:#5B665D;border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:700}
+  .fr-graf{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:16px;margin:0 0 18px}
+  @media(max-width:1100px){.fr-graf{grid-template-columns:1fr}}
+  .fr-card{background:#fff;border-radius:14px;box-shadow:0 3px 14px rgba(15,107,46,.12);overflow:hidden}
+  .fr-card h3{margin:0;display:flex;align-items:center;gap:8px;background:#176B31;color:#fff;padding:10px 16px;font-size:.98rem;font-weight:700}
+  .fr-card .cp{padding:16px;display:flex;align-items:center;gap:18px;min-height:190px}
+  .fr-leg{display:flex;flex-direction:column;gap:7px;font-size:.88rem;flex:1}
+  .fr-leg span{display:flex;align-items:center;gap:8px}
+  .fr-leg i{width:12px;height:12px;border-radius:50%;flex:none}
+  .fr-leg b{margin-left:auto}
+  .fr-don{flex:none;width:150px;height:150px}
+  .fr-vazio{padding:20px;color:#4F6354}
+</style>
+
+<div class="fr-head">
+  <svg class="fr-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="10" width="38" height="46" rx="5" fill="#fff" stroke="#176B31" stroke-width="4"/><rect x="20" y="5" width="18" height="10" rx="3" fill="#176B31"/><path d="M17 26h24M17 34h24M17 42h12" stroke="#176B31" stroke-width="3.5" stroke-linecap="round"/><circle cx="47" cy="46" r="13" fill="#2E9E4F"/><path d="M41 46l4 4 8-9" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div><h1>Fila de Regularização</h1><p class="sub">Mandatos vencidos, ordenados pelo maior tempo de atraso</p></div>
+  <div class="fr-badge">
+    <svg viewBox="0 0 24 24" width="44" height="44" fill="#2E9E4F" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="8.5" r="2.7"/><path d="M2 20c0-3.6 2.7-6 6-6s6 2.4 6 6zM14.500 14.300c.6-.2 1.300-.3 2-.3 3 0 5.500 1.900 5.500 5v1h-6.500c0-2.300-.4-4-1-5.700z"/></svg>
+    <div><b>{{ total_fila }}</b><span>Pendentes</span></div>
+  </div>
+</div>
+
+<div class="fr-bar">
+  <div class="busca">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="#14301E" aria-hidden="true"><path d="M10 2a8 8 0 1 0 4.900 14.300l5 5 1.400-1.400-5-5A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+    <input type="text" id="fr-busca" placeholder="Buscar sindicato, presidente ou região…" autocomplete="off">
+  </div>
+  <select id="fr-regiao"><option value="">Todas as regiões</option>{% for r in regioes %}<option>{{ r }}</option>{% endfor %}</select>
+</div>
+
+<div class="fr-tab">
+  {% if fila %}
+  <table>
+    <thead><tr><th>Atraso</th><th>Sindicato</th><th>Região</th><th>Presidente</th><th>Contato</th><th>Venceu em</th></tr></thead>
+    <tbody id="fr-corpo">
+    {% for it in fila %}
+    <tr data-q="{{ (it.s.nome ~ ' ' ~ (it.presidente or '') ~ ' ' ~ it.regiao_exib)|lower }}" data-r="{{ it.regiao_exib }}">
+      <td><span class="fr-pill">{{ -it.dias }} DIA{{ 'S' if -it.dias != 1 else '' }}</span></td>
+      <td><a class="fr-nome" href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }}</a></td>
+      <td>{{ it.regiao_exib }}</td>
+      <td>{{ it.presidente or '—' }}</td>
+      <td class="fr-ct">
+        {% if it.telefone %}<a href="tel:{{ it.telefone }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="#176B31"><path d="M6.600 10.800a15 15 0 0 0 6.600 6.600l2.200-2.200a1 1 0 0 1 1-.25 11 11 0 0 0 3.500.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.500a1 1 0 0 1 1 1c0 1.200.2 2.400.56 3.500a1 1 0 0 1-.25 1z"/></svg>{{ it.telefone }}</a>{% endif %}
+        {% if it.email %}<a href="mailto:{{ it.email }}"><svg viewBox="0 0 24 24" width="14" height="14" fill="#176B31"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7L4 7.500V17h16V7.500L12 12zm0-2 8-4.500H4L12 10z"/></svg>{{ it.email }}</a>{% endif %}
+        {% if not it.telefone and not it.email %}<span class="fr-sem">sem contato</span>{% endif %}
+      </td>
+      <td>{{ it.s.gestao_fim.strftime('%d/%m/%Y') }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="fr-vazio">Nenhum mandato vencido.</div>{% endif %}
+</div>
+
+<div class="fr-graf">
+  <div class="fr-card">
+    <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M4 13h4v8H4v-8zm6-9h4v17h-4V4zm6 5h4v12h-4V9z"/></svg>Por região</h3>
+    <div class="cp">
+      {% if por_regiao %}
+      <svg class="fr-don" viewBox="0 0 42 42" role="img" aria-label="Mandatos vencidos por região">
+        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#EEF3EE" stroke-width="7"/>
+        {% for r in por_regiao %}<circle cx="21" cy="21" r="15.9155" fill="none" stroke="{{ r.cor }}" stroke-width="7" stroke-dasharray="{{ '%.2f'|format(r.pct) }} {{ '%.2f'|format(100 - r.pct) }}" stroke-dashoffset="{{ '%.2f'|format(25 - r.off) }}"/>{% endfor %}
+        <text x="21" y="22.500" text-anchor="middle" font-size="8" font-weight="700" fill="#14301E">{{ total_fila }}</text>
+      </svg>
+      <div class="fr-leg">{% for r in por_regiao %}<span><i style="background:{{ r.cor }}"></i>{{ r.nome }}<b>{{ r.qtd }}</b></span>{% endfor %}</div>
+      {% else %}<span style="color:#4F6354">Sem mandatos vencidos.</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="fr-card">
+    <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M3 17l6-6 4 4 7-8-1.400-1.200L13 12.800l-4-4-7 7L3 17zM3 20h18v-2H3v2z"/></svg>Vencimentos por mês<span style="margin-left:auto;font-weight:500;font-size:.78rem;opacity:.85">vermelho: já venceu · verde: a vencer</span></h3>
+    <div class="cp" style="display:block;padding:12px 14px">
+      {% if serie %}
+      {% set n = serie|length %}{% set w = 600 / n %}
+      <svg viewBox="0 0 600 170" style="width:100%;height:auto" role="img" aria-label="Quantidade de mandatos que vencem em cada mês">
+        <line x1="0" y1="130" x2="600" y2="130" stroke="#D9E2D8"/>
+        {% for s in serie %}
+          {% set h = (s.qtd / maxq * 105) if s.qtd else 0 %}
+          {% if s.qtd %}<rect x="{{ '%.1f'|format(loop.index0 * w + w * 0.18) }}" y="{{ '%.1f'|format(130 - h) }}" width="{{ '%.1f'|format(w * 0.64) }}" height="{{ '%.1f'|format(h) }}" rx="2" fill="{{ '#D32F2F' if s.passado else '#2E9E4F' }}"/>
+          <text x="{{ '%.1f'|format(loop.index0 * w + w / 2) }}" y="{{ '%.1f'|format(125 - h) }}" text-anchor="middle" font-size="10" font-weight="700" fill="#14301E">{{ s.qtd }}</text>{% endif %}
+          {% if loop.index0 % 3 == 0 %}<text x="{{ '%.1f'|format(loop.index0 * w + w / 2) }}" y="148" text-anchor="middle" font-size="9" fill="#4F6354">{{ s.rot }}</text>{% endif %}
+        {% endfor %}
+      </svg>
+      {% else %}<span style="color:#4F6354">Sem datas de fim de mandato cadastradas.</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="fr-card">
+    <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M12 2l3 6.500 7 .8-5.200 4.800 1.500 7L12 17.500 5.700 21l1.500-7L2 9.300l7-.8L12 2z"/></svg>Situação geral</h3>
+    <div class="cp">
+      <svg class="fr-don" viewBox="0 0 42 42" role="img" aria-label="Sindicatos em dia e com mandato vencido">
+        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#2E9E4F" stroke-width="7"/>
+        <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#D32F2F" stroke-width="7" stroke-dasharray="{{ pct_pend }} {{ 100 - pct_pend }}" stroke-dashoffset="25"/>
+        <text x="21" y="21" text-anchor="middle" font-size="8" font-weight="700" fill="#14301E">{{ total_fila }}</text>
+        <text x="21" y="27" text-anchor="middle" font-size="3.600" font-weight="700" fill="#14301E">Pendentes</text>
+      </svg>
+      <div class="fr-leg">
+        <span><i style="background:#2E9E4F"></i>Em dia<b>{{ pct_reg }}%</b></span>
+        <span><i style="background:#D32F2F"></i>Pendentes<b>{{ pct_pend }}%</b></span>
+        <span style="color:#4F6354;font-size:.8rem">de {{ total_ativos }} sindicatos ativos</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var q=document.getElementById('fr-busca'), r=document.getElementById('fr-regiao'), c=document.getElementById('fr-corpo');
+  if(!c) return;
+  function f(){
+    var t=(q.value||'').toLowerCase().trim(), g=r.value;
+    c.querySelectorAll('tr').forEach(function(tr){
+      var ok=(!t||tr.dataset.q.indexOf(t)>-1)&&(!g||tr.dataset.r===g);
+      tr.style.display=ok?'':'none';
+    });
+  }
+  q.addEventListener('input',f); r.addEventListener('change',f);
+})();
+</script>
+{% endblock %}

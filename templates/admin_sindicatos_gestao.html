@@ -56,6 +56,13 @@
   .cv-card details{margin-top:10px}
   .cv-card .gp-lst a{display:flex;align-items:center;gap:0;padding:3px 0}
   .cv-card .gp-lst a span{margin-left:auto;color:#4F6354;padding-left:8px}
+  .gp-atalhos{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:0 0 18px}
+  .gp-at{display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:14px;text-decoration:none;border:1px solid;color:#14301E}
+  .gp-at .nn{font-family:'Fraunces',serif;font-size:2.4rem;font-weight:700;line-height:1}
+  .gp-at .seta{margin-left:auto;font-size:1.5rem;font-weight:700}
+  .gp-at.r{background:#FDECEA;border-color:#F3C5BE}.gp-at.r .nn,.gp-at.r .seta{color:#B3261E}
+  .gp-at.v{background:#E8F4EA;border-color:#C5DFCB}.gp-at.v .nn,.gp-at.v .seta{color:#1F6B3A}
+  .gp-at:hover{filter:brightness(.97)}
   .gp-vazio{padding:16px 18px;color:#4F6354}
 </style>
 {{ cab_hero('Painel da Gestão', 'Mandatos, vencimentos e qualidade do cadastro dos sindicatos rurais em um só lugar.', 'cab') }}
@@ -105,42 +112,12 @@
   </div>
 </div>
 
-<div class="gp-box">
-  <div class="gp-topo">Fila de regularização<small>mandatos já vencidos, do mais atrasado ao menos</small></div>
-  {% if fila %}
-  <table>
-    <tr><th>Atraso</th><th>Sindicato</th><th>Região</th><th>Presidente</th><th>Contato</th><th>Venceu em</th></tr>
-    {% for it in fila %}
-    <tr>
-      <td><span class="gp-tag r">{{ -it.dias }} DIA{{ 'S' if -it.dias != 1 else '' }}</span></td>
-      <td><a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}" style="font-weight:700;color:#14301E;text-decoration:none">{{ it.s.nome }}</a></td>
-      <td>{{ it.regiao_exib }}</td>
-      <td>{{ it.presidente or '—' }}</td>
-      <td>{% if it.telefone %}<a href="tel:{{ it.telefone }}">{{ it.telefone }}</a>{% endif %}{% if it.telefone and it.email %}<br>{% endif %}{% if it.email %}<a href="mailto:{{ it.email }}">{{ it.email }}</a>{% endif %}{% if not it.telefone and not it.email %}<span class="gp-tag g">sem contato</span>{% endif %}</td>
-      <td>{{ it.s.gestao_fim.strftime('%d/%m/%Y') }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-  {% else %}<div class="gp-vazio">Nenhum mandato vencido.</div>{% endif %}
-</div>
-
-<div class="gp-box">
-  <div class="gp-topo">Qualidade do cadastro<small>% dos {{ total }} sindicatos ativos com o dado preenchido</small></div>
-  <div class="gp-q">
-    {% for q in qualidade %}
-    <div>
-      <div class="lin">
-        <span>{{ q.campo }}</span>
-        <div class="bar"><i class="{{ 'crit' if q.pct < 50 else ('baixo' if q.pct < 80 else '') }}" style="width:{{ q.pct }}%"></i></div>
-        <b>{{ q.pct }}%</b>
-      </div>
-      {% if q.faltam %}
-      <details style="margin:4px 0 0 212px"><summary>{{ q.faltam|length }} sem {{ q.campo|lower }} · ver quais</summary>
-        <div class="gp-lst">{% for it in q.faltam %}<a href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=it.s.id) }}">{{ it.s.nome }} <span style="color:#4F6354">({{ it.regiao_exib }})</span></a>{% endfor %}</div>
-      </details>
-      {% endif %}
-    </div>
-    {% endfor %}
-  </div>
+<div class="gp-atalhos">
+  <a class="gp-at r" href="{{ url_for('admin_sindicatos_fila') }}">
+    <span class="nn">{{ total_fila }}</span><span><b>Fila de regularização</b><br>mandatos vencidos, com gráficos</span><span class="seta">→</span>
+  </a>
+  <a class="gp-at v" href="{{ url_for('admin_sindicatos_qualidade') }}">
+    <span class="nn">{{ pct_medio_cadastro }}%</span><span><b>Qualidade do cadastro</b><br>o que falta preencher</span><span class="seta">→</span>
+  </a>
 </div>
 {% endblock %}

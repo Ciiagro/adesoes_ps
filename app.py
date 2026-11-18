@@ -1881,13 +1881,8 @@ def admin_sindicatos_lista():
     )
 
 
-@app.route("/admin/sindicatos/gestao")
-def admin_sindicatos_gestao():
-    """Painel da gestão: calendário de vencimentos por região, fila de
-    regularização (mandatos vencidos) e qualidade do cadastro."""
-    if not pode_ver_sindicatos():
-        return redirect(url_for("admin_login"))
-
+def _itens_gestao(db):
+    """Sindicatos ativos com região, contato, dias para o fim do mandato e faixa."""
     import re
     from datetime import date as _date
     db = SessionLocal()
@@ -1924,6 +1919,116 @@ def admin_sindicatos_gestao():
 
     for it in itens:
         it["faixa"] = faixa(it["dias"])
+    return itens, hoje
+
+
+def _qualidade_cadastro(itens):
+    """% de preenchimento por campo + quem falta."""
+    campos = [
+        ("Presidente", lambda it: bool(it["presidente"])),
+        ("Telefone", lambda it: bool(it["telefone"])),
+        ("E-mail", lambda it: bool(it["email"])),
+        ("Endereço", lambda it: bool(it["endereco"])),
+        ("Coordenada no mapa", lambda it: it["coord"]),
+        ("Data de fim do mandato", lambda it: it["dias"] is not None),
+    ]
+    qualidade = []
+    for nome, ok in campos:
+        faltam = [it for it in itens if not ok(it)]
+        qualidade.append({
+            "campo": nome, "faltam": faltam,
+            "pct": round(100 * (len(itens) - len(faltam)) / len(itens)) if itens else 0,
+        })
+    return qualidade
+
+
+@app.route("/admin/sindicatos/fila")
+def admin_sindicatos_fila():
+    """Fila de regularização: mandatos vencidos + gráficos (por região,
+    vencimentos por mês e situação geral)."""
+    if not pode_ver_sindicatos():
+        return redirect(url_for("admin_login"))
+
+    db = SessionLocal()
+    itens, hoje = _itens_gestao(db)
+    fila = sorted([it for it in itens if it["faixa"] == "vencido"], key=lambda x: x["dias"])
+
+    # --- por região (rosca) ---
+    cores = ["#176B31", "#2E9E4F", "#7BC043", "#C9A100", "#F08C00", "#9AA39A"]
+    cont = {}
+    for it in fila:
+        cont[it["regiao_exib"]] = cont.get(it["regiao_exib"], 0) + 1
+    ordenado = sorted(cont.items(), key=lambda kv: (-kv[1], kv[0]))
+    topo, resto = ordenado[:5], ordenado[5:]
+    por_regiao = [{"nome": n, "qtd": q, "cor": cores[i]} for i, (n, q) in enumerate(topo)]
+    if resto:
+        por_regiao.append({"nome": "Outras", "qtd": sum(q for _, q in resto), "cor": cores[5]})
+    total_fila = len(fila)
+    acc = 0.0
+    for r in por_regiao:
+        r["pct"] = (100.0 * r["qtd"] / total_fila) if total_fila else 0
+        r["off"] = acc
+        acc += r["pct"]
+
+    # --- vencimentos por mês (barras) ---
+    from collections import Counter
+    def ym(d): return d.year * 12 + d.month - 1
+    meses = Counter(ym(it["s"].gestao_fim) for it in itens if it["s"].gestao_fim)
+    if meses:
+        ini = min(min(meses), ym(hoje) - 12)
+        fim = max(max(meses), ym(hoje) + 12)
+        fim = min(fim, ym(hoje) + 12)
+        serie = []
+        for m in range(ini, fim + 1):
+            serie.append({"rot": "%02d/%02d" % (m % 12 + 1, (m // 12) % 100), "qtd": meses.get(m, 0), "passado": m <= ym(hoje)})
+        maxq = max([s["qtd"] for s in serie] + [1])
+    else:
+        serie, maxq = [], 1
+
+    # --- situação geral ---
+    total_ativos = len(itens)
+    regulares = total_ativos - total_fila
+    pct_pend = round(100 * total_fila / total_ativos) if total_ativos else 0
+
+    return render_template(
+        "admin_sindicatos_fila.html",
+        pagina_ativa="sindicatos_fila",
+        fila=fila, por_regiao=por_regiao, total_fila=total_fila,
+        serie=serie, maxq=maxq,
+        total_ativos=total_ativos, regulares=regulares,
+        pct_pend=pct_pend, pct_reg=100 - pct_pend,
+        regioes=sorted({it["regiao_exib"] for it in fila}),
+        apenas_sindicatos=True, pode_editar_sindicatos=gestao_sindicato_logado(),
+    )
+
+
+@app.route("/admin/sindicatos/qualidade")
+def admin_sindicatos_qualidade():
+    """Qualidade do cadastro dos sindicatos ativos."""
+    if not pode_ver_sindicatos():
+        return redirect(url_for("admin_login"))
+
+    db = SessionLocal()
+    itens, hoje = _itens_gestao(db)
+    qualidade = _qualidade_cadastro(itens)
+    return render_template(
+        "admin_sindicatos_qualidade.html",
+        pagina_ativa="sindicatos_qualidade",
+        qualidade=qualidade, total=len(itens),
+        pct_medio=(round(sum(q["pct"] for q in qualidade) / len(qualidade)) if qualidade else 0),
+        apenas_sindicatos=True, pode_editar_sindicatos=gestao_sindicato_logado(),
+    )
+
+
+@app.route("/admin/sindicatos/gestao")
+def admin_sindicatos_gestao():
+    """Painel da gestão: calendário de vencimentos por região, fila de
+    regularização (mandatos vencidos) e qualidade do cadastro."""
+    if not pode_ver_sindicatos():
+        return redirect(url_for("admin_login"))
+
+    db = SessionLocal()
+    itens, hoje = _itens_gestao(db)
 
     faixas = ["vencido", "m3", "m6", "m12"]
     regioes = sorted({it["regiao"] for it in itens})
@@ -1941,27 +2046,14 @@ def admin_sindicatos_gestao():
 
     fila = sorted([it for it in itens if it["faixa"] == "vencido"], key=lambda x: x["dias"])
 
-    campos = [
-        ("Presidente", lambda it: bool(it["presidente"])),
-        ("Telefone", lambda it: bool(it["telefone"])),
-        ("E-mail", lambda it: bool(it["email"])),
-        ("Endereço", lambda it: bool(it["endereco"])),
-        ("Coordenada no mapa", lambda it: it["coord"]),
-        ("Data de fim do mandato", lambda it: it["dias"] is not None),
-    ]
-    qualidade = []
-    for nome, ok in campos:
-        faltam = [it for it in itens if not ok(it)]
-        qualidade.append({
-            "campo": nome, "faltam": faltam,
-            "pct": round(100 * (len(itens) - len(faltam)) / len(itens)) if itens else 0,
-        })
+    qualidade = _qualidade_cadastro(itens)
 
     return render_template(
         "admin_sindicatos_gestao.html",
         pagina_ativa="sindicatos_gestao",
-        itens=itens, calendario=calendario, totais=totais, fila=fila,
-        qualidade=qualidade, total=len(itens), hoje=hoje,
+        itens=itens, calendario=calendario, totais=totais,
+        total_fila=len(fila), pct_medio_cadastro=(round(sum(q["pct"] for q in qualidade) / len(qualidade)) if qualidade else 0),
+        total=len(itens), hoje=hoje,
         apenas_sindicatos=True, pode_editar_sindicatos=gestao_sindicato_logado(),
     )
 
