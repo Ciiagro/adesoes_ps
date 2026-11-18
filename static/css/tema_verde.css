@@ -1,0 +1,118 @@
+/* ==========================================================================
+   TEMA VERDE FORTE — painel administrativo (Sindicatos / Adesões / Carreta)
+   Carregado DEPOIS dos estilos de cada página, então tem a palavra final.
+   Para voltar ao visual antigo, basta apagar a linha <link ... tema_verde.css>
+   do templates/admin_base.html.
+   ========================================================================== */
+:root{
+  --bg:#E9F3EA;
+  --green:#2A7D45;
+  --green-dark:#17572F;
+  --green-deep:#0E3E21;
+  --green-soft:#D6EBDB;
+  --line:#C5DCC9;
+  --line-soft:#DDEBDF;
+  --ink-soft:#4F6354;
+}
+body{background:radial-gradient(1100px 520px at 82% -10%,#F6FBF5 0%,transparent 60%),var(--bg) !important}
+
+/* menu lateral: verde mais vivo */
+.sidebar{background:linear-gradient(180deg,#17692F 0%,#0E3E21 100%) !important;border-right:2px solid #35D07F !important}
+.sidebar a.nav-item:hover{background:rgba(255,255,255,.14) !important}
+.sidebar a.nav-item.ativo{background:#fff !important;color:#0E3E21 !important}
+
+/* tabelas: cabeçalho verde-escuro com letra branca */
+th,.tabela-wrap thead th,.table-wrap thead th,.tab-sind thead th{background:#17572F !important;color:#fff !important}
+tbody tr:hover td{background:#EAF6EC}
+
+/* cartões de resumo (Mandatos vencidos / Vencem em breve / Sindicatos) */
+.kp{position:relative;overflow:hidden;border-width:1.5px !important;box-shadow:0 3px 10px rgba(30,70,40,.10) !important}
+.kp::after{content:"";position:absolute;right:14px;top:50%;width:84px;height:84px;transform:translateY(-50%);opacity:.16;background:no-repeat center/contain;pointer-events:none}
+.kp .ic{box-shadow:0 4px 10px rgba(0,0,0,.22)}
+.kp .nn{font-weight:700 !important}
+.kp.venc{background:linear-gradient(120deg,#FFE4E1 0%,#FFC7C1 100%) !important;border-color:#EC8C84 !important;color:#B71C1C !important}
+.kp.venc .ic{background:#D32F2F !important}
+.kp.venc::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23B71C1C'%3E%3Cpath d='M12 2 1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z'/%3E%3C/svg%3E")}
+.kp.breve{background:linear-gradient(120deg,#FFF1CF 0%,#FFDB92 100%) !important;border-color:#EDB547 !important;color:#8A5A00 !important}
+.kp.breve .ic{background:#F29B0C !important}
+.kp.breve::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238A5A00'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 11h-5V7h2v4h3v2z'/%3E%3C/svg%3E")}
+.kp.total{background:linear-gradient(120deg,#D4F0DA 0%,#9FDAAF 100%) !important;border-color:#5FB77A !important;color:#0F4D27 !important}
+.kp.total .ic{background:#1B8A47 !important}
+.kp.total .ll{color:#1F5A33 !important;font-weight:600 !important}
+.kp.total::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230F4D27'%3E%3Cpath d='M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3zm0 2c-2.3 0-7 1.2-7 3.5V19h14v-2.5C15 14.2 10.3 13 8 13zm8 0c-.3 0-.6 0-1 .1 1.2.8 2 1.9 2 3.4V19h6v-2.5c0-2.3-4.7-3.5-7-3.5z'/%3E%3C/svg%3E")}
+
+/* filtros e cartões */
+.filtro-card,.lista-fixo .filtro-card{border:1.5px solid #B7D5BD !important;box-shadow:0 2px 8px rgba(30,70,40,.08) !important}
+.filtro-card .filtro-form label{color:#14532D !important}
+.lista-fixo{background:var(--bg) !important}
+.lista-fixo .cab,.mp-head{border-color:#B7D5BD !important}
+
+/* municípios e status mais fortes */
+.sl .chips span{background:#BFE3C8 !important;color:#0F4D27 !important;font-weight:600 !important}
+.sl .chips .mais,.sl .chips span.mais{background:#fff !important;border:1.5px solid #6DBE83 !important;color:#17572F !important;font-weight:700 !important}
+.stt.a{background:#BFE8CA !important;color:#0F4D27 !important}
+.stt.v{background:#FFCFCA !important;color:#B3261E !important}
+.stt.b{background:#FFE29C !important;color:#7A4E00 !important}
+
+/* botões e links */
+button,.btn{background:#1F7A3E;box-shadow:0 6px 14px -8px rgba(23,87,47,.9)}
+button:hover,.btn:hover{background:#14572D}
+.btn.secundario,.btn-secundario{background:#fff;color:#17572F;border:1.5px solid #9CC7A6}
+.btn.secundario:hover{background:#E3F1E6;color:#17572F}
+a{color:#1F7A3E}
+
+/* mapa: cartões e legenda */
+.mapa-bloco{border:1.5px solid #9CC7A6 !important}
+.mapa-bloco h2{background:#17572F !important}
+.mp-filtro,.legenda-regioes{border:1.5px solid #B7D5BD !important}
+.mp-filtro .btn-f{background:#1F7A3E !important}
+
+/* ==========================================================================
+   VERSÃO MAIS FORTE (pedido: cores mais fortes e na cor verde)
+   ========================================================================== */
+:root{--bg:#DCEEDF;--green:#1E8A3E;--green-dark:#136B2D;--green-deep:#0A4A1F;--green-soft:#C7E5CD;--line:#A9D2B2;--line-soft:#CFE6D4}
+body{background:radial-gradient(1100px 520px at 82% -10%,#EEF8EF 0%,transparent 60%),var(--bg) !important}
+.lista-fixo{background:var(--bg) !important}
+
+/* menu */
+.sidebar{background:linear-gradient(180deg,#148A35 0%,#0A4A1F 100%) !important;border-right:3px solid #3EE08A !important}
+.sidebar a.nav-item.ativo{background:#fff !important;color:#0A4A1F !important;font-weight:700 !important}
+
+/* tabelas */
+th,.tabela-wrap thead th,.table-wrap thead th,.tab-sind thead th{background:#0F6B2E !important;color:#fff !important}
+tbody tr:hover td{background:#D9F0DD}
+
+/* cartões de resumo em cores cheias */
+.kp{border:0 !important;color:#fff !important;box-shadow:0 6px 16px rgba(0,0,0,.18) !important}
+.kp *,.kp a{color:#fff !important}
+.kp::after{opacity:.22;filter:brightness(0) invert(1)}
+.kp .ic{background:#fff !important;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.kp .ic *{color:inherit}
+.kp.venc{background:linear-gradient(120deg,#E53935 0%,#B71C1C 100%) !important}
+.kp.venc .ic{color:#D32F2F !important}
+.kp.breve{background:linear-gradient(120deg,#FFA726 0%,#E67E00 100%) !important}
+.kp.breve .ic{color:#E67E00 !important}
+.kp.total{background:linear-gradient(120deg,#2EAE55 0%,#0F6B2E 100%) !important}
+.kp.total .ic{color:#1B8A47 !important}
+.kp.total .ll{color:#fff !important;opacity:.95}
+.kp .nn{font-size:inherit}
+
+/* filtros, cartões, cabeçalho */
+.filtro-card,.lista-fixo .filtro-card{background:#fff;border:2px solid #7FBF8F !important}
+.lista-fixo .cab,.mp-head{border:2px solid #7FBF8F !important;background-color:#EAF6EC !important}
+.filtro-card .filtro-form label{color:#0A4A1F !important}
+
+/* municípios e status */
+.sl .chips span{background:#8FD3A1 !important;color:#06381A !important;font-weight:700 !important}
+.sl .chips .mais,.sl .chips span.mais{background:#fff !important;border:2px solid #1E8A3E !important;color:#0F6B2E !important}
+.stt.a{background:#7FD197 !important;color:#06381A !important}
+.stt.v{background:#FFB3AB !important;color:#9B1C12 !important}
+.stt.b{background:#FFD36B !important;color:#6B4300 !important}
+
+/* botões e mapa */
+button,.btn{background:#168A38}
+button:hover,.btn:hover{background:#0F6B2E}
+.mapa-bloco{border:2px solid #7FBF8F !important}
+.mapa-bloco h2{background:#0F6B2E !important}
+.mp-filtro,.legenda-regioes{border:2px solid #7FBF8F !important}
+.mp-filtro .btn-f{background:#168A38 !important}
