@@ -41,6 +41,7 @@
   .mp-filtro .btn-f:hover{background:#245530}
   .legenda-regioes{background:#fff;border:1px solid #E7EBDD;border-radius:999px;padding:11px 22px;margin:0 0 14px;box-shadow:0 1px 8px rgba(44,81,55,.06)}
   .legenda-regioes .item{font-size:.8rem;font-weight:500;color:#2d3a30}
+  .mapa-bloco .leaflet-tile-pane{filter:grayscale(.75) brightness(1.06) contrast(.92)}
   .mapa-bloco{background:#fff;border:1px solid #DDE6D8;border-radius:16px;padding:0;overflow:hidden;box-shadow:0 2px 12px rgba(44,81,55,.10)}
   .mapa-bloco h2{display:flex;align-items:center;gap:10px;margin:0 !important;padding:11px 18px;background:#1F4D2F;color:#fff;font-size:.95rem;font-weight:700;border:0;border-radius:0}
   .mapa-bloco h2 svg{flex:none;opacity:.95}
@@ -107,9 +108,9 @@
 
   // ---------- Mapa 1: sindicatos (ponto na sede) ----------
   const mapaSindicatos = L.map('mapa-sindicatos').setView(CENTRO_CEARA, 7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd', maxZoom: 19
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
   }).addTo(mapaSindicatos);
 
   if (sindicatos.length > 0) {
@@ -145,9 +146,9 @@
 
   // ---------- Mapa 2: municípios coloridos por região ----------
   const mapaRegioes = L.map('mapa-regioes').setView(CENTRO_CEARA, 7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd', maxZoom: 19
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
   }).addTo(mapaRegioes);
 
   fetch("{{ url_for('static', filename='ceara_municipios.geojson') }}")
