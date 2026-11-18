@@ -186,3 +186,11 @@ button:hover,.btn:hover{background:#0F6B2E}
 .ult-venc .uv-nome{font-weight:700;color:#14301E;text-decoration:none}
 .ult-venc .uv-nome:hover{text-decoration:underline}
 .ult-venc .uv-data{margin-left:auto;display:flex;align-items:center;gap:8px;color:#4F6354;font-size:.9rem;white-space:nowrap}
+
+/* Últimos vencimentos: só aparece ao clicar em "Mandatos vencidos" */
+.ult-venc{display:none}
+.ult-venc.aberto{display:block}
+/* Título à esquerda, ao lado da folha */
+.cab-hero{justify-content:flex-start !important}
+.cab-hero .cab-txt{margin:0 auto 0 0 !important;text-align:left !important;flex:0 1 auto !important;max-width:calc(100% - 560px) !important;position:relative;z-index:2}
+.cab-hero .sub{max-width:none !important}

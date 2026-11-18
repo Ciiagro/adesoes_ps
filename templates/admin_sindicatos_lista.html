@@ -148,7 +148,7 @@
 {{ cab_hero('Sindicatos Rurais', 'Acompanhe a situação, o presidente e os municípios de cada sindicato rural.', 'cab') }}
 
 <div class="kpis3">
-  <button type="button" class="kp venc al-btn" data-alvo="al-venc"><span class="ic">⚠</span><span><span class="tt">Mandatos vencidos</span><br><span class="nn">{{ avisos_vencidos|length }}</span><br><span class="ll">Ver detalhes →</span></span></button>
+  <button type="button" class="kp venc uv-abre"><span class="ic">⚠</span><span><span class="tt">Mandatos vencidos</span><br><span class="nn">{{ avisos_vencidos|length }}</span><br><span class="ll">Ver últimos vencimentos →</span></span></button>
   <button type="button" class="kp breve al-btn" data-alvo="al-breve"><span class="ic">◔</span><span><span class="tt">Vencem em breve</span><br><span class="nn">{{ avisos_a_vencer|length }}</span><br><span class="ll">Ver detalhes →</span></span></button>
   <div class="kp total"><span class="ic">✓</span><span><span class="tt">Sindicatos Rurais</span><br><span class="nn">{{ total_sind }}</span><br><span class="ll">{{ pct_ativos }}% de ativos ({{ sind_ativos }} de {{ total_sind }})</span></span></div>
 </div>
@@ -333,5 +333,16 @@
     b.setAttribute('aria-expanded', abrir ? 'true' : 'false');
     b.textContent = abrir ? 'mostrar menos' : '+' + b.dataset.n;
   });
+</script>
+<script>
+(function(){
+  var b=document.querySelector('.uv-abre'), box=document.querySelector('.ult-venc');
+  if(!b||!box) return;
+  b.addEventListener('click',function(){
+    var a=box.classList.toggle('aberto');
+    b.classList.toggle('aberto',a);
+    if(a) box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+})();
 </script>
 {% endblock %}
