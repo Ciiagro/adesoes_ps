@@ -123,7 +123,9 @@
   .sl .nome-cel small{display:block;color:#5E7766;font-size:.8rem;margin-top:2px}
   .sl .pres b{font-weight:600;color:#1F3B2A}.sl .pres small{display:block;color:#5E7766;font-size:.8rem}
   .sl .chips{display:flex;flex-wrap:wrap;gap:5px}.sl .chips span{background:#DCEFDF;color:#1F4D2F;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:500;display:inline-flex;align-items:center;gap:4px}
-  .sl .chips span.mais{background:#fff;border:1px solid #DCEFDF}
+  .sl .chips .mais{background:#fff;border:1px solid #DCEFDF;color:#1F4D2F;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .sl .chips .mais:hover{background:#DCEFDF}
+  .sl .chips span[hidden]{display:none}
   .sl-vazio{display:none;padding:30px;text-align:center;color:#5E7766}
 </style>
 <style>
@@ -211,7 +213,7 @@
     <td><div class="nome-cel"><span class="lf"><svg class="ic2" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12c0-4-2.5-6.5-7-6.5 0 4 2.5 6.5 7 6.5z"/><path d="M12 12c0-3.5 2.5-6 7-6 0 3.5-2.5 6-7 6z"/></svg></span><div><a class="n" href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=sd.id) }}">{{ sd.nome }}</a><small>{{ l.muns|length }} município(s)</small></div></div></td>
     <td>{{ l.regiao or '—' }}</td>
     <td class="pres"><b>{{ (ref.presidente_nome if ref else '') or '—' }}</b>{% if ref and ref.email1 %}<small>{{ ref.email1 }}</small>{% endif %}{% if ref and ref.telefone1 %}<small>{{ ref.telefone1 }}</small>{% endif %}</td>
-    <td><div class="chips">{% for m in l.muns[:3] %}<span>{{ m.nome }}</span>{% endfor %}{% if l.muns|length > 3 %}<span class="mais">+{{ l.muns|length - 3 }}</span>{% endif %}{% if not l.muns %}—{% endif %}</div></td>
+    <td><div class="chips">{% for m in l.muns[:3] %}<span>{{ m.nome }}</span>{% endfor %}{% for m in l.muns[3:] %}<span class="extra" hidden>{{ m.nome }}</span>{% endfor %}{% if l.muns|length > 3 %}<button type="button" class="mais" data-n="{{ l.muns|length - 3 }}" aria-expanded="false" title="Ver todos os municípios">+{{ l.muns|length - 3 }}</button>{% endif %}{% if not l.muns %}—{% endif %}</div></td>
     <td>{% if st == 'v' %}<span class="stt v"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2L1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z"/></svg>Mandato vencido</span>{% elif st == 'b' %}<span class="stt b"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/></svg>Vence em breve</span>{% elif st == 'i' %}<span class="stt i"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm5 11H7v-2h10v2z"/></svg>Sindicato inativo</span>{% else %}<span class="stt a"><svg class="ic2" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Mandato vigente</span>{% endif %}</td>
     <td>
       <div class="acoes-cel">
@@ -311,5 +313,15 @@
     lim.onclick=function(){ busca.value=''; reg.value=''; st.value=''; filtra(); };
     filtra();
   })();
+
+  // "+N" dos municípios: mostra/esconde os demais na própria linha
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.chips .mais');
+    if (!b) return;
+    var abrir = b.getAttribute('aria-expanded') !== 'true';
+    b.parentNode.querySelectorAll('.extra').forEach(function (el) { el.hidden = !abrir; });
+    b.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+    b.textContent = abrir ? 'mostrar menos' : '+' + b.dataset.n;
+  });
 </script>
 {% endblock %}
