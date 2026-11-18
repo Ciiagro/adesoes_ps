@@ -1,10 +1,10 @@
 {# Cabeçalho padrão das telas da Carreta: ícone, título, subtítulo, ação e foto do campo à direita. #}
 {% macro cr_head(pagina, sub='', ico='lista') -%}
 <style>
-  .cr-head{font-size:clamp(13px,.95vw,17px);position:relative;overflow:hidden;display:flex;align-items:center;min-height:9em;padding:1.1em 1.6em 2.2em;margin:0 0 1em;background:linear-gradient(90deg,#fff 0,#F1F8F2 55%,#E6F3E8 100%);border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10)}
-  .cr-head .cr-art{position:absolute;right:0;top:0;height:100%;width:58%;z-index:0;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22%);mask-image:linear-gradient(90deg,transparent 0,#000 22%)}
+  .cr-head{font-size:clamp(13px,.95vw,17px);position:relative;overflow:hidden;display:flex;align-items:center;min-height:9.5em;padding:1.1em 1.6em 2.4em;margin:0 0 1em;background:linear-gradient(90deg,#fff 0,#F1F8F2 55%,#E6F3E8 100%);border-radius:16px;box-shadow:0 4px 18px rgba(15,107,46,.10)}
+  .cr-head .cr-art{position:relative;flex:none;height:7.6em;width:auto;aspect-ratio:470/160;margin-left:2.2em;z-index:1}
   .cr-head>*{position:relative;z-index:1}
-  .cr-head .cr-tx{max-width:50%}
+  .cr-head .cr-tx{flex:0 1 auto}
   .cr-head h1{margin:0;font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-.02em;color:#0F5A28;font-size:2em;line-height:1.12}
   .cr-head .cr-pg{margin:.3em 0 0;font-size:1.35em;font-weight:800;font-style:italic;color:#14301E;line-height:1.1}
   .cr-head .sub{margin:.45em 0 0;color:#14301E;font-size:.9em;font-style:italic;max-width:none}
@@ -14,24 +14,21 @@
   .cr-head .cr-acoes-cab{display:flex;gap:.6em;flex-wrap:wrap}
 </style>
 <div class="cr-head">
-  <svg class="cr-art" viewBox="0 0 900 230" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">
+  <div class="cr-tx">
+    <h1>Carreta do Agro/Saúde</h1>
+    <div class="cr-pg">{{ pagina }}</div>
+    <p class="sub">{{ sub }}</p>
+    {% if caller is defined %}<div class="cr-acoes-cab">{{ caller() }}</div>{% endif %}
+  </div>
+  <svg class="cr-art" viewBox="396 72 470 160" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">
     <defs>
-      <linearGradient id="crSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3C9"/><stop offset=".55" stop-color="#E7F4D2"/><stop offset="1" stop-color="#CBE9C2"/></linearGradient>
-      <radialGradient id="crSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFFBE3"/><stop offset=".35" stop-color="#FFE28A"/><stop offset="1" stop-color="#FFE28A" stop-opacity="0"/></radialGradient>
       <linearGradient id="crTrailer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E8EEE9"/></linearGradient>
     </defs>
-    <rect width="900" height="230" fill="url(#crSky)"/>
-    <circle cx="300" cy="118" r="96" fill="url(#crSun)"/>
-    <circle cx="300" cy="118" r="30" fill="#FFF1B0"/>
-    <path d="M0 150C150 122 300 142 450 126C600 110 750 136 900 120V230H0Z" fill="#B7DC96"/>
-    <path d="M0 172C200 142 380 176 560 152C720 132 820 160 900 150V230H0Z" fill="#7CC15E"/>
-    <path d="M0 192C300 176 600 188 900 174V230H0Z" fill="#46A04B"/>
-    <g stroke="#2E8A3D" stroke-opacity=".45" stroke-width="2" fill="none">
-      <path d="M300 168L-120 230"/><path d="M300 168L60 230"/><path d="M300 168L200 230"/><path d="M300 168L330 230"/><path d="M300 168L470 230"/><path d="M300 168L640 230"/><path d="M300 168L820 230"/><path d="M300 168L1000 230"/>
-    </g>
-    <path d="M0 204H900V230H0Z" fill="#5F6E63"/>
-    <path d="M0 217H900" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-dasharray="26 18"/>
-    <ellipse cx="640" cy="208" rx="210" ry="6" fill="#1F2A22" fill-opacity=".25"/>
+    <!-- ondas atrás da carreta -->
+    <path d="M396 232C410 150 470 96 570 72H612C520 106 468 160 452 232Z" fill="#35A853" fill-opacity=".9"/>
+    <path d="M420 232C436 156 490 104 590 72H620C530 112 482 164 468 232Z" fill="#BFE3C5" fill-opacity=".8"/>
+    <path d="M396 214C520 196 700 214 866 198V232H396Z" fill="#7CC15E" fill-opacity=".55"/>
+    <ellipse cx="640" cy="212" rx="215" ry="6" fill="#1F2A22" fill-opacity=".22"/>
     <!-- carreta -->
     <rect x="522" y="112" width="296" height="80" rx="7" fill="url(#crTrailer)" stroke="#CFD9D1" stroke-width="1.5"/>
     <path d="M522 168C600 154 700 180 818 164V185a7 7 0 0 1-7 7H529a7 7 0 0 1-7-7Z" fill="#2E9E4F"/>
@@ -48,17 +45,8 @@
     <g fill="#1E2621"><circle cx="478" cy="202" r="15"/><circle cx="700" cy="202" r="15"/><circle cx="740" cy="202" r="15"/><circle cx="780" cy="202" r="15"/></g>
     <g fill="#C3CCC6"><circle cx="478" cy="202" r="6"/><circle cx="700" cy="202" r="6"/><circle cx="740" cy="202" r="6"/><circle cx="780" cy="202" r="6"/></g>
     <!-- folhas -->
-    <path d="M60 230C52 200 66 176 98 168C104 198 90 222 60 230Z" fill="#2E9E4F"/><path d="M62 226C70 204 82 188 96 172" stroke="#fff" stroke-opacity=".7" stroke-width="2" fill="none"/>
-    <path d="M96 230C98 208 114 192 140 190C138 212 122 228 96 230Z" fill="#7BC043"/>
-    <!-- onda -->
-    <path d="M150 230C190 120 260 40 360 0H410C300 54 230 130 214 230Z" fill="#35A853" fill-opacity=".9"/>
-    <path d="M190 230C230 130 300 56 390 0H420C330 66 262 140 246 230Z" fill="#BFE3C5" fill-opacity=".75"/>
+    <path d="M826 214C820 194 830 178 850 172C855 192 846 208 826 214Z" fill="#2E9E4F"/><path d="M828 211C834 196 842 184 849 175" stroke="#fff" stroke-opacity=".7" stroke-width="1.6" fill="none"/>
+    <path d="M846 216C848 202 858 192 872 190C870 204 862 214 846 216Z" fill="#7BC043"/>
   </svg>
-  <div class="cr-tx">
-    <h1>Carreta do Agro /<br>Carreta da Saúde</h1>
-    <div class="cr-pg">{{ pagina }}</div>
-    <p class="sub">{{ sub }}</p>
-    {% if caller is defined %}<div class="cr-acoes-cab">{{ caller() }}</div>{% endif %}
-  </div>
 </div>
 {%- endmacro %}
