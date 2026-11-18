@@ -277,11 +277,11 @@
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'mapa_sindicatos' else '' }}" href="{{ url_for('admin_sindicatos_mapa') }}"><span class="ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M9 3 3 5.500v15.500l6-2.500 6 2.500 6-2.500V3l-6 2.500L9 3zm0 2.300 4.500 1.900v11.500L9 16.800V5.300z"/></svg></span> Mapa dos Sindicatos</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'processos_eleitorais' else '' }}" href="{{ url_for('admin_todos_processos_eleitorais') }}"><span class="ic"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M4 13h16v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7zm2.500-3L8 4h8l1.500 6H15l-1-2h-4l-1 2H6.500zM11 15v2h2v-2h-2z"/></svg></span> Processos Eleitorais</a>
       <div class="nav-sep">Carreta (Agro/Saúde)</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_painel' else '' }}" href="{{ url_for('admin_carreta_painel') }}"><span class="ic">📊</span> Painel</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta' else '' }}" href="{{ url_for('admin_carreta', status='pendente' if carreta_pendentes_count else None) }}"><span class="ic">🚛</span> Solicitações{% if carreta_pendentes_count %}<span class="contador">{{ carreta_pendentes_count }}</span>{% endif %}</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_bloqueios' else '' }}" href="{{ url_for('admin_carreta_bloqueios') }}"><span class="ic">🚫</span> Bloqueio de Datas</a>
-      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_painel' else '' }}" href="{{ url_for('admin_carreta_painel') }}"><span class="ic">📊</span> Painel</a>
       {% endif %}
 
       {% if apenas_sindicatos %}
@@ -296,11 +296,11 @@
 
       {% if apenas_carreta %}
       <div class="nav-sep">Carreta (Agro/Saúde)</div>
+      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_painel' else '' }}" href="{{ url_for('admin_carreta_painel') }}"><span class="ic">📊</span> Painel</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta' else '' }}" href="{{ url_for('admin_carreta', status='pendente' if carreta_pendentes_count else None) }}"><span class="ic">🚛</span> Solicitações{% if carreta_pendentes_count %}<span class="contador">{{ carreta_pendentes_count }}</span>{% endif %}</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_calendario' else '' }}" href="{{ url_for('admin_carreta_calendario') }}"><span class="ic">📅</span> Calendário</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_mapa' else '' }}" href="{{ url_for('admin_carreta_mapa') }}"><span class="ic">🗺️</span> Mapa da Carreta</a>
       <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_bloqueios' else '' }}" href="{{ url_for('admin_carreta_bloqueios') }}"><span class="ic">🚫</span> Bloqueio de Datas</a>
-      <a class="nav-item {{ 'ativo' if pagina_ativa == 'carreta_painel' else '' }}" href="{{ url_for('admin_carreta_painel') }}"><span class="ic">📊</span> Painel</a>
       {% endif %}
     </nav>
     <div class="rodape-sidebar"><a href="{{ url_for('admin_logout') }}"><span class="ic">🚪</span> Sair</a></div>

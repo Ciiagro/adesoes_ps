@@ -844,10 +844,10 @@ def admin_login():
             return redirect(url_for("admin_sindicatos"))
         if senha and senha == os.environ.get("CARRETA_PASSWORD"):
             session["carreta_admin_ok"] = True
-            return redirect(url_for("admin_carreta"))
+            return redirect(url_for("admin_carreta_painel"))
         if senha and senha == os.environ.get("CARRETA_LEITURA_PASSWORD"):
             session["carreta_leitura_ok"] = True
-            return redirect(url_for("admin_carreta"))
+            return redirect(url_for("admin_carreta_painel"))
         flash("Senha incorreta.")
     return render_template("admin_login.html")
 
@@ -875,7 +875,7 @@ def carreta_entrada():
     """Tela inicial própria da gestão da Carreta do Agro: pede só a senha da Carreta
     (gestão ou só-leitura) e leva direto ao módulo (sem passar pelo /admin)."""
     if carreta_admin_logado() or carreta_leitura_logado():
-        return redirect(url_for("admin_carreta"))
+        return redirect(url_for("admin_carreta_painel"))
     if request.method == "POST":
         senha = request.form.get("senha")
         if senha and senha == os.environ.get("CARRETA_PASSWORD"):
@@ -883,13 +883,13 @@ def carreta_entrada():
             session.pop("gestao_sindicato_ok", None)
             session.pop("carreta_leitura_ok", None)
             session["carreta_admin_ok"] = True
-            return redirect(url_for("admin_carreta"))
+            return redirect(url_for("admin_carreta_painel"))
         if senha and senha == os.environ.get("CARRETA_LEITURA_PASSWORD"):
             session.pop("admin_ok", None)
             session.pop("gestao_sindicato_ok", None)
             session.pop("carreta_admin_ok", None)
             session["carreta_leitura_ok"] = True
-            return redirect(url_for("admin_carreta"))
+            return redirect(url_for("admin_carreta_painel"))
         flash("Senha incorreta.")
     return render_template("carreta_entrada.html")
 
