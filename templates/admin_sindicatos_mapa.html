@@ -215,7 +215,7 @@
         },
         onEachFeature: (feature, layer) => {
           const regiao = regiaoPorCodIbge[feature.properties.id];
-          layer.bindTooltip(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}` + (REGIAO_SEL && NOME_SIND[feature.properties.id] ? '<br>Sindicato: ' + NOME_SIND[feature.properties.id] : '') + (regiao && regiao !== REGIAO_SEL ? '<br><i>clique para ver a região</i>' : ''), { sticky: true });
+          layer.bindTooltip(`<b>${feature.properties.name}</b><br>${regiao || 'sem região definida'}` + (REGIAO_SEL && regiao === REGIAO_SEL ? '<br>Sindicato: ' + (NOME_SIND[feature.properties.id] || 'sem sindicato') : '') + (regiao && regiao !== REGIAO_SEL ? '<br><i>clique para ver a região</i>' : ''), { sticky: true });
           if (regiao) {
             layer.on('click', () => {
               if (regiao !== REGIAO_SEL) {
@@ -236,7 +236,7 @@
         const c = l.getBounds().getCenter();
         rotulos.push(L.marker(c, {
           interactive: false, keyboard: false,
-          icon: L.divIcon({ className: 'rot-mun', html: '<span><b>' + l.feature.properties.name + '</b>' + (REGIAO_SEL ? '<em>' + (NOME_SIND[l.feature.properties.id] || 'sem sindicato') + '</em>' : '') + '</span>', iconSize: [0, 0] })
+          icon: L.divIcon({ className: 'rot-mun', html: '<span><b>' + l.feature.properties.name + '</b>' + '</span>', iconSize: [0, 0] })
         }));
       });
       const grupoRotulos = L.layerGroup(rotulos);
