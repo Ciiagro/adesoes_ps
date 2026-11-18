@@ -1,57 +1,148 @@
 {% extends 'admin_base.html' %}
-{% block extra_head %}<style>.conteudo{max-width:none !important}</style>{% endblock %}
 {% block title %}Vice-Presidência e Sindicatos Rurais{% endblock %}
+{% block extra_head %}
+<style>
+  .conteudo{max-width:none !important}
+  .vp-voltar{display:inline-block;margin-bottom:10px;font-weight:700;color:#0F6B2E}
+  /* topo */
+  .vp-hero{position:relative;overflow:hidden;display:flex;align-items:center;gap:20px;min-height:128px;padding:16px 28px 16px 26px;margin-bottom:14px;border-radius:22px;border:2px solid #7FBF8F;background:linear-gradient(100deg,#FFFFFF 0%,#F4FAF3 60%,#EAF6EC 100%);box-shadow:0 2px 12px rgba(15,107,46,.12)}
+  .vp-hero>*{position:relative;z-index:2}
+  .vp-hero .vp-fotobox{position:absolute;z-index:0;top:0;right:0;height:100%;aspect-ratio:988/124;background:url('{{ url_for("static", filename="img/banner_paisagem.jpg") }}') right center/100% 100% no-repeat}
+  .vp-folha{flex:none;width:84px;height:84px;filter:drop-shadow(0 4px 6px rgba(15,107,46,.25))}
+  .vp-hero h1{margin:0;font-family:'Inter',system-ui,sans-serif;font-weight:800;letter-spacing:-.02em;font-size:clamp(1.6rem,2.6vw,2.5rem);color:#0F6B2E;line-height:1.1}
+  .vp-hero .sub{margin:6px 0 0;color:#23382A;font-size:.95rem;max-width:62ch;font-weight:500}
+  .vp-acoes{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .vp-acoes .btn{background:#168A38;color:#fff;border-radius:999px;padding:10px 20px}
+  /* resumo + busca */
+  .vp-barra{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fff;border:2px solid #7FBF8F;border-radius:999px;padding:8px 16px;margin-bottom:16px;box-shadow:0 1px 8px rgba(15,107,46,.08)}
+  .vp-barra .busca{flex:1 1 280px;display:flex;align-items:center;gap:8px;min-width:220px}
+  .vp-barra input{flex:1;border:1px solid #CFE6D4;border-radius:999px;padding:9px 14px;font:inherit;background:#F7FCF7}
+  .vp-chip{display:inline-flex;align-items:center;gap:6px;background:#CDEBD4;color:#0F4D27;border-radius:999px;padding:5px 14px;font-weight:700;font-size:.82rem;white-space:nowrap}
+  /* cartões das regiões */
+  .vp-grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,600px),1fr));gap:18px;align-items:start}
+  .vp-card{background:#fff;border:2px solid #7FBF8F;border-radius:18px;overflow:hidden;box-shadow:0 3px 14px rgba(15,107,46,.12)}
+  .vp-card-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;background:linear-gradient(100deg,#0F6B2E 0%,#1E8A3E 100%);color:#fff}
+  .vp-card-topo h2{margin:0;color:#fff;font-size:1.15rem;font-family:'Fraunces',Georgia,serif;font-weight:700}
+  .vp-card-topo .vp-n{background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:3px 12px;font-size:.78rem;font-weight:700;white-space:nowrap}
+  .vp-vice{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#E3F3E6;border-bottom:1px solid #B9DDC1}
+  .vp-vice .av{flex:none;width:40px;height:40px;border-radius:50%;background:#1E8A3E;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem}
+  .vp-vice .rot{display:block;font-size:.68rem;font-weight:700;letter-spacing:.08em;color:#2F6B3F}
+  .vp-vice .nm{display:block;font-weight:700;color:#0F3F22;font-size:.98rem;line-height:1.25}
+  .vp-vice .tel{margin-left:auto;white-space:nowrap;font-weight:600;color:#0F6B2E}
+  .vp-tab-wrap{overflow-x:auto}
+  .vp-card table{width:100%;border-collapse:collapse;margin:0}
+  .vp-card table thead th{background:#F1F8F2 !important;color:#0F4D27 !important;font-size:.7rem;letter-spacing:.07em;padding:10px 14px;border-bottom:2px solid #CFE6D4;text-align:left}
+  .vp-card table td{padding:11px 14px;border-bottom:1px solid #E3EFE5;vertical-align:top;font-size:.9rem}
+  .vp-card table tbody tr:nth-child(even) td{background:#F8FCF8}
+  .vp-card table tbody tr:hover td{background:#E6F5E9}
+  .vp-card table tr:last-child td{border-bottom:0}
+  .vp-card .sind{font-weight:700;color:#0F5A28}
+  .vp-card a.tel,.vp-card a.mail{color:#0F6B2E;text-decoration:none}
+  .vp-card a.tel:hover,.vp-card a.mail:hover{text-decoration:underline}
+  .vp-card .mail{display:block;overflow-wrap:anywhere}
+  .vp-vazio{padding:16px 18px;color:#5E7564}
+  #vp-sem{display:none;text-align:center;padding:30px;color:#4F6354;font-weight:600}
+  @media (max-width:1000px){.vp-hero .vp-fotobox{display:none}}
+</style>
+{% endblock %}
+
 {% block admin_content %}
-<a class="link-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
-<div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+{% set ns = namespace(n=0) %}
+{% for r in regioes.values() %}{% set ns.n = ns.n + (r.sindicatos|length) %}{% endfor %}
+
+<a class="vp-voltar" href="{{ url_for('admin_sindicatos') }}">← Voltar para a lista</a>
+
+<div class="vp-hero">
+  <div class="vp-fotobox" aria-hidden="true"></div>
+  <svg class="vp-folha" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="vpg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#0F6B2E"/><stop offset="1" stop-color="#7BC043"/></linearGradient></defs><path d="M8 56C6 30 22 10 56 6c2 32-14 50-40 52" fill="url(#vpg)"/><path d="M10 54C22 38 34 26 50 14" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".85"/><path d="M8 58c2-6 4-9 8-12" stroke="#0F6B2E" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
   <div>
     <h1>Vice-Presidência e Sindicatos Rurais</h1>
-    <p class="sub">
-      Vice-presidente regional e sindicatos rurais de cada região FAEC, com os contatos atuais
-      (presidente, telefone, e-mail) — mesmo dado do relatório em PDF, só que pra consultar direto
-      na tela.
-    </p>
+    <p class="sub">Vice-presidente regional e sindicatos rurais de cada região FAEC, com os contatos atuais (presidente, telefone e e-mail) para consultar direto na tela.</p>
   </div>
-  <a class="btn secundario" href="{{ url_for('admin_sindicatos_relatorio_contatos') }}" target="_blank">⬇️ Baixar em PDF</a>
+  <div class="vp-acoes">
+    <a class="btn" href="{{ url_for('admin_sindicatos_relatorio_contatos') }}" target="_blank">⬇️ Baixar em PDF</a>
+  </div>
 </div>
 
 {% if not regioes %}
-<div class="secao-card"><p class="vazio">Nenhum dado cadastrado ainda.</p></div>
-{% endif %}
+<div class="vp-card"><p class="vp-vazio">Nenhum dado cadastrado ainda.</p></div>
+{% else %}
+<div class="vp-barra">
+  <span class="vp-chip">🗺️ {{ regioes|length }} região(ões)</span>
+  <span class="vp-chip">🤝 {{ ns.n }} sindicato(s)</span>
+  <label class="busca">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="#2F7A43" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+    <input type="search" id="vp-busca" placeholder="Buscar sindicato, presidente, telefone ou e-mail..." autocomplete="off">
+  </label>
+</div>
 
+<div class="vp-grade">
 {% for nome_regiao in regioes.keys()|sort %}
 {% set info_regiao = regioes[nome_regiao] %}
-<div class="secao-card" style="margin-bottom:16px;padding:0;overflow:hidden;">
-  <div style="background:var(--verde-claro, #EFEBD8);padding:14px 18px;">
-    <h2 style="margin:0;">{{ nome_regiao }}</h2>
-    {% if info_regiao.vice_presidente %}
-    <p style="margin:4px 0 0;font-size:.9rem;">
-      <strong>VICE-PRESIDENTE REGIONAL</strong> — {{ info_regiao.vice_presidente }}
-      {% if info_regiao.telefone_vice %} · telefone {{ info_regiao.telefone_vice }}{% endif %}
-    </p>
+<section class="vp-card" data-regiao>
+  <div class="vp-card-topo">
+    <h2>{{ nome_regiao }}</h2>
+    <span class="vp-n">{{ info_regiao.sindicatos|length }} sindicato(s)</span>
+  </div>
+  {% if info_regiao.vice_presidente %}
+  <div class="vp-vice">
+    <span class="av">{{ info_regiao.vice_presidente[:1]|upper }}</span>
+    <div>
+      <span class="rot">VICE-PRESIDENTE REGIONAL</span>
+      <span class="nm">{{ info_regiao.vice_presidente }}</span>
+    </div>
+    {% if info_regiao.telefone_vice %}
+    <a class="tel" href="tel:{{ info_regiao.telefone_vice|replace('(','')|replace(')','')|replace(' ','')|replace('-','') }}">📞 {{ info_regiao.telefone_vice }}</a>
     {% endif %}
   </div>
+  {% endif %}
 
   {% if not info_regiao.sindicatos %}
-  <p class="vazio" style="padding:14px 18px;">Nenhum sindicato cadastrado nessa região.</p>
+  <p class="vp-vazio">Nenhum sindicato cadastrado nessa região.</p>
   {% else %}
-  <table style="margin:0;">
-    <thead>
-      <tr><th>Sindicato</th><th>Presidente</th><th>Telefone</th><th>E-mail</th></tr>
-    </thead>
+  <div class="vp-tab-wrap">
+  <table>
+    <thead><tr><th>Sindicato</th><th>Presidente</th><th>Telefone</th><th>E-mail</th></tr></thead>
     <tbody>
       {% for nome_sindicato in info_regiao.sindicatos.keys()|sort %}
       {% set s = info_regiao.sindicatos[nome_sindicato] %}
-      <tr>
-        <td><strong>{{ nome_sindicato }}</strong></td>
+      <tr class="vp-linha" data-q="{{ (nome_sindicato ~ ' ' ~ (s.presidente or '') ~ ' ' ~ (s.telefone or '') ~ ' ' ~ (s.email or ''))|lower }}">
+        <td class="sind">{{ nome_sindicato }}</td>
         <td>{{ s.presidente or '—' }}</td>
-        <td>{{ s.telefone or '—' }}</td>
-        <td>{{ s.email or '—' }}</td>
+        <td>{% if s.telefone %}<a class="tel" href="tel:{{ s.telefone|replace('(','')|replace(')','')|replace(' ','')|replace('-','') }}">{{ s.telefone }}</a>{% else %}—{% endif %}</td>
+        <td>{% if s.email %}{% for em in s.email.split('/') %}{% if em.strip() %}<a class="mail" href="mailto:{{ em.strip() }}">{{ em.strip() }}</a>{% endif %}{% endfor %}{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  </div>
   {% endif %}
-</div>
+</section>
 {% endfor %}
+</div>
+<p id="vp-sem">Nenhum sindicato encontrado para essa busca.</p>
+{% endif %}
+
+<script>
+(function () {
+  var campo = document.getElementById('vp-busca');
+  if (!campo) return;
+  function norm(t) { return (t || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
+  campo.addEventListener('input', function () {
+    var termos = norm(campo.value).split(/\s+/).filter(Boolean), total = 0;
+    document.querySelectorAll('[data-regiao]').forEach(function (card) {
+      var visiveis = 0;
+      card.querySelectorAll('tr.vp-linha').forEach(function (tr) {
+        var q = norm(tr.dataset.q);
+        var ok = termos.every(function (t) { return q.indexOf(t) !== -1; });
+        tr.style.display = ok ? '' : 'none';
+        if (ok) visiveis++;
+      });
+      card.style.display = (visiveis > 0 || !termos.length) ? '' : 'none';
+      total += visiveis;
+    });
+    document.getElementById('vp-sem').style.display = (termos.length && total === 0) ? 'block' : 'none';
+  });
+})();
+</script>
 {% endblock %}
