@@ -51,19 +51,8 @@
 {% endblock %}
 
 {% block admin_content %}
-<div class="mp-head">
-  <div class="mp-fotobox" aria-hidden="true">
-    <div class="mp-foto"></div>
-    <svg class="mp-onda" viewBox="0 0 200 130" preserveAspectRatio="none"><path d="M20 130C70 95 130 35 180 0L212 0C160 42 108 98 66 130z" fill="#2F7A43"/><path d="M74 130C122 100 172 50 216 0L238 0C196 56 146 108 104 130z" fill="#8CBF6A" opacity=".9"/></svg>
-  </div>
-  <svg class="mp-folhas" viewBox="0 0 150 130" aria-hidden="true"><path d="M-6 130C-4 80 30 40 90 30c2 50-30 90-96 100z" fill="#6FA774" opacity=".55"/><path d="M-6 100C10 60 44 40 80 38 70 74 40 98 -6 100z" fill="#A9C98A" opacity=".6"/><path d="M30 130C34 100 60 80 100 76 96 104 70 124 30 130z" fill="#2F7A43" opacity=".35"/></svg>
-  <span class="mp-ico"><svg viewBox="0 0 24 24" width="46" height="46" fill="#2F7A43" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 4.5 6 11 6 11s6-6.5 6-11a6 6 0 0 0-6-6zm0 8.2A2.2 2.2 0 1 1 14.2 8 2.2 2.2 0 0 1 12 10.2zM3 18l4-1.2v2L4.5 20v-.6zm18 0-4-1.2v2l2.5 1.2z"/></svg></span>
-  <div>
-    <h1>Mapa dos Sindicatos</h1>
-    <p class="sub">Visualize a distribuição dos sindicatos rurais e acesse informações de cada região{% if regiao_filtro %} — <b>{{ regiao_filtro }}</b>{% endif %}.</p>
-    <span class="mp-qtd">{{ dados_mapa.sindicatos|length }} sindicato(s) georreferenciado(s)</span>
-  </div>
-</div>
+{% from '_cab_hero.html' import cab_hero %}
+{{ cab_hero('Mapa dos Sindicatos', 'Visualize a distribuição dos sindicatos rurais e acesse informações de cada região — ' ~ (dados_mapa.sindicatos|length) ~ ' sindicato(s) georreferenciado(s)' ~ ((' na região ' ~ regiao_filtro) if regiao_filtro else '') ~ '.') }}
 <form method="get" class="mp-filtro">
   <span class="rot"><svg viewBox="0 0 24 24" width="17" height="17" fill="#2F7A43" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5z"/></svg>Filtrar por região</span>
   <select name="regiao">

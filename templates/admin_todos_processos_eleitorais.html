@@ -2,18 +2,14 @@
 {% block extra_head %}<style>.conteudo{max-width:none !important}</style>{% endblock %}
 {% block title %}Processos Eleitorais{% endblock %}
 {% block admin_content %}
-<div class="page-head">
-  <h1>Processos Eleitorais</h1>
-  <p class="sub">
-    O processo eleitoral mais recente de cada sindicato. Clique em um sindicato pra ver
-    o histórico completo dele ou cadastrar um novo processo.
-  </p>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+{% from '_cab_hero.html' import cab_hero %}
+{{ cab_hero('Processos Eleitorais', 'O processo eleitoral mais recente de cada sindicato. Clique em um sindicato para ver o histórico completo dele ou cadastrar um novo processo.') }}
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px;">
     <a class="btn" href="{{ url_for('admin_sindicato_novo') }}">➕ Novo sindicato</a>
     <a class="btn secundario" href="{{ url_for('admin_todos_processos_eleitorais_exportar') }}">⬇️ Baixar planilha (.xlsx)</a>
     <a class="btn secundario" href="{{ url_for('admin_cronograma_eleitoral_exportar') }}">📅 Cronograma Consolidado (.xlsx)</a>
   </div>
-</div>
+
 
 <table>
   <thead>

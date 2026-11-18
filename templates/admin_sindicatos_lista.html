@@ -144,20 +144,30 @@
   @media(max-width:900px){.lista-fixo .cab>div:first-child{max-width:100%}.lista-fixo .cab .sub{white-space:normal}.lista-fixo .cab{min-height:90px;padding:14px 20px}}
 </style>
 <div class="lista-fixo">
-<div class="cab">
-  <div>
-    <div class="mig">Sindicatos Rurais</div>
-    <h1>Sindicatos Rurais</h1>
-    <p class="sub">Acompanhe a situação, o presidente e os municípios de cada sindicato rural.</p>
-  </div>
-  <div class="banner" role="img" aria-label="Juntos pelo fortalecimento do nosso campo!"></div>
-</div>
+{% from '_cab_hero.html' import cab_hero %}
+{{ cab_hero('Sindicatos Rurais', 'Acompanhe a situação, o presidente e os municípios de cada sindicato rural.', 'cab') }}
 
 <div class="kpis3">
   <button type="button" class="kp venc al-btn" data-alvo="al-venc"><span class="ic">⚠</span><span><span class="tt">Mandatos vencidos</span><br><span class="nn">{{ avisos_vencidos|length }}</span><br><span class="ll">Ver detalhes →</span></span></button>
   <button type="button" class="kp breve al-btn" data-alvo="al-breve"><span class="ic">◔</span><span><span class="tt">Vencem em breve</span><br><span class="nn">{{ avisos_a_vencer|length }}</span><br><span class="ll">Ver detalhes →</span></span></button>
   <div class="kp total"><span class="ic">✓</span><span><span class="tt">Sindicatos Rurais</span><br><span class="nn">{{ total_sind }}</span><br><span class="ll">{{ pct_ativos }}% de ativos ({{ sind_ativos }} de {{ total_sind }})</span></span></div>
 </div>
+{% if avisos_vencidos %}
+<div class="ult-venc">
+  <div class="uv-topo">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14zM7 12v2h2v-2H7zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z"/></svg>
+    <span class="tt">Últimos vencimentos</span>
+    <button type="button" class="uv-todos al-btn" data-alvo="al-venc">Ver todos →</button>
+  </div>
+  {% for s, dias in (avisos_vencidos|sort(attribute='1'))[:4] %}
+  <div class="uv-item">
+    <span class="uv-tag">{{ -dias }} DIA{{ 'S' if -dias != 1 else '' }} VENCIDO</span>
+    <a class="uv-nome" href="{{ url_for('admin_sindicato_grupo_editar', sindicato_id=s.id) }}">{{ s.nome }}</a>
+    <span class="uv-data"><svg viewBox="0 0 24 24" width="18" height="18" fill="#4F6354" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v10H5V10h14z"/></svg>venceu em {{ s.gestao_fim.strftime('%d/%m/%Y') }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% if avisos_vencidos %}
 <div class="al-painel" id="al-venc">
   {% for s, dias in avisos_vencidos %}
@@ -258,7 +268,7 @@
   // cabeçalho: grande no topo, compacto depois de rolar
   (function(){
     var f=document.querySelector('.lista-fixo'); if(!f) return;
-    function ajusta(){ var y=window.pageYOffset||document.documentElement.scrollTop; if(y>140) f.classList.add('compacto'); else if(y<10) f.classList.remove('compacto'); }
+    function ajusta(){ f.classList.remove('compacto'); } /* topo fixo desligado: o cabeçalho rola junto com a página */
     window.addEventListener('scroll',ajusta,{passive:true}); ajusta();
   })();
   document.querySelectorAll('.al-btn').forEach(function(b){

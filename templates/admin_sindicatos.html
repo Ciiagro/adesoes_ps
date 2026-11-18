@@ -122,14 +122,8 @@
   @media(max-width:900px){.lista-fixo .cab>div:first-child{max-width:100%}.lista-fixo .cab .sub{white-space:normal}.lista-fixo .cab{min-height:90px;padding:14px 20px}}
 </style>
 <div class="lista-fixo">
-<div class="cab">
-  <div>
-    <div class="mig">Sindicatos Rurais x Municípios</div>
-    <h1>Municípios e seus Sindicatos</h1>
-    <p class="sub">Veja todos os municípios e o sindicato rural responsável por cada um.</p>
-  </div>
-  <div class="banner" role="img" aria-label="Juntos pelo fortalecimento do nosso campo!"></div>
-</div>
+{% from '_cab_hero.html' import cab_hero %}
+{{ cab_hero('Municípios e seus Sindicatos', 'Veja todos os municípios e o sindicato rural responsável por cada um.', 'cab') }}
 
 {% if avisos_gestao %}
 <div class="kpis3">
@@ -306,7 +300,7 @@
   })();
   (function(){
     var f=document.querySelector('.lista-fixo'); if(!f) return;
-    function ajusta(){ var y=window.pageYOffset||document.documentElement.scrollTop; if(y>140) f.classList.add('compacto'); else if(y<10) f.classList.remove('compacto'); }
+    function ajusta(){ f.classList.remove('compacto'); }
     window.addEventListener('scroll',ajusta,{passive:true}); ajusta();
   })();
   document.querySelectorAll('.al-btn').forEach(function(b){
