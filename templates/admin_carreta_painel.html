@@ -91,12 +91,14 @@
   .pn-filtros{padding:.55em 1.1em;margin-bottom:.8em}
   .pn-filtros .tt{font-size:1.05em}.pn-filtros .tt .ic{width:2em;height:2em}
   .pn-sel{height:2.2em}
-  .pn-kpis{grid-template-columns:repeat(8,minmax(0,1fr));gap:.7em;margin-bottom:.8em}
-  .pn-kpi{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"i v" "i r" "i d";column-gap:.7em;align-items:center;padding:.7em .8em}
-  .pn-kpi .ico{grid-area:i;width:2.4em;height:2.4em;margin:0}
-  .pn-kpi .v{grid-area:v;font-size:1.55em}
-  .pn-kpi .r{grid-area:r;margin:.1em 0 0;font-size:.82em;line-height:1.15}
-  .pn-kpi .d{grid-area:d;margin:0;font-size:.7em;line-height:1.2}
+  .pn-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:.8em;margin-bottom:.9em}
+  .pn-kpi{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"i v" "i r" "i d";column-gap:.9em;align-items:center;padding:.75em 1em}
+  .pn-kpi .ico{grid-area:i;width:3em;height:3em;margin:0;border-radius:14px}
+  .pn-kpi .ico svg{width:1.6em;height:1.6em}
+  .pn-kpi .v{grid-area:v;font-size:1.8em;white-space:nowrap}
+  .pn-kpi .v small{font-size:.45em;margin:0 .5em 0 .2em}
+  .pn-kpi .r{grid-area:r;margin:.15em 0 0;font-size:.95em;line-height:1.2}
+  .pn-kpi .d{grid-area:d;margin:.1em 0 0;font-size:.8em;line-height:1.25}
   .pn-kpi::after{display:none}
   .pn-linha{gap:.8em;margin-bottom:.8em}
   .pn-l1{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
@@ -112,7 +114,7 @@
   .pn-oc div{padding:.45em .3em .55em}.pn-oc .p{font-size:1.05em}
   .pn-prox{gap:.4em}.pn-pr{padding:.4em .6em}.pn-pr .ev{font-size:.9em}.pn-pr .dt{width:2.9em}
   .pn-rodape{display:none}
-  @media (max-width:1500px){.pn-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.pn-oc{grid-template-columns:repeat(6,minmax(0,1fr))}}
+  @media (max-width:1500px){.pn-oc{grid-template-columns:repeat(6,minmax(0,1fr))}}
   @media (max-width:1100px){.pn-l2{grid-template-columns:1fr}}
 </style>
 
@@ -146,7 +148,7 @@
   <div class="pn-kpi" style="--c:#D9534F"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V9h14v11z"/></svg></div>
     <div class="v">{{ antec_media }}<small>dias</small></div><div class="r">Antecedência média</div><div class="d">entre o pedido e o evento</div></div>
   <div class="pn-kpi" style="--c:#1E8A3D"><div class="ico"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 13h2v7H3v-7zm4-5h2v12H7V8zm4-5h2v17h-2V3zm4 8h2v9h-2v-9zm4-3h2v12h-2V8z"/></svg></div>
-    <div class="v">{{ tot_agro }}<small>Agro</small> {{ tot_saude }}<small>Saúde</small></div><div class="r">Por programa</div><div class="d">solicitações não canceladas</div></div>
+    <div class="v">{{ tot_agro }}<small>Agro</small>{{ tot_saude }}<small>Saúde</small></div><div class="r">Por programa</div><div class="d">solicitações não canceladas</div></div>
 </div>
 
 <div class="pn-linha pn-l1">
