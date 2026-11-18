@@ -293,10 +293,21 @@ def _cores_regioes(nomes_regioes, regiao_por_cod_ibge):
     def dist(a, b):
         return sum((x - y) ** 2 for x, y in zip(rgb(a), rgb(b))) ** 0.5
 
-    ordem = sorted(nomes_regioes, key=lambda n: -len(viz.get(n, ())))
+    # Cores fixas escolhidas pelo usuário (casa pelo trecho do nome, sem acento/maiúscula)
+    import unicodedata
+    def _norm(t):
+        return "".join(c for c in unicodedata.normalize("NFD", t.lower()) if unicodedata.category(c) != "Mn")
+    fixas = {"cariri": "#b56759", "ibiapaba": "#833c31"}
+    for n in nomes_regioes:
+        for trecho, cor in fixas.items():
+            if trecho in _norm(n):
+                cores[n] = cor
+    paleta_livre = [c for c in _PALETA_REGIOES if c.lower() not in {v.lower() for v in fixas.values()}]
+
+    ordem = sorted([n for n in nomes_regioes if n not in cores], key=lambda n: -len(viz.get(n, ())))
     for n in ordem:
         usadas_viz = [cores[v] for v in viz.get(n, ()) if v in cores]
-        livres = [c for c in _PALETA_REGIOES if c not in cores.values()] or list(_PALETA_REGIOES)
+        livres = [c for c in paleta_livre if c not in cores.values()] or list(paleta_livre)
         melhor = max(livres, key=lambda c: min([dist(c, u) for u in usadas_viz] or [999]))
         cores[n] = melhor
     return cores
