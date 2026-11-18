@@ -236,6 +236,58 @@ def salvar_edicao(db, municipio, form, alterado_por, observacao):
     return algo_mudou
 
 
+_PALETA_REGIOES = [
+    "#E11D48", "#2563EB", "#FACC15", "#16A34A", "#9333EA",
+    "#F97316", "#06B6D4", "#92400E", "#DB2777", "#1D4ED8",
+    "#84CC16", "#14B8A6", "#6366F1", "#F43F5E", "#65A30D",
+]
+
+
+def _cores_regioes(nomes_regioes, regiao_por_cod_ibge):
+    """Dá uma cor a cada região de modo que regiões VIZINHAS fiquem com
+    cores bem diferentes (descobre a vizinhança pelos pontos de fronteira
+    que os municípios compartilham no geojson)."""
+    import json, os
+    cores = {}
+    try:
+        caminho = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "ceara_municipios.geojson")
+        with open(caminho, encoding="utf-8") as f:
+            geo = json.load(f)
+        pontos = {}  # ponto -> regiões que o tocam
+        for ft in geo["features"]:
+            reg = regiao_por_cod_ibge.get(str(ft["properties"]["id"]))
+            if not reg:
+                continue
+            g = ft["geometry"]
+            polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
+            for poly in polys:
+                for anel in poly:
+                    for x, y in anel:
+                        pontos.setdefault((round(x, 4), round(y, 4)), set()).add(reg)
+        viz = {n: set() for n in nomes_regioes}
+        for regs in pontos.values():
+            if len(regs) > 1:
+                for r in regs:
+                    viz.setdefault(r, set()).update(regs - {r})
+    except Exception:
+        viz = {n: set() for n in nomes_regioes}
+
+    def rgb(h):
+        return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+
+    def dist(a, b):
+        return sum((x - y) ** 2 for x, y in zip(rgb(a), rgb(b))) ** 0.5
+
+    ordem = sorted(nomes_regioes, key=lambda n: -len(viz.get(n, ())))
+    for n in ordem:
+        usadas_viz = [cores[v] for v in viz.get(n, ()) if v in cores]
+        livres = [c for c in _PALETA_REGIOES if c not in cores.values()] or list(_PALETA_REGIOES)
+        melhor = max(livres, key=lambda c: min([dist(c, u) for u in usadas_viz] or [999]))
+        cores[n] = melhor
+    return cores
+
+
+
 def dados_mapa_sindicatos(db, regiao_filtro=None):
     """Monta os dados pros dois mapas do Ceará (sindicatos georreferenciados
     e municípios coloridos por região FAEC):
@@ -248,18 +300,13 @@ def dados_mapa_sindicatos(db, regiao_filtro=None):
       referência de onde essa região fica no estado).
     - `regiao_por_cod_ibge`: {cod_ibge: nome_da_regiao}, usado pra colorir
       o contorno de cada um dos 184 municípios no mapa de regiões."""
-    paleta = [
-        "#E6194B", "#2E9E4F", "#F2C200", "#2F6FDE", "#F58231",
-        "#8E24AA", "#00B8D9", "#E91EAD", "#8D5524", "#1B2A7A",
-        "#00897B", "#7B1F2B", "#9AA800", "#FF7A9A", "#546E7A",
-    ]
     nomes_regioes = listar_regioes_faec(db)
-    cor_por_regiao = {nome: paleta[i % len(paleta)] for i, nome in enumerate(nomes_regioes)}
 
     todos_municipios = listar_municipios_para_selecao(db)
     regiao_por_cod_ibge = {
         str(m.cod_ibge): m.regiao_faec for m in todos_municipios if m.regiao_faec
     }
+    cor_por_regiao = _cores_regioes(nomes_regioes, regiao_por_cod_ibge)
 
     # Agrupa os municípios por sindicato UMA VEZ, em memória (reaproveitando
     # os dados que já buscamos acima) — em vez de fazer uma consulta ao
