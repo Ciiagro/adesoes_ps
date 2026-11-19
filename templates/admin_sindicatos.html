@@ -182,10 +182,10 @@
 </form>
 <div class="acoes-row">
   {% if pode_editar_sindicatos %}
-  <a href="{{ url_for('admin_sindicatos_exportar', busca=filtro_busca, regiao_faec=filtro_regiao_faec, sindicato_id=filtro_sindicato_id) }}">⬇️ Gerar planilha para os setores</a>
-  <a href="{{ url_for('admin_sindicatos_ficha') }}" target="_blank">📄 Gerar ficha de distribuição (PDF)</a>
+  <a href="{{ url_for('admin_sindicatos_exportar', busca=filtro_busca, regiao_faec=filtro_regiao_faec, sindicato_id=filtro_sindicato_id) }}"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M5 20h14v-2H5v2zM12 2v10.2l3.6-3.6L17 10l-5 5-5-5 1.4-1.4L11 12.2V2h1z"/></svg> Gerar planilha para os setores</a>
+  <a href="{{ url_for('admin_sindicatos_ficha') }}" target="_blank"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5zM8 13h8v2H8v-2zm0 4h5v2H8v-2z"/></svg> Gerar ficha de distribuição (PDF)</a>
   <a class="btn-vp" href="{{ url_for('admin_sindicatos_vice_presidencia') }}"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5L14 3.5zM7 12v2h10v-2H7zm0 4v2h7v-2H7z"/></svg> Vice-Presidência e Sindicatos Rurais</a>
-  <a href="{{ url_for('admin_sindicato_novo') }}">➕ Novo sindicato</a>
+  <a href="{{ url_for('admin_sindicato_novo') }}"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5z"/></svg> Novo sindicato</a>
   {% endif %}
   <span class="cnt">☰ {{ total }} município(s) encontrado(s)</span>
 </div>
