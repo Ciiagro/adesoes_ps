@@ -5,7 +5,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   .cr-wrap{font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-size:clamp(13px,.95vw,17px);width:100%;margin:0 !important;max-width:none !important;color:#14301E}
-  .cr-wrap .cr-head{margin-bottom:-1.6em !important}
+  .cr-wrap .cr-head{margin-bottom:.8em !important}
   .cr-wrap h1,.cr-wrap .sub{font-family:'Plus Jakarta Sans','Inter',sans-serif !important}
 
   /* ---------- card de filtros ---------- */
@@ -23,12 +23,12 @@
   .cr-limpar:hover{background:#F1F8F2}
   .cr-nova{background:#176B31;color:#fff !important;box-shadow:0 3px 10px rgba(23,107,49,.3)}
   .cr-nova:hover{background:#0F5A28}
-  .cr-grade{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.2em;max-width:76%}
+  .cr-grade{display:grid;grid-template-columns:1.1fr 1.1fr 1.1fr 1fr .85fr auto;gap:1.2em;max-width:98%;align-items:end}
   .cr-fld label.rot{display:block;font-weight:800;color:#0F5A28;font-size:1em;margin:0 0 .4em}
   .cr-fld .caixa{position:relative;display:flex;align-items:center;height:2.9em;border:1.5px solid #D9E6DB;border-radius:12px;background:#fff;padding:0 .9em;gap:.7em}
   .cr-fld .caixa svg{flex:none;width:1.15em;height:1.15em}
   .cr-fld select{appearance:none;-webkit-appearance:none;border:0;outline:0;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%2314301E' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right center no-repeat;font:inherit;font-size:.95em;color:#3A4F40;width:100%;height:100%;margin:0;padding:0 1.4em 0 0;box-shadow:none;cursor:pointer}
-  .cr-buscar{margin-top:1.1em;display:inline-flex;align-items:center;gap:.6em;border:0;background:linear-gradient(180deg,#14803A,#0F6B2E);color:#fff;font:inherit;font-weight:800;font-size:1em;padding:.75em 1.6em;border-radius:999px;box-shadow:0 5px 14px rgba(15,107,46,.35);cursor:pointer;margin-bottom:0}
+  .cr-buscar{margin-top:0;height:3.1em;font-size:1.05em;white-space:nowrap;display:inline-flex;align-items:center;gap:.6em;border:0;background:linear-gradient(180deg,#14803A,#0F6B2E);color:#fff;font:inherit;font-weight:800;font-size:1em;padding:.75em 1.6em;border-radius:999px;box-shadow:0 5px 14px rgba(15,107,46,.35);cursor:pointer;margin-bottom:0}
   .cr-buscar:hover{filter:brightness(1.08)}
   .cr-aviso{background:#FBEED6;border:1px solid #EEDCB4;border-radius:10px;padding:.6em .9em;margin:0 0 .9em;font-size:.9em;max-width:76%}
 
@@ -39,19 +39,19 @@
   .cr-total{display:inline-flex;align-items:center;gap:.5em;background:rgba(255,255,255,.16);border-radius:999px;padding:.4em 1em;font-weight:700;font-size:.9em}
   .cr-tab{background:#fff;border-radius:0 0 16px 16px;box-shadow:0 6px 22px rgba(15,107,46,.12);overflow:hidden}
   table.cr-t{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:1em}
-  table.cr-t th{background:#0F6B2E;color:#fff;text-align:left;font-weight:700;font-size:1em;padding:.85em 1.1em;border-top:1px solid rgba(255,255,255,.28);border-right:1px solid rgba(255,255,255,.12)}
+  table.cr-t th{background:#0F6B2E;color:#fff;text-align:left;font-weight:800;font-size:.76em;letter-spacing:.05em;text-transform:uppercase;padding:.8em .9em;border-top:1px solid rgba(255,255,255,.28);border-right:1px solid rgba(255,255,255,.12)}
   table.cr-t th:last-child{border-right:0;text-align:center}
-  table.cr-t td{padding:.62em 1.1em;border-bottom:1px solid #EAF0EB;vertical-align:middle;color:#1A2E20}
+  table.cr-t td{padding:.5em .9em;border-bottom:1px solid #EAF0EB;vertical-align:middle;color:#14301E;font-size:.9em;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   table.cr-t tbody tr:hover{background:#F4FAF5}
   table.cr-t tbody tr:last-child td{border-bottom:0}
   .cr-mun{font-weight:800;color:#14301E;text-decoration:none}.cr-mun:hover{color:#176B31;text-decoration:underline}
-  .cr-sit{display:inline-flex;align-items:center;gap:.35em;border-radius:999px;padding:.25em .85em;font-weight:800;font-size:.92em}
+  .cr-sit{display:inline-flex;align-items:center;gap:.35em;border-radius:999px;padding:.25em .85em;font-weight:800;font-size:.8em;white-space:nowrap}
   .cr-sit.ap{background:#CFEFC5;color:#1B6E2E}.cr-sit.re{background:#D6EAFB;color:#1F5FA8}.cr-sit.pe{background:#FDEBC8;color:#8A5300}.cr-sit.ca{background:#FFD9D6;color:#C62828}
-  .cr-acoes{display:flex;gap:.5em;justify-content:center;white-space:nowrap}
-  .cr-acoes a,.cr-acoes button{width:2.3em;height:2.3em;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 8px rgba(15,107,46,.2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;text-decoration:none}
+  .cr-acoes{display:flex;flex:none;gap:.5em;justify-content:center;white-space:nowrap}
+  .cr-acoes a,.cr-acoes button{flex:none;width:2em;height:2em;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 8px rgba(15,107,46,.2);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;margin:0;text-decoration:none}
   .cr-acoes a:hover,.cr-acoes button:hover{background:#F1F8F2}
   .cr-acoes svg{width:1.1em;height:1.1em}
-  .cr-acoes form{display:inline;margin:0}
+  .cr-acoes form{display:flex;margin:0}
 
   .cpag{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:.8em .3em 1em;color:#14301E;font-size:1em}
   .cpag-info{display:flex;align-items:center;gap:1.5em;flex-wrap:wrap;font-weight:600}
@@ -68,7 +68,7 @@
   .cr-rodape::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 140' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%230F5A28'/%3E%3Cstop offset='.55' stop-color='%2325933F'/%3E%3Cstop offset='1' stop-color='%237BC043'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 140V50C200 25 430 85 720 100C940 111 1090 100 1200 88V140Z' fill='url(%23g)'/%3E%3Cpath d='M0 140V92C220 78 450 118 720 122C940 125 1090 118 1200 112V140Z' fill='%23fff' fill-opacity='.18'/%3E%3C/svg%3E") center bottom/100% 100% no-repeat}
   .cr-rodape span{position:relative;font-family:'Plus Jakarta Sans',sans-serif;font-style:italic;font-weight:800;font-size:1.5em;color:#0F5A28;border-bottom:3px solid #7BC043;padding-bottom:.15em;align-self:flex-start;margin-top:.2em}
   .cr-vazio{background:#fff;border-radius:0 0 16px 16px;padding:2em;text-align:center;color:#4F6354}
-  @media (max-width:1100px){.cr-grade{grid-template-columns:repeat(2,minmax(0,1fr));max-width:none}.cr-aviso{max-width:none}.cr-ft .cr-busca-mini{min-width:12em}}
+  @media (max-width:1100px){.cr-grade{grid-template-columns:repeat(2,minmax(0,1fr));max-width:none}.cr-buscar{grid-column:1/-1;justify-content:center}.cr-aviso{max-width:none}.cr-ft .cr-busca-mini{min-width:12em}}
 </style>
 
 <div class="cr-wrap">
@@ -94,6 +94,14 @@
 
   <div class="cr-grade">
     <div class="cr-fld">
+      <label class="rot" for="f-prog">Programa</label>
+      <div class="caixa"><svg viewBox="0 0 24 24" fill="#0F6B2E" aria-hidden="true"><path d="M3 6h11v9h-1.2a2.5 2.5 0 0 0-4.6 0H6.7a2.5 2.5 0 0 0-4.7 0H1V8a2 2 0 0 1 2-2zm11 3h4l3 3v3h-1a2.5 2.5 0 0 0-4.5 0H14V9z"/></svg>
+        <select id="f-prog" name="programa">
+          <option value="">Todos os programas</option>
+          {% for chave, rotulo in tipos_recurso.items() %}<option value="{{ chave }}" {% if filtro_programa == chave %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+        </select></div>
+    </div>
+    <div class="cr-fld">
       <label class="rot" for="f-mun">Município</label>
       <div class="caixa"><svg viewBox="0 0 24 24" fill="#0F6B2E" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.200 7 13 7 13s7-7.800 7-13a7 7 0 0 0-7-7zm0 9.500a2.500 2.500 0 1 1 0-5 2.500 2.500 0 0 1 0 5z"/></svg>
         <select id="f-mun"><option value="">Selecione o município</option></select></div>
@@ -116,9 +124,9 @@
           {% for chave, rotulo in status_label.items() %}<option value="{{ chave }}" {% if filtro_status == chave %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
         </select></div>
     </div>
+    <button type="submit" class="cr-buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M15.500 14h-.8l-.3-.3A6.500 6.500 0 1 0 14 15.500l.3.3v.8l5 5 1.500-1.500-5-5zm-6 0a4.500 4.500 0 1 1 0-9 4.500 4.500 0 0 1 0 9z"/></svg>Buscar resultados</button>
   </div>
 
-  <button type="submit" class="cr-buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" aria-hidden="true"><path d="M15.500 14h-.8l-.3-.3A6.500 6.500 0 1 0 14 15.500l.3.3v.8l5 5 1.500-1.500-5-5zm-6 0a4.500 4.500 0 1 1 0-9 4.500 4.500 0 0 1 0 9z"/></svg>Buscar resultados</button>
 </form>
 
 <div class="cr-resbar">

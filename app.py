@@ -2417,6 +2417,9 @@ def admin_carreta():
     db = SessionLocal()
     hoje = datetime.now().date()
     status = request.args.get("status", "")
+    programa = request.args.get("programa", "")
+    if programa not in carr.TIPOS_RECURSO:
+        programa = ""
     busca = request.args.get("busca", "").strip()
     if "mes" in request.args:
         # Chave "mes" apareceu na URL de propósito (dropdown ou "Limpar
@@ -2439,10 +2442,12 @@ def admin_carreta():
         "admin_carreta.html",
         pagina_ativa="carreta",
         solicitacoes=carr.listar_solicitacoes(
-            db, status=status or None, ano=ano_da_busca, mes=mes_da_busca, busca=busca or None
+            db, status=status or None, tipo_recurso=programa or None, ano=ano_da_busca, mes=mes_da_busca,
+            busca=busca or None
         ),
         status_label=carr.STATUS_LABEL,
         tipos_recurso=carr.TIPOS_RECURSO,
+        filtro_programa=programa,
         filtro_status=status,
         filtro_ano=ano,
         filtro_mes=mes,

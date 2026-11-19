@@ -1,5 +1,5 @@
 {% extends 'admin_base.html' %}
-{% from '_cr_head.html' import cr_head %}
+{% from '_cr_head.html' import cr_head, cr_form_css %}
 {% block title %}Mapa da Carreta{% endblock %}
 
 {% block extra_head %}
@@ -36,12 +36,38 @@
 {% endblock %}
 
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}</style>
+{{ cr_form_css() }}
+<style>
+  .cf .cartao-atual{display:flex;align-items:center;gap:.9em;padding:.8em 1.1em;border-radius:14px;border:1px solid #E1EFE2;background:#F6FBF6;margin-bottom:.8em;box-shadow:0 2px 10px rgba(15,107,46,.06)}
+  .cf .cartao-atual.dist{background:#F6FBF6}.cf .cartao-atual.alerta{background:linear-gradient(90deg,#FFF3D6,#FFF9EA);border:1px solid #F0DDB0;border-left:6px solid #E8A21A}
+  .cf .cartao-atual .emoji{font-size:1.6em}
+  .cf .colunas-programas{gap:1.2em}
+  .cf .titulo-programa{display:flex;align-items:center;gap:.6em;margin:0 0 .7em;padding:.7em 1.2em;border-radius:14px;background:linear-gradient(90deg,#0F5A28,#137A38);color:#fff;font-family:inherit;font-size:1.1em;font-weight:800}
+  .cf .titulo-programa .bolinha{border:2px solid #fff}
+  .cf .mapa-carreta-programa{height:400px;border-radius:14px;border:0;box-shadow:0 4px 16px rgba(15,107,46,.15)}
+  .cf .mp-sub{display:flex;align-items:center;gap:.6em;font-weight:800;color:#0F5A28;margin:1.1em 0 .6em}
+  .cf .mp-sub::before{content:"";width:.35em;height:1.1em;border-radius:6px;background:linear-gradient(#3DB65E,#0F6B30)}
+  .cf .colunas-programas ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.4em}
+  .cf .colunas-programas li{background:#F6FBF6;border:1px solid #E1EFE2;border-radius:12px;padding:.55em 1em}
+  .cf .colunas-programas li a{color:#0F5A28;font-weight:700;text-decoration:none}
+  .cf .mp-sub.passado{color:#1F5FA8}.cf .mp-sub.passado::before{background:linear-gradient(#5B9BDB,#1F5FA8)}
+  .cf .colunas-programas ul.passado li{background:#EEF4FB;border-color:#D3E3F4}
+  .cf .colunas-programas ul.passado li a{color:#1F5FA8}
+  .cf .mp-sub.futuro{color:#0F5A28}
+  .cf .colunas-programas ul.futuro li{background:#E4F5E4;border-color:#BFE3C2;border-left:5px solid #2E9E4F}
+  .cf .colunas-programas ul.futuro li a{color:#0F5A28}
+  .cf .colunas-programas ul.passado li{border-left:5px solid #7FB0E3}
+  .cf .mp-nav{display:flex;align-items:center;justify-content:space-between;gap:1em;margin:0 0 1em}
+  .cf .mp-mes{font-weight:800;color:#0F5A28;font-size:1.15em}
+  .cf .mp-pill{display:inline-flex;align-items:center;border-radius:999px;border:1.5px solid #CFE0D2;background:#fff;color:#0F5A28 !important;font-weight:700;text-decoration:none;padding:.45em 1.2em;font-size:.9em;box-shadow:0 2px 8px rgba(15,107,46,.08)}
+  .cf .mp-pill:hover{background:#F1F8F2}
+</style>
+<div class="cf">
 {% call cr_head('Mapa da Carreta', 'Duas carretas físicas, cada uma com seu trajeto.', 'mapa') %}{% endcall %}
-<p class="sub" style="margin:0 0 16px;max-width:none;">Duas carretas físicas — Agro e Saúde — cada uma com seu próprio trajeto. Elas dividem o mesmo cavalo mecânico e motorista, então vale sempre olhar a distância entre as duas antes de aprovar datas próximas em municípios diferentes.</p>
+<div class="cf-info"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg><span>As duas carretas dividem o mesmo cavalo mecânico e motorista: olhe sempre a distância entre elas antes de aprovar datas próximas em municípios diferentes.</span></div>
 
 {% if distancia_entre_carretas_km is not none %}
-<div class="cartao-atual" style="{% if distancia_entre_carretas_km >= 100 %}border-color:#D9A441;background:#FBF3E3;{% endif %}">
+<div class="cartao-atual dist {% if distancia_entre_carretas_km >= 100 %}alerta{% endif %}">
   <span class="emoji">🐎</span>
   <div>
     <strong>Distância entre as duas carretas agora: {{ distancia_entre_carretas_km }} km</strong>
@@ -53,12 +79,10 @@
 </div>
 {% endif %}
 
-<div class="secao-card" style="margin-bottom:16px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <a class="btn secundario" href="{{ url_for('admin_carreta_mapa', ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
-    <h2 style="margin:0;">{{ MESES_NOMES[mes] }} de {{ ano }}</h2>
-    <a class="btn secundario" href="{{ url_for('admin_carreta_mapa', ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
-  </div>
+<div class="mp-nav">
+  <a class="mp-pill" href="{{ url_for('admin_carreta_mapa', ano=ano_anterior, mes=mes_anterior) }}">← Mês anterior</a>
+  <div class="mp-mes">{{ MESES_NOMES[mes] }} de {{ ano }}</div>
+  <a class="mp-pill" href="{{ url_for('admin_carreta_mapa', ano=ano_proximo, mes=mes_proximo) }}">Próximo mês →</a>
 </div>
 
 <div class="colunas-programas">
@@ -91,8 +115,8 @@
     <div id="mapa-agro" class="mapa-carreta-programa"></div>
 
     {% if agro.anteriores %}
-    <p style="margin-top:16px;font-weight:600;">Já aconteceram (mais recentes primeiro)</p>
-    <ul>
+    <p class="mp-sub passado">Já aconteceram (mais recentes primeiro)</p>
+    <ul class="passado">
       {% for p in agro.anteriores %}
       <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
       {% endfor %}
@@ -100,8 +124,8 @@
     {% endif %}
 
     {% if agro.proximas %}
-    <p style="margin-top:16px;font-weight:600;">Próximos compromissos aprovados</p>
-    <ul>
+    <p class="mp-sub futuro">Próximos compromissos aprovados</p>
+    <ul class="futuro">
       {% for p in agro.proximas %}
       <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
       {% endfor %}
@@ -137,8 +161,8 @@
     <div id="mapa-saude" class="mapa-carreta-programa"></div>
 
     {% if saude.anteriores %}
-    <p style="margin-top:16px;font-weight:600;">Já aconteceram (mais recentes primeiro)</p>
-    <ul>
+    <p class="mp-sub passado">Já aconteceram (mais recentes primeiro)</p>
+    <ul class="passado">
       {% for p in saude.anteriores %}
       <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
       {% endfor %}
@@ -146,8 +170,8 @@
     {% endif %}
 
     {% if saude.proximas %}
-    <p style="margin-top:16px;font-weight:600;">Próximos compromissos aprovados</p>
-    <ul>
+    <p class="mp-sub futuro">Próximos compromissos aprovados</p>
+    <ul class="futuro">
       {% for p in saude.proximas %}
       <li><a href="{{ url_for('admin_carreta_detalhe', solicitacao_id=p.id) }}">{{ p.evento }} — {{ p.municipio_nome }} ({{ p.data_inicio }} a {{ p.data_fim }})</a></li>
       {% endfor %}
@@ -155,6 +179,7 @@
     {% endif %}
   </div>
 
+</div>
 </div>
 {% endblock %}
 

@@ -1,12 +1,14 @@
 {% extends 'admin_base.html' %}
-{% from '_cr_head.html' import cr_head %}
+{% from '_cr_head.html' import cr_head, cr_form_css %}
 {% block admin_content %}
-<style>.conteudo{max-width:none !important}</style>
-{% call cr_head('Bloqueio de Datas', 'Datas em que a carreta não pode ser usada.', 'bloqueio') %}{% endcall %}
-<p class="sub" style="margin:0 0 16px;max-width:none;">Datas em que a carreta NÃO pode ser usada (feriado, manutenção do veículo, motorista de férias/licença, etc). Enquanto o bloqueio existir, ninguém consegue pedir aquela carreta nessas datas — nem pelo formulário público, nem por aqui. Isso é sempre uma decisão sua: o sistema nunca bloqueia data nenhuma sozinho. Diga se o bloqueio vale só pra uma das carretas (ex.: ela quebrou e foi pra oficina) ou pras duas juntas (ex.: o motorista está de férias).</p>
+{{ cr_form_css() }}
+<div class="cf">
+{% call cr_head('Bloqueio de Datas', 'Datas em que a carreta não pode ser usada: feriado, manutenção do veículo, motorista de férias ou licença.', 'bloqueio') %}{% endcall %}
+<div class="cf-info" style="padding:.55em 1em;margin-bottom:.8em;"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg><span>Enquanto houver bloqueio, ninguém pede a carreta nessas datas (nem pelo formulário público, nem por aqui). Você escolhe se vale para uma carreta ou para as duas.</span></div>
 
-<div class="secao-card" style="margin-bottom:16px;">
-  <h2>Novo bloqueio</h2>
+<div class="secao-card" style="padding:0;margin-bottom:16px;">
+  <div class="dt-bar"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 0 1 6.3 12.9L7.1 5.7A8 8 0 0 1 12 4zM5.7 7.1l11.2 11.2A8 8 0 0 1 5.7 7.1z"/></svg><h2>Novo bloqueio</h2></div>
+  <div class="dt-corpo">
   {% if pode_editar_carreta %}
   <form method="post">
     <div class="info-grid">
@@ -31,38 +33,40 @@
         <span class="rot" style="display:block;margin-bottom:5px;">Motivo *</span>
         <input type="text" name="motivo" required placeholder="Ex.: Manutenção do veículo, Feriado, Motorista de férias..." style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
       </label>
-      <label style="grid-column:1/-1;">
+      <label>
         <span class="rot" style="display:block;margin-bottom:5px;">Seu nome</span>
         <input type="text" name="criado_por" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;">
       </label>
+      <button type="submit" style="align-self:end;height:2.9em;border-radius:10px;padding:0 1.4em;white-space:nowrap;justify-content:center;">Bloquear essas datas</button>
     </div>
-    <button type="submit" style="margin-top:14px;">🚫 Bloquear essas datas</button>
   </form>
   {% else %}
   <p class="vazio">Esse login é só de visualização — não é possível cadastrar bloqueios.</p>
   {% endif %}
+  </div>
 </div>
 
-<div class="secao-card">
-  <h2>Bloqueios cadastrados</h2>
+<div class="secao-card" style="padding:0;">
+  <div class="dt-bar"><svg viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg><h2>Bloqueios cadastrados</h2><span class="esp"></span><span class="cr-pill cont">Total: {{ bloqueios|length }}</span></div>
+  <div class="dt-corpo">
   {% if not bloqueios %}
   <p class="vazio">Nenhum bloqueio cadastrado.</p>
   {% else %}
-  <table>
+  <table class="lista">
     <thead>
-      <tr><th>Período</th><th>Carreta</th><th>Motivo</th><th>Cadastrado por</th><th></th></tr>
+      <tr><th>Período</th><th>Carreta</th><th>Motivo</th><th>Cadastrado por</th><th style="text-align:center;width:9em;">Ação</th></tr>
     </thead>
     <tbody>
       {% for b in bloqueios %}
       <tr>
         <td>{{ b.data_inicio.strftime('%d/%m/%Y') }} a {{ b.data_fim.strftime('%d/%m/%Y') }}</td>
-        <td>{{ tipos_recurso.get(b.tipo_recurso, 'Ambas') }}</td>
+        <td><span class="cr-pill {% if b.tipo_recurso == 'carreta_agro' %}ag{% elif b.tipo_recurso %}sa{% endif %}">{{ tipos_recurso.get(b.tipo_recurso, 'Ambas') }}</span></td>
         <td>{{ b.motivo }}</td>
         <td>{{ b.criado_por or '—' }}</td>
-        <td>
+        <td style="text-align:center;">
           {% if pode_editar_carreta %}
           <form method="post" action="{{ url_for('admin_carreta_bloqueio_excluir', bloqueio_id=b.id) }}" onsubmit="return confirm('Remover esse bloqueio? A data volta a ficar disponível.');">
-            <button type="submit" class="btn secundario" style="color:var(--danger);padding:5px 12px;font-size:.8rem;">Remover</button>
+            <button type="submit" class="btn secundario" style="color:var(--danger);padding:.35em 1em;font-size:.8em;">Remover</button>
           </form>
           {% endif %}
         </td>
@@ -71,5 +75,7 @@
     </tbody>
   </table>
   {% endif %}
+  </div>
+</div>
 </div>
 {% endblock %}
